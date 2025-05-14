@@ -1,0 +1,4 @@
+# WezTerm logs and cache
+debug.log
+*.tmp
+*.log
