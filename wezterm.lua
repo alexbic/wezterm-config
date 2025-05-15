@@ -306,7 +306,7 @@ config.colors = {
 }
 
 -- Клавиши
-config.leader = { key = 'a', mods = 'CTRL', timeout_milliseconds = 1000 }
+config.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 config.keys = {
   { key = 'p', mods = 'CMD|SHIFT', action = act.ActivateCommandPalette },
   
