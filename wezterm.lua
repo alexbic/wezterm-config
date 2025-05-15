@@ -194,13 +194,13 @@ wezterm.on('augment-command-palette', function(window, pane)
     { brief = 'Прозрачность 40%', action = act.EmitEvent('set-opacity-0.4') },
     { brief = 'Прозрачность 60% (по умолчанию)', action = act.EmitEvent('set-opacity-0.6') },
     { brief = 'Прозрачность 80%', action = act.EmitEvent('set-opacity-0.8') },
-    { brief = 'Сбросить настройки по умолчанию (Ctrl+A, 9)', action = act.EmitEvent('reset-to-defaults') },
+    { brief = 'Сбросить настройки по умолчанию (Alt+A, 9)', action = act.EmitEvent('reset-to-defaults') },
     { brief = 'Сменить фоновое изображение', action = act.EmitEvent('change-background') },
     { brief = 'Черный фон + картинка (Ctrl+0)', action = act.EmitEvent('set-black-background') },
   }
 end)
 
--- Формат заголовка вкладки с ID (для отладки)
+-- Формат заголовка вкладки с улучшенным отображением активной вкладки
 wezterm.on('format-tab-title', function(tab, tabs, panes, config, hover, max_width)
   local pane = tab.active_pane
   local title = pane.title
@@ -208,10 +208,16 @@ wezterm.on('format-tab-title', function(tab, tabs, panes, config, hover, max_wid
     title = pane.foreground_process_name
   end
   
-  -- Отображаем номер вкладки для обычной работы (без ID)
-  return {
-    {Text=" " .. tab.tab_index + 1 .. ": " .. title .. " "},
-  }
+  -- Отображаем номер вкладки и добавляем индикатор для активной вкладки
+  if tab.is_active then
+    return {
+      {Text=" ★ " .. (tab.tab_index + 1) .. ": " .. title .. " "},
+    }
+  else
+    return {
+      {Text=" " .. (tab.tab_index + 1) .. ": " .. title .. " "},
+    }
+  end
 end)
 
 -- Конфигурация
@@ -269,6 +275,7 @@ config.window_background_image_hsb = {
 -- Размытие на macOS / Wayland
 config.macos_window_background_blur = 30
 
+-- Настройка цветов панели вкладок с улучшенным визуальным отображением активной вкладки
 config.colors = {
   foreground = '#ffffff',
   background = '#000000',
@@ -279,10 +286,10 @@ config.colors = {
   tab_bar = {
     background = '#282a36',
     active_tab = {
-      bg_color = '#44475a',
-      fg_color = '#f8f8f2',
+      bg_color = '#bd93f9',  -- Яркий фиолетовый из палитры Dracula
+      fg_color = '#f8f8f2',  -- Белый текст
       intensity = 'Bold',
-      underline = 'None',
+      underline = 'Single',  -- Добавляем подчеркивание для активной вкладки
       italic = false,
       strikethrough = false,
     },
@@ -305,15 +312,17 @@ config.colors = {
   },
 }
 
--- Клавиши
+-- Изменяем leader key с Ctrl+A на Alt+A чтобы избежать конфликта с tmux
 config.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
+
+-- Клавиши с обновленным leader key
 config.keys = {
   { key = 'p', mods = 'CMD|SHIFT', action = act.ActivateCommandPalette },
   
   -- Полноэкранный режим
   { key = 'f', mods = 'CMD', action = wezterm.action.ToggleFullScreen },
 
-  -- Различные уровни прозрачности (Ctrl+A, затем цифра)
+  -- Различные уровни прозрачности (Alt+A, затем цифра)
   { key = '0', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.00') },
   { key = '1', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.05') },
   { key = '2', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.15') },
