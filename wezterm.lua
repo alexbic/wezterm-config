@@ -150,6 +150,34 @@ local function reset_to_defaults(window)
   log("Сброс к настройкам по умолчанию")
 end
 
+-- Функция для получения имени хоста из SSH-соединения
+local function get_ssh_host_info(pane)
+  -- Пытаемся получить информацию о SSH-соединении
+  local ssh_info = nil
+  local process_name = pane:get_foreground_process_name() or ""
+  
+  -- Проверяем, является ли процесс SSH-соединением
+  if process_name:find("ssh") then
+    local process_cmd = pane:get_foreground_process_info()
+    if process_cmd then
+      local cmd_line = process_cmd.cmdline or {}
+      for i, arg in ipairs(cmd_line) do
+        -- Ищем аргумент, который не начинается с "-" и содержит "@"
+        if arg:find("@") and not arg:find("^%-") then
+          ssh_info = arg
+          break
+        end
+        -- Или берем последний аргумент, если он не является флагом
+        if i == #cmd_line and not arg:find("^%-") then
+          ssh_info = arg
+        end
+      end
+    end
+  end
+  
+  return ssh_info
+end
+
 -- Периодическая проверка и применение фона (основной механизм)
 wezterm.on('update-status', function(window, pane)
   -- Проверяем, изменилась ли активная вкладка
@@ -165,6 +193,30 @@ wezterm.on('update-status', function(window, pane)
         tostring(wezterm.GLOBALS.last_active_tab[window_id]) .. " -> " .. tab_id)
     set_background_for_window(window)
   end
+  
+  -- Получаем текущее время
+  local current_time = wezterm.strftime("%H:%M:%S")
+  
+  -- Получаем информацию о SSH-соединении
+  local ssh_info = get_ssh_host_info(pane)
+  local status_elements = {}
+  
+  -- Добавляем текущее время
+  table.insert(status_elements, "🕒 " .. current_time)
+  
+  -- Добавляем информацию о SSH-соединении, если она есть
+  if ssh_info then
+    table.insert(status_elements, "🖥️ SSH: " .. ssh_info)
+  end
+  
+  -- Объединяем все элементы в статусную строку
+  local status_text = table.concat(status_elements, " | ")
+  
+  -- Устанавливаем статусную строку
+  window:set_right_status(wezterm.format({
+    { Foreground = { Color = "#8be9fd" } },
+    { Text = status_text },
+  }))
 end)
 
 -- Обработчики событий для прозрачности
@@ -231,13 +283,16 @@ config.color_scheme = 'Dracula'
 config.enable_tab_bar = true
 config.hide_tab_bar_if_only_one_tab = false
 config.use_fancy_tab_bar = true
-config.tab_bar_at_bottom = false  -- Панель вкладок СВЕРХУ (было изменено)
+config.tab_bar_at_bottom = false  -- Панель вкладок СВЕРХУ
 config.show_new_tab_button_in_tab_bar = true
 config.show_tab_index_in_tab_bar = true
 config.tab_max_width = 25
 
 -- Добавляем кнопки управления в панель вкладок
 config.show_tabs_in_tab_bar = true
+
+-- Частота обновления статусной строки (мс) - устанавливаем 1 секунду
+config.status_update_interval = 1000
 
 -- Кнопки в строке вкладок
 config.tab_bar_style = {
