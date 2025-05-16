@@ -150,33 +150,93 @@ local function reset_to_defaults(window)
   log("Сброс к настройкам по умолчанию")
 end
 
--- Функция для получения имени хоста из SSH-соединения
-local function get_ssh_host_info(pane)
-  -- Пытаемся получить информацию о SSH-соединении
-  local ssh_info = nil
-  local process_name = pane:get_foreground_process_name() or ""
+-- Улучшенная функция для определения, запущен ли tmux
+local function is_tmux_running(pane)
+  if not pane then
+    log("Не удалось проверить tmux: панель не существует")
+    return false
+  end
   
-  -- Проверяем, является ли процесс SSH-соединением
-  if process_name:find("ssh") then
-    local process_cmd = pane:get_foreground_process_info()
-    if process_cmd then
-      local cmd_line = process_cmd.cmdline or {}
-      for i, arg in ipairs(cmd_line) do
-        -- Ищем аргумент, который не начинается с "-" и содержит "@"
-        if arg:find("@") and not arg:find("^%-") then
-          ssh_info = arg
-          break
-        end
-        -- Или берем последний аргумент, если он не является флагом
-        if i == #cmd_line and not arg:find("^%-") then
-          ssh_info = arg
-        end
-      end
+  -- Логируем доступную информацию о панели
+  local process_name = pane.foreground_process_name or "неизвестно"
+  local title = pane.title or "неизвестно"
+  local cwd = pane.current_working_dir and pane.current_working_dir.file_path or "неизвестно"
+  
+  log("Проверка tmux: процесс=" .. process_name .. ", заголовок=" .. title .. ", cwd=" .. cwd)
+  
+  -- Проверяем содержимое переменной $TERM_PROGRAM
+  local success, stdout, stderr = wezterm.run_child_process({"sh", "-c", "echo $TERM_PROGRAM"})
+  if success then
+    log("TERM_PROGRAM=" .. stdout)
+    if stdout:find("tmux") then
+      log("Tmux обнаружен через TERM_PROGRAM")
+      return true
     end
   end
   
-  return ssh_info
+  -- Проверка через командную строку
+  success, stdout, stderr = wezterm.run_child_process({"sh", "-c", "ps -p $$ -o ppid= | xargs ps -o comm= -p"})
+  if success then
+    log("Родительский процесс: " .. stdout)
+    if stdout:find("tmux") then
+      log("Tmux обнаружен через ps")
+      return true
+    end
+  end
+  
+  -- Проверяем переменную окружения TMUX
+  success, stdout, stderr = wezterm.run_child_process({"sh", "-c", "echo $TMUX"})
+  if success and stdout and #stdout > 0 and stdout ~= "\n" then
+    log("TMUX=" .. stdout)
+    log("Tmux обнаружен через переменную TMUX")
+    return true
+  end
+  
+  -- Проверяем по имени процесса
+  if process_name:find("tmux") then
+    log("Tmux обнаружен через foreground_process_name")
+    return true
+  end
+  
+  -- Проверяем по заголовку
+  if title:find("tmux") then
+    log("Tmux обнаружен через title")
+    return true
+  end
+  
+  -- Принудительно скрываем вкладки, если нажата клавиша F11
+  -- Это позволит вам вручную переключать видимость панели вкладок
+  if wezterm.GLOBALS.hide_tabs_by_f11 then
+    log("Tmux имитирован через F11")
+    return true
+  end
+  
+  log("Tmux не обнаружен")
+  return false
 end
+
+-- Переключатель режима скрытия интерфейса
+wezterm.on('toggle-tabs', function(window, pane)
+  wezterm.GLOBALS.hide_tabs_by_f11 = not wezterm.GLOBALS.hide_tabs_by_f11
+  
+  local status = wezterm.GLOBALS.hide_tabs_by_f11 and "скрыт" or "показан"
+  log("Интерфейс " .. status .. " вручную")
+  
+  -- Применяем изменения видимости панели вкладок
+  local overrides = window:get_config_overrides() or {}
+  overrides.enable_tab_bar = not wezterm.GLOBALS.hide_tabs_by_f11
+  window:set_config_overrides(overrides)
+  
+  -- Переключаем в полноэкранный режим без декораций
+  if wezterm.GLOBALS.hide_tabs_by_f11 then
+    window:perform_action(wezterm.action.ToggleFullScreen, pane)
+  else
+    -- Если уже в полноэкранном режиме, выходим из него
+    if window:is_full_screen() then
+      window:perform_action(wezterm.action.ToggleFullScreen, pane)
+    end
+  end
+end)
 
 -- Периодическая проверка и применение фона (основной механизм)
 wezterm.on('update-status', function(window, pane)
@@ -194,29 +254,35 @@ wezterm.on('update-status', function(window, pane)
     set_background_for_window(window)
   end
   
-  -- Получаем текущее время
-  local current_time = wezterm.strftime("%H:%M:%S")
-  
-  -- Получаем информацию о SSH-соединении
-  local ssh_info = get_ssh_host_info(pane)
-  local status_elements = {}
-  
-  -- Добавляем текущее время
-  table.insert(status_elements, "🕒 " .. current_time)
-  
-  -- Добавляем информацию о SSH-соединении, если она есть
-  if ssh_info then
-    table.insert(status_elements, "🖥️ SSH: " .. ssh_info)
+  -- Проверяем, запущен ли tmux, и скрываем панель вкладок
+  local active_pane = tab.active_pane
+  if active_pane and is_tmux_running(active_pane) then
+    -- Скрываем панель вкладок при работе с tmux
+    local overrides = window:get_config_overrides() or {}
+    overrides.enable_tab_bar = false
+    window:set_config_overrides(overrides)
+    
+    -- Переключаем в полноэкранный режим без декораций, если еще не в нем
+    if not window:is_full_screen() then
+      window:perform_action(wezterm.action.ToggleFullScreen, pane)
+    end
+    
+    log("Интерфейс скрыт (tmux обнаружен)")
+  else
+    -- Восстанавливаем видимость панели вкладок
+    if not wezterm.GLOBALS.hide_tabs_by_f11 then
+      local overrides = window:get_config_overrides() or {}
+      overrides.enable_tab_bar = true
+      window:set_config_overrides(overrides)
+      
+      -- Если в полноэкранном режиме, выходим из него
+      if window:is_full_screen() then
+        window:perform_action(wezterm.action.ToggleFullScreen, pane)
+      end
+      
+      log("Интерфейс показан (tmux не обнаружен)")
+    end
   end
-  
-  -- Объединяем все элементы в статусную строку
-  local status_text = table.concat(status_elements, " | ")
-  
-  -- Устанавливаем статусную строку
-  window:set_right_status(wezterm.format({
-    { Foreground = { Color = "#8be9fd" } },
-    { Text = status_text },
-  }))
 end)
 
 -- Обработчики событий для прозрачности
@@ -249,6 +315,7 @@ wezterm.on('augment-command-palette', function(window, pane)
     { brief = 'Сбросить настройки по умолчанию (Alt+A, 9)', action = act.EmitEvent('reset-to-defaults') },
     { brief = 'Сменить фоновое изображение', action = act.EmitEvent('change-background') },
     { brief = 'Черный фон + картинка (Ctrl+0)', action = act.EmitEvent('set-black-background') },
+    { brief = 'Переключить видимость интерфейса', action = act.EmitEvent('toggle-tabs') },
   }
 end)
 
@@ -370,7 +437,34 @@ config.colors = {
 -- Изменяем leader key с Ctrl+A на Alt+A чтобы избежать конфликта с tmux
 config.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
--- Клавиши с обновленным leader key
+-- Отключаем dead keys для испанской клавиатуры
+config.use_dead_keys = false
+
+-- Обработчик нажатий клавиш для проверки, запущен ли tmux
+wezterm.on('key-down', function(window, pane, key, mods, event)
+  -- Вручную переключаем видимость панели вкладок и системных кнопок по F11
+  if key == 'F11' and mods:contains('NONE') then
+    window:perform_action(act.EmitEvent('toggle-tabs'), pane)
+    return false
+  end
+  
+  -- Если нажаты клавиши для создания новой вкладки/окна
+  if (key == 't' and mods:contains('CMD')) or
+     (key == 'n' and mods:contains('CMD')) then
+    
+    -- Проверяем, запущен ли tmux
+    if is_tmux_running(pane) then
+      -- Если tmux запущен, отменяем стандартную обработку
+      log("Блокировка создания новой вкладки/окна (tmux)")
+      return false
+    end
+  end
+  
+  -- Пропускаем стандартную обработку для других клавиш
+  return true
+end)
+
+-- Настраиваем обработку клавиш Ñ для испанской клавиатуры
 config.keys = {
   { key = 'p', mods = 'CMD|SHIFT', action = act.ActivateCommandPalette },
   
@@ -391,7 +485,7 @@ config.keys = {
   -- Черный фон с хорошо видимой картинкой (Ctrl+0)
   { key = '0', mods = 'CTRL', action = act.EmitEvent('set-black-background') },
   
-  -- Управление вкладками - создание новой вкладки через SpawnTab
+  -- Управление вкладками - будет работать только если не запущен tmux
   { key = 't', mods = 'CMD', action = act.SpawnTab 'CurrentPaneDomain' },
   
   { key = 'w', mods = 'CMD', action = act.CloseCurrentTab { confirm = true } },
@@ -401,7 +495,41 @@ config.keys = {
   -- Горячие клавиши для смены фона
   { key = 'r', mods = 'CMD|SHIFT', action = act.EmitEvent('change-background') },
   { key = 'b', mods = 'CMD|SHIFT', action = act.EmitEvent('change-background') },
+  
+  -- Отправка тильды ~ через Alt+Ñ для испанской клавиатуры
+  { key = "ñ", mods = "ALT", action = wezterm.action.SendString("~") },
+  { key = "Ñ", mods = "ALT", action = wezterm.action.SendString("~") },
+  
+  -- Мгновенная вставка из буфера обмена
+  { key = 'v', mods = 'CMD', action = wezterm.action.PasteFrom 'Clipboard' },
+  
+  -- Переключение видимости панели вкладок вручную
+  { key = 'F11', mods = 'NONE', action = act.EmitEvent('toggle-tabs') },
 }
+
+-- Дополнительные ключевые привязки для испанской клавиатуры
+-- Определяем дополнительные символы, которые могут быть сложными для ввода
+config.key_tables = {
+  -- Таблица для специальных символов
+  spanish_fixes = {
+    { key = "n", mods = "NONE", action = wezterm.action.SendString("~") },
+    { key = "Escape", action = "PopKeyTable" },
+    { key = "Return", action = "PopKeyTable" },
+  },
+}
+
+-- Добавляем специальную комбинацию для входа в режим ввода специальных символов
+table.insert(config.keys, { 
+  key = "n", 
+  mods = "ALT", 
+  action = wezterm.action.ActivateKeyTable { 
+    name = "spanish_fixes", 
+    one_shot = true,
+  } 
+})
+
+-- Настройка SSH
+config.ssh_backend = "Ssh2"
 
 log("Конфигурация загружена успешно")
 return config
