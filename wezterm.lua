@@ -49,6 +49,7 @@ local default_opacity = 0.6
 if not wezterm.GLOBALS then wezterm.GLOBALS = {} end
 if not wezterm.GLOBALS.tab_backgrounds then wezterm.GLOBALS.tab_backgrounds = {} end
 if not wezterm.GLOBALS.last_active_tab then wezterm.GLOBALS.last_active_tab = {} end
+if not wezterm.GLOBALS.hide_tabs then wezterm.GLOBALS.hide_tabs = false end
 
 -- Функция для получения случайного фона
 local function get_random_background()
@@ -64,7 +65,7 @@ end
 local function get_background_for_tab(tab_id)
   if not wezterm.GLOBALS.tab_backgrounds[tab_id] then
     wezterm.GLOBALS.tab_backgrounds[tab_id] = get_random_background()
-    log("Создан новый фон для вкладки " .. tab_id .. ": " .. wezterm.GLOBALS.tab_backgrounds[tab_id])
+    log("Создан новый фон для вкладки " .. tab_id .. ": " .. (wezterm.GLOBALS.tab_backgrounds[tab_id] or "нет"))
   end
   return wezterm.GLOBALS.tab_backgrounds[tab_id]
 end
@@ -89,7 +90,7 @@ local function set_background_for_window(window)
   local window_id = window:window_id()
   wezterm.GLOBALS.last_active_tab[window_id] = tab_id
   
-  log("Установлен фон " .. bg .. " для вкладки " .. tab_id .. " в окне " .. window_id)
+  log("Установлен фон " .. (bg or "нет") .. " для вкладки " .. tab_id .. " в окне " .. window_id)
 end
 
 -- Функция принудительно меняет фон для текущей вкладки
@@ -102,7 +103,7 @@ local function force_change_tab_background(window)
   
   local tab_id = tab:tab_id()
   wezterm.GLOBALS.tab_backgrounds[tab_id] = get_random_background()
-  log("Принудительно изменен фон для вкладки " .. tab_id .. ": " .. wezterm.GLOBALS.tab_backgrounds[tab_id])
+  log("Принудительно изменен фон для вкладки " .. tab_id .. ": " .. (wezterm.GLOBALS.tab_backgrounds[tab_id] or "нет"))
   
   -- Применяем новый фон
   set_background_for_window(window)
@@ -150,95 +151,46 @@ local function reset_to_defaults(window)
   log("Сброс к настройкам по умолчанию")
 end
 
--- Улучшенная функция для определения, запущен ли tmux
-local function is_tmux_running(pane)
-  if not pane then
-    log("Не удалось проверить tmux: панель не существует")
-    return false
-  end
+-- Функция для переключения видимости интерфейса
+local function toggle_interface(window, pane)
+  -- Переключаем состояние
+  wezterm.GLOBALS.hide_tabs = not wezterm.GLOBALS.hide_tabs
   
-  -- Логируем доступную информацию о панели
-  local process_name = pane.foreground_process_name or "неизвестно"
-  local title = pane.title or "неизвестно"
-  local cwd = pane.current_working_dir and pane.current_working_dir.file_path or "неизвестно"
-  
-  log("Проверка tmux: процесс=" .. process_name .. ", заголовок=" .. title .. ", cwd=" .. cwd)
-  
-  -- Проверяем содержимое переменной $TERM_PROGRAM
-  local success, stdout, stderr = wezterm.run_child_process({"sh", "-c", "echo $TERM_PROGRAM"})
-  if success then
-    log("TERM_PROGRAM=" .. stdout)
-    if stdout:find("tmux") then
-      log("Tmux обнаружен через TERM_PROGRAM")
-      return true
-    end
-  end
-  
-  -- Проверка через командную строку
-  success, stdout, stderr = wezterm.run_child_process({"sh", "-c", "ps -p $$ -o ppid= | xargs ps -o comm= -p"})
-  if success then
-    log("Родительский процесс: " .. stdout)
-    if stdout:find("tmux") then
-      log("Tmux обнаружен через ps")
-      return true
-    end
-  end
-  
-  -- Проверяем переменную окружения TMUX
-  success, stdout, stderr = wezterm.run_child_process({"sh", "-c", "echo $TMUX"})
-  if success and stdout and #stdout > 0 and stdout ~= "\n" then
-    log("TMUX=" .. stdout)
-    log("Tmux обнаружен через переменную TMUX")
-    return true
-  end
-  
-  -- Проверяем по имени процесса
-  if process_name:find("tmux") then
-    log("Tmux обнаружен через foreground_process_name")
-    return true
-  end
-  
-  -- Проверяем по заголовку
-  if title:find("tmux") then
-    log("Tmux обнаружен через title")
-    return true
-  end
-  
-  -- Принудительно скрываем вкладки, если нажата клавиша F11
-  -- Это позволит вам вручную переключать видимость панели вкладок
-  if wezterm.GLOBALS.hide_tabs_by_f11 then
-    log("Tmux имитирован через F11")
-    return true
-  end
-  
-  log("Tmux не обнаружен")
-  return false
-end
-
--- Переключатель режима скрытия интерфейса
-wezterm.on('toggle-tabs', function(window, pane)
-  wezterm.GLOBALS.hide_tabs_by_f11 = not wezterm.GLOBALS.hide_tabs_by_f11
-  
-  local status = wezterm.GLOBALS.hide_tabs_by_f11 and "скрыт" or "показан"
-  log("Интерфейс " .. status .. " вручную")
-  
-  -- Применяем изменения видимости панели вкладок
   local overrides = window:get_config_overrides() or {}
-  overrides.enable_tab_bar = not wezterm.GLOBALS.hide_tabs_by_f11
-  window:set_config_overrides(overrides)
   
-  -- Переключаем в полноэкранный режим без декораций
-  if wezterm.GLOBALS.hide_tabs_by_f11 then
-    window:perform_action(wezterm.action.ToggleFullScreen, pane)
+  if wezterm.GLOBALS.hide_tabs then
+    -- Скрываем интерфейс
+    overrides.enable_tab_bar = false
+    overrides.window_decorations = "RESIZE"  -- Только изменение размера, без кнопок
+    window:set_config_overrides(overrides)
+    
+    -- Переключаем в полноэкранный режим, если еще не в нем
+    if not window:is_full_screen() then
+      window:perform_action(wezterm.action.ToggleFullScreen, pane)
+    end
+    
+    log("Интерфейс скрыт")
   else
-    -- Если уже в полноэкранном режиме, выходим из него
+    -- Показываем интерфейс
+    overrides.enable_tab_bar = true
+    overrides.window_decorations = "RESIZE"  -- ИЗМЕНЕНО: убраны кнопки
+    window:set_config_overrides(overrides)
+    
+    -- Выходим из полноэкранного режима, если находимся в нем
     if window:is_full_screen() then
       window:perform_action(wezterm.action.ToggleFullScreen, pane)
     end
+    
+    log("Интерфейс восстановлен")
   end
+end
+
+-- Переключатель режима скрытия интерфейса 
+wezterm.on('toggle-interface', function(window, pane)
+  toggle_interface(window, pane)
 end)
 
--- Периодическая проверка и применение фона (основной механизм)
+-- Периодическая проверка активной вкладки
 wezterm.on('update-status', function(window, pane)
   -- Проверяем, изменилась ли активная вкладка
   local tab = window:active_tab()
@@ -252,36 +204,6 @@ wezterm.on('update-status', function(window, pane)
     log("Обнаружена смена вкладки: " .. 
         tostring(wezterm.GLOBALS.last_active_tab[window_id]) .. " -> " .. tab_id)
     set_background_for_window(window)
-  end
-  
-  -- Проверяем, запущен ли tmux, и скрываем панель вкладок
-  local active_pane = tab.active_pane
-  if active_pane and is_tmux_running(active_pane) then
-    -- Скрываем панель вкладок при работе с tmux
-    local overrides = window:get_config_overrides() or {}
-    overrides.enable_tab_bar = false
-    window:set_config_overrides(overrides)
-    
-    -- Переключаем в полноэкранный режим без декораций, если еще не в нем
-    if not window:is_full_screen() then
-      window:perform_action(wezterm.action.ToggleFullScreen, pane)
-    end
-    
-    log("Интерфейс скрыт (tmux обнаружен)")
-  else
-    -- Восстанавливаем видимость панели вкладок
-    if not wezterm.GLOBALS.hide_tabs_by_f11 then
-      local overrides = window:get_config_overrides() or {}
-      overrides.enable_tab_bar = true
-      window:set_config_overrides(overrides)
-      
-      -- Если в полноэкранном режиме, выходим из него
-      if window:is_full_screen() then
-        window:perform_action(wezterm.action.ToggleFullScreen, pane)
-      end
-      
-      log("Интерфейс показан (tmux не обнаружен)")
-    end
   end
 end)
 
@@ -315,16 +237,21 @@ wezterm.on('augment-command-palette', function(window, pane)
     { brief = 'Сбросить настройки по умолчанию (Alt+A, 9)', action = act.EmitEvent('reset-to-defaults') },
     { brief = 'Сменить фоновое изображение', action = act.EmitEvent('change-background') },
     { brief = 'Черный фон + картинка (Ctrl+0)', action = act.EmitEvent('set-black-background') },
-    { brief = 'Переключить видимость интерфейса', action = act.EmitEvent('toggle-tabs') },
+    { brief = 'Переключить видимость интерфейса (Cmd+Shift+H)', action = act.EmitEvent('toggle-interface') },
+    { brief = 'Перезагрузить конфигурацию', action = wezterm.action.ReloadConfiguration },
   }
 end)
 
--- Формат заголовка вкладки с улучшенным отображением активной вкладки
+-- Формат заголовка вкладки
 wezterm.on('format-tab-title', function(tab, tabs, panes, config, hover, max_width)
   local pane = tab.active_pane
+  if not pane then
+    return { {Text = " " .. (tab.tab_index + 1) .. ": ? "} }
+  end
+  
   local title = pane.title
   if title == nil or #title == 0 then
-    title = pane.foreground_process_name
+    title = pane.foreground_process_name or "terminal"
   end
   
   -- Отображаем номер вкладки и добавляем индикатор для активной вкладки
@@ -358,31 +285,43 @@ config.tab_max_width = 25
 -- Добавляем кнопки управления в панель вкладок
 config.show_tabs_in_tab_bar = true
 
--- Частота обновления статусной строки (мс) - устанавливаем 1 секунду
+-- Частота обновления статусной строки (мс)
 config.status_update_interval = 1000
 
 -- Кнопки в строке вкладок
 config.tab_bar_style = {
   new_tab = wezterm.format {
-    { Background = { Color = '#282a36' } },
+    { Background = { Color = '#bd93f9' } },  -- ИЗМЕНЕНО: Яркий фиолетовый из палитры Dracula
     { Foreground = { Color = '#f8f8f2' } },
     { Text = '  + ' },
   },
   new_tab_hover = wezterm.format {
-    { Background = { Color = '#6272a4' } },
+    { Background = { Color = '#ff79c6' } },  -- ИЗМЕНЕНО: Розовый из палитры Dracula
     { Foreground = { Color = '#f8f8f2' } },
     { Text = '  + ' },
   },
 }
 
--- Настройки окна
-config.window_decorations = 'INTEGRATED_BUTTONS | RESIZE'
+-- ИЗМЕНЕНО: Настройки окна - убраны кнопки управления и добавлена обводка
+config.window_decorations = 'RESIZE'  -- Только изменение размера, без кнопок
 config.window_padding = { left = 10, right = 10, top = 10, bottom = 10 }
+
+-- ИЗМЕНЕНО: Добавляем обводку окна в 1 пиксель
 config.window_frame = {
   font = wezterm.font { family = 'Menlo', weight = 'Bold' },
   font_size = 12.0,
-  active_titlebar_bg = '#282a36',
-  inactive_titlebar_bg = '#1e1f29',
+  active_titlebar_bg = '#bd93f9',  -- ИЗМЕНЕНО: светлый фиолетовый (Dracula)
+  inactive_titlebar_bg = '#6272a4',  -- Синеватый (Dracula)
+  
+  -- Обводка окна
+  border_left_width = '1px',
+  border_right_width = '1px',
+  border_bottom_width = '1px',
+  border_top_width = '1px',
+  border_left_color = '#bd93f9',  -- Фиолетовый (Dracula)
+  border_right_color = '#bd93f9',
+  border_bottom_color = '#bd93f9',
+  border_top_color = '#bd93f9',
 }
 
 -- Выбираем случайное изображение для начального фона
@@ -397,39 +336,39 @@ config.window_background_image_hsb = {
 -- Размытие на macOS / Wayland
 config.macos_window_background_blur = 30
 
--- Настройка цветов панели вкладок с улучшенным визуальным отображением активной вкладки
+-- Настройка цветов панели вкладок - Светлая тема Dracula
 config.colors = {
   foreground = '#ffffff',
   background = '#000000',
   cursor_bg = '#ffffff',
   cursor_fg = '#000000',
   
-  -- Цвета панели вкладок
+  -- Цвета панели вкладок - светлые цвета Dracula
   tab_bar = {
-    background = '#282a36',
+    background = '#bd93f9',  -- ИЗМЕНЕНО: светлый фиолетовый
     active_tab = {
-      bg_color = '#bd93f9',  -- Яркий фиолетовый из палитры Dracula
+      bg_color = '#000000',  -- Чёрный для активной вкладки
       fg_color = '#f8f8f2',  -- Белый текст
       intensity = 'Bold',
-      underline = 'Single',  -- Добавляем подчеркивание для активной вкладки
+      underline = 'Single',
       italic = false,
       strikethrough = false,
     },
     inactive_tab = {
-      bg_color = '#282a36',
-      fg_color = '#6272a4',
+      bg_color = '#44475a',  -- Тёмно-серый
+      fg_color = '#f8f8f2',  -- Светлый текст
     },
     inactive_tab_hover = {
-      bg_color = '#44475a',
-      fg_color = '#f8f8f2',
+      bg_color = '#6272a4',  -- Синеватый при наведении
+      fg_color = '#f8f8f2',  -- Светлый текст
     },
     new_tab = {
-      bg_color = '#282a36',
-      fg_color = '#6272a4',
+      bg_color = '#bd93f9',  -- Фиолетовый
+      fg_color = '#f8f8f2',  -- Светлый текст
     },
     new_tab_hover = {
-      bg_color = '#44475a',
-      fg_color = '#f8f8f2',
+      bg_color = '#ff79c6',  -- Розовый при наведении
+      fg_color = '#f8f8f2',  -- Светлый текст
     },
   },
 }
@@ -437,34 +376,15 @@ config.colors = {
 -- Изменяем leader key с Ctrl+A на Alt+A чтобы избежать конфликта с tmux
 config.leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
--- Отключаем dead keys для испанской клавиатуры
+-- Расширенная поддержка испанской клавиатуры для MacBook Air
 config.use_dead_keys = false
+config.send_composed_key_when_left_alt_is_pressed = true
+config.send_composed_key_when_right_alt_is_pressed = false
 
--- Обработчик нажатий клавиш для проверки, запущен ли tmux
-wezterm.on('key-down', function(window, pane, key, mods, event)
-  -- Вручную переключаем видимость панели вкладок и системных кнопок по F11
-  if key == 'F11' and mods:contains('NONE') then
-    window:perform_action(act.EmitEvent('toggle-tabs'), pane)
-    return false
-  end
-  
-  -- Если нажаты клавиши для создания новой вкладки/окна
-  if (key == 't' and mods:contains('CMD')) or
-     (key == 'n' and mods:contains('CMD')) then
-    
-    -- Проверяем, запущен ли tmux
-    if is_tmux_running(pane) then
-      -- Если tmux запущен, отменяем стандартную обработку
-      log("Блокировка создания новой вкладки/окна (tmux)")
-      return false
-    end
-  end
-  
-  -- Пропускаем стандартную обработку для других клавиш
-  return true
-end)
+-- Поддержка разных раскладок клавиатуры
+config.enable_csi_u_key_encoding = false
 
--- Настраиваем обработку клавиш Ñ для испанской клавиатуры
+-- Настраиваем горячие клавиши и специальные символы
 config.keys = {
   { key = 'p', mods = 'CMD|SHIFT', action = act.ActivateCommandPalette },
   
@@ -485,9 +405,8 @@ config.keys = {
   -- Черный фон с хорошо видимой картинкой (Ctrl+0)
   { key = '0', mods = 'CTRL', action = act.EmitEvent('set-black-background') },
   
-  -- Управление вкладками - будет работать только если не запущен tmux
+  -- Управление вкладками
   { key = 't', mods = 'CMD', action = act.SpawnTab 'CurrentPaneDomain' },
-  
   { key = 'w', mods = 'CMD', action = act.CloseCurrentTab { confirm = true } },
   { key = '[', mods = 'CMD', action = act.ActivateTabRelative(-1) },
   { key = ']', mods = 'CMD', action = act.ActivateTabRelative(1) },
@@ -496,40 +415,39 @@ config.keys = {
   { key = 'r', mods = 'CMD|SHIFT', action = act.EmitEvent('change-background') },
   { key = 'b', mods = 'CMD|SHIFT', action = act.EmitEvent('change-background') },
   
-  -- Отправка тильды ~ через Alt+Ñ для испанской клавиатуры
-  { key = "ñ", mods = "ALT", action = wezterm.action.SendString("~") },
-  { key = "Ñ", mods = "ALT", action = wezterm.action.SendString("~") },
-  
   -- Мгновенная вставка из буфера обмена
   { key = 'v', mods = 'CMD', action = wezterm.action.PasteFrom 'Clipboard' },
   
-  -- Переключение видимости панели вкладок вручную
-  { key = 'F11', mods = 'NONE', action = act.EmitEvent('toggle-tabs') },
+  -- Переключение видимости интерфейса
+  { key = 'h', mods = 'CMD|SHIFT', action = act.EmitEvent('toggle-interface') },
+  
+  -- Перезагрузка конфигурации
+  { key = 'r', mods = 'CMD|CTRL', action = wezterm.action.ReloadConfiguration },
+  
+  -- Отправка специальных символов через Alt (Option)
+  { key = "'", mods = 'ALT', action = wezterm.action.SendString("\\") },
+  { key = 'ñ', mods = 'ALT', action = wezterm.action.SendString("~") },
+  { key = '1', mods = 'ALT', action = wezterm.action.SendString("|") },
+  { key = 'º', mods = 'ALT', action = wezterm.action.SendString("\\") },
+  { key = '+', mods = 'ALT', action = wezterm.action.SendString("]") },
+  { key = '`', mods = 'ALT', action = wezterm.action.SendString("[") },
+  { key = 'ç', mods = 'ALT', action = wezterm.action.SendString("}") },
+  { key = '*', mods = 'ALT', action = wezterm.action.SendString("{") },
 }
-
--- Дополнительные ключевые привязки для испанской клавиатуры
--- Определяем дополнительные символы, которые могут быть сложными для ввода
-config.key_tables = {
-  -- Таблица для специальных символов
-  spanish_fixes = {
-    { key = "n", mods = "NONE", action = wezterm.action.SendString("~") },
-    { key = "Escape", action = "PopKeyTable" },
-    { key = "Return", action = "PopKeyTable" },
-  },
-}
-
--- Добавляем специальную комбинацию для входа в режим ввода специальных символов
-table.insert(config.keys, { 
-  key = "n", 
-  mods = "ALT", 
-  action = wezterm.action.ActivateKeyTable { 
-    name = "spanish_fixes", 
-    one_shot = true,
-  } 
-})
 
 -- Настройка SSH
 config.ssh_backend = "Ssh2"
 
+-- Используем стандартный тип терминала
+config.term = "xterm-256color"
+
+-- Поддержка более широкого набора действий
+config.disable_default_key_bindings = false
+config.skip_close_confirmation_for_processes_named = {
+  'bash', 'sh', 'zsh', 'fish', 'tmux'
+}
+
+-- Вывести сообщение о загрузке конфигурации
 log("Конфигурация загружена успешно")
+
 return config
