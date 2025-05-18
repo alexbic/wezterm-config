@@ -66,6 +66,39 @@ local function get_background_for_tab(tab_id)
   return wezterm.GLOBALS.tab_backgrounds[tab_id]
 end
 
+-- Универсальная функция для настройки внешнего вида
+local function set_appearance(config)
+  return function(window, pane)
+    local log_message = config.log_message or "Изменение настроек внешнего вида"
+    log(log_message)
+    
+    local overrides = window:get_config_overrides() or {}
+    
+    -- Устанавливаем прозрачность, если указана
+    if config.opacity ~= nil then
+      overrides.window_background_opacity = config.opacity
+    end
+    
+    -- Устанавливаем настройки HSB для изображения, если указаны
+    if config.hsb then
+      overrides.window_background_image_hsb = config.hsb
+    end
+    
+    -- Устанавливаем изображение фона, если указано
+    if config.background_image then
+      overrides.window_background_image = config.background_image
+    end
+    
+    -- Применяем все настройки
+    window:set_config_overrides(overrides)
+    
+    -- Устанавливаем заголовок окна, если указан
+    if config.title then
+      window:set_title(config.title)
+    end
+  end
+end
+
 -- Регистрируем обработчики событий
 local function register_handlers()
   -- Обработчик смены фона при смене вкладки
@@ -115,88 +148,74 @@ local function register_handlers()
     window:set_config_overrides(overrides)
   end)
 
-  -- Регистрируем обработчики для прозрачности
-  wezterm.on('set-opacity-0.00', function(window, pane)
-    log("Установка прозрачности 0.00")
-    local overrides = window:get_config_overrides() or {}
-    overrides.window_background_opacity = 0.00
-    window:set_config_overrides(overrides)
-    window:set_title("Opacity: 0%")
-  end)
+  -- Использование универсальной функции для всех настроек внешнего вида
+  
+  -- Настройки прозрачности
+  wezterm.on('set-opacity-0.00', set_appearance({
+    opacity = 0.00,
+    title = "Opacity: 0%",
+    log_message = "Установка прозрачности 0.00"
+  }))
+  
+  wezterm.on('set-opacity-0.05', set_appearance({
+    opacity = 0.05,
+    title = "Opacity: 5%",
+    log_message = "Установка прозрачности 0.05"
+  }))
+  
+  wezterm.on('set-opacity-0.15', set_appearance({
+    opacity = 0.15,
+    title = "Opacity: 15%",
+    log_message = "Установка прозрачности 0.15"
+  }))
+  
+  wezterm.on('set-opacity-0.25', set_appearance({
+    opacity = 0.25,
+    title = "Opacity: 25%",
+    log_message = "Установка прозрачности 0.25"
+  }))
+  
+  wezterm.on('set-opacity-0.4', set_appearance({
+    opacity = 0.4,
+    title = "Opacity: 40%",
+    log_message = "Установка прозрачности 0.4"
+  }))
+  
+  wezterm.on('set-opacity-0.6', set_appearance({
+    opacity = 0.6,
+    title = "Opacity: 60%",
+    log_message = "Установка прозрачности 0.6"
+  }))
+  
+  wezterm.on('set-opacity-0.8', set_appearance({
+    opacity = 0.8,
+    title = "Opacity: 80%",
+    log_message = "Установка прозрачности 0.8"
+  }))
 
-  wezterm.on('set-opacity-0.05', function(window, pane)
-    log("Установка прозрачности 0.05")
-    local overrides = window:get_config_overrides() or {}
-    overrides.window_background_opacity = 0.05
-    window:set_config_overrides(overrides)
-    window:set_title("Opacity: 5%")
-  end)
-
-  wezterm.on('set-opacity-0.15', function(window, pane)
-    log("Установка прозрачности 0.15")
-    local overrides = window:get_config_overrides() or {}
-    overrides.window_background_opacity = 0.15
-    window:set_config_overrides(overrides)
-    window:set_title("Opacity: 15%")
-  end)
-
-  wezterm.on('set-opacity-0.25', function(window, pane)
-    log("Установка прозрачности 0.25")
-    local overrides = window:get_config_overrides() or {}
-    overrides.window_background_opacity = 0.25
-    window:set_config_overrides(overrides)
-    window:set_title("Opacity: 25%")
-  end)
-
-  wezterm.on('set-opacity-0.4', function(window, pane)
-    log("Установка прозрачности 0.4")
-    local overrides = window:get_config_overrides() or {}
-    overrides.window_background_opacity = 0.4
-    window:set_config_overrides(overrides)
-    window:set_title("Opacity: 40%")
-  end)
-
-  wezterm.on('set-opacity-0.6', function(window, pane)
-    log("Установка прозрачности 0.6")
-    local overrides = window:get_config_overrides() or {}
-    overrides.window_background_opacity = 0.6
-    window:set_config_overrides(overrides)
-    window:set_title("Opacity: 60%")
-  end)
-
-  wezterm.on('set-opacity-0.8', function(window, pane)
-    log("Установка прозрачности 0.8")
-    local overrides = window:get_config_overrides() or {}
-    overrides.window_background_opacity = 0.8
-    window:set_config_overrides(overrides)
-    window:set_title("Opacity: 80%")
-  end)
-
-  wezterm.on('set-black-background', function(window, pane)
-    log("Установка черного фона")
-    local overrides = window:get_config_overrides() or {}
-    overrides.window_background_opacity = 1.0
-    overrides.window_background_image_hsb = {
+  -- Установка черного фона
+  wezterm.on('set-black-background', set_appearance({
+    opacity = 1.0,
+    hsb = {
       brightness = 0.4,
       saturation = 1.0,
       hue = 1.0,
-    }
-    window:set_config_overrides(overrides)
-    window:set_title("Solid Background (картинка на черном фоне)")
-  end)
+    },
+    title = "Solid Background (картинка на черном фоне)",
+    log_message = "Установка черного фона"
+  }))
 
-  wezterm.on('reset-to-defaults', function(window, pane)
-    log("Сброс к настройкам по умолчанию")
-    local overrides = window:get_config_overrides() or {}
-    overrides.window_background_opacity = 0.6
-    overrides.window_background_image_hsb = {
-      brightness = 0.3,
+  -- Сброс к настройкам по умолчанию
+  wezterm.on('reset-to-defaults', set_appearance({
+    opacity = 1.0,  -- Изменено на 1.0 для непрозрачного фона
+    hsb = {
+      brightness = 0.4,
       saturation = 1.0,
       hue = 1.0,
-    }
-    window:set_config_overrides(overrides)
-    window:set_title("Default Settings (прозрачность 60%)")
-  end)
+    },
+    title = "Default Settings (непрозрачный фон)",
+    log_message = "Сброс к настройкам по умолчанию"
+  }))
 
   -- Командная палитра с командами для управления прозрачностью
   wezterm.on('augment-command-palette', function(window, pane)
@@ -206,7 +225,7 @@ local function register_handlers()
       { brief = 'Прозрачность 15%', action = wezterm.action.EmitEvent('set-opacity-0.15') },
       { brief = 'Прозрачность 25%', action = wezterm.action.EmitEvent('set-opacity-0.25') },
       { brief = 'Прозрачность 40%', action = wezterm.action.EmitEvent('set-opacity-0.4') },
-      { brief = 'Прозрачность 60% (по умолчанию)', action = wezterm.action.EmitEvent('set-opacity-0.6') },
+      { brief = 'Прозрачность 60%', action = wezterm.action.EmitEvent('set-opacity-0.6') },
       { brief = 'Прозрачность 80%', action = wezterm.action.EmitEvent('set-opacity-0.8') },
       { brief = 'Сбросить настройки по умолчанию', action = wezterm.action.EmitEvent('reset-to-defaults') },
       { brief = 'Сменить фоновое изображение', action = wezterm.action.EmitEvent('change-background') },
@@ -233,10 +252,10 @@ local appearance = {
    color_scheme = 'Tangoesque (terminal.sexy)',
 
    -- background
-   window_background_opacity = 0.5,
+   window_background_opacity = 1.0,  -- Изменено на 1.0 (непрозрачный)
    window_background_image = get_random_background(), -- Добавляем случайный фон при запуске
    window_background_image_hsb = {
-     brightness = 0.3,
+     brightness = 0.4,  -- Увеличена яркость для лучшей видимости
      saturation = 1.0,
      hue = 1.0,
    },

@@ -20,6 +20,13 @@ local leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
 -- Клавиши для основных функций
 local keys = {
+
+  -- Горячая клавиша для очистки мусора от Powerline (Alt+C)
+{ key = 'c', mods = 'ALT', action = wezterm.action.EmitEvent('user-var-changed', {
+  name = 'clean_powerline_artifacts',
+  value = 'clean',
+ })},
+
     -- Общие функции --
     { key = 'F1',     mods = 'NONE',        action = 'ActivateCopyMode' },
     { key = 'F2',     mods = 'NONE',        action = act.ActivateCommandPalette },
@@ -46,14 +53,15 @@ local keys = {
    
     -- Активаторы для key_tables (таблиц клавиш)
     { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable({
-        name = 'pane_control',   -- Alt+A, затем p для управления панелями
+        name = 'pane_control',
         one_shot = false,
-        timeout_milliseconds = 1000000,
+        timeout_milliseconds = 30000,  -- Уменьшаем таймаут до 30 секунд
     })},
+    
     { key = 'f', mods = 'LEADER', action = act.ActivateKeyTable({
-        name = 'font_control',   -- Alt+A, затем f для управления шрифтом
+        name = 'font_control',
         one_shot = false,
-        timeout_milliseconds = 10000000,
+        timeout_milliseconds = 30000,  -- Уменьшаем таймаут до 30 секунд
     })},
 
 
@@ -98,16 +106,17 @@ local keys = {
     { key = '`', mods = 'ALT', action = act.SendString("[") },
     { key = 'ç', mods = 'ALT', action = act.SendString("}") },
     { key = '*', mods = 'ALT', action = act.SendString("{") },
+    { key = '3', mods = 'ALT', action = act.SendString("#") },
 }
 
 -- Все остальные настройки
 return {
     disable_default_key_bindings = true,      -- Отключаем стандартные привязки клавиш
     disable_default_mouse_bindings = true,    -- Отключаем стандартные привязки мыши
-    leader = leader,                          -- Используем Command+A как лидер-клавишу на macOS
+    leader = leader,                          -- Используем Alt+A как лидер-клавишу
     keys = keys,
     key_tables = {
-        -- Таблица для управления панелями (Command+A, затем p)
+        -- Таблица для управления панелями (Alt+A, затем p)
         pane_control = {
             -- Разделение панелей
             { key = '-', action = act.SplitHorizontal({ domain = 'CurrentPaneDomain' }) }, -- Горизонтальное разделение
@@ -127,12 +136,13 @@ return {
             { key = 'UpArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Up', 1 }) },       -- Уменьшить высоту
             { key = 'RightArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Right', 1 }) }, -- Увеличить ширину
             
-            -- Выход из режима
-            { key = 'Escape', action = 'PopKeyTable' },  -- Escape для выхода
-            { key = 'q', action = 'PopKeyTable' },       -- q для выхода
+            -- Выход из режима - упрощенные опции выхода без колбэков
+            { key = 'Escape', action = act.PopKeyTable },
+            { key = 'q', action = act.PopKeyTable },
+            { key = 'Enter', action = act.PopKeyTable },
         },
         
-        -- Отдельная таблица для управления шрифтом (Command+A, затем f)
+        -- Отдельная таблица для управления шрифтом (Alt+A, затем f)
         font_control = {
             -- Управление шрифтом (стрелки вверх/вниз)
             { key = 'UpArrow', action = act.IncreaseFontSize },    -- Увеличить размер шрифта
@@ -140,9 +150,10 @@ return {
             { key = 'r', action = act.ResetFontSize },             -- Сбросить размер шрифта
             { key = '0', action = act.ResetFontSize },             -- Сбросить размер шрифта (альтернатива)
             
-            -- Выход из режима
-            { key = 'Escape', action = 'PopKeyTable' },  -- Escape для выхода
-            { key = 'q', action = 'PopKeyTable' },       -- q для выхода
+            -- Выход из режима - упрощенные опции выхода без колбэков
+            { key = 'Escape', action = act.PopKeyTable },
+            { key = 'q', action = act.PopKeyTable },
+            { key = 'Enter', action = act.PopKeyTable },
         },
     },
     
