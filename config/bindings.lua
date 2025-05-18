@@ -18,25 +18,6 @@ end
 -- Устанавливаем лидер-клавишу Alt+A для специальных функций
 local leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
--- Храним последний статус чтобы избежать мерцания
-local last_status = ""
-
--- Обновляем статус только если он изменился
-wezterm.on('update-right-status', function(window, pane)
-    local name = window:active_key_table()
-    local status = ""
-    
-    if name then
-        status = 'MODE: ' .. name
-    end
-    
-    -- Обновляем только если статус действительно изменился
-    if last_status ~= status then
-        window:set_right_status(status)
-        last_status = status
-    end
-end)
-
 -- Клавиши для основных функций
 local keys = {
     -- Общие функции --
@@ -62,16 +43,16 @@ local keys = {
     -- Черный фон с хорошо видимой картинкой (Command+0 на macOS)
     { key = '0', mods = mod.SUPER, action = act.EmitEvent('set-black-background') },
     
-    -- Активаторы для key_tables (таблиц клавиш) - для активации режимов
+    -- Активаторы для key_tables (таблиц клавиш)
     { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable({
         name = 'pane_control',   -- Alt+A, затем p для управления панелями
-        one_shot = false,        -- Режим остается активным до явного выхода
-        timeout_milliseconds = 0, -- Нет таймаута
+        one_shot = false,
+        timeout_milliseconds = 1000,
     })},
     { key = 'f', mods = 'LEADER', action = act.ActivateKeyTable({
         name = 'font_control',   -- Alt+A, затем f для управления шрифтом
-        one_shot = false,        -- Режим остается активным до явного выхода
-        timeout_milliseconds = 0, -- Нет таймаута
+        one_shot = false,
+        timeout_milliseconds = 1000,
     })},
 
     -- Горячие клавиши для смены фона
@@ -120,12 +101,20 @@ local keys = {
     { key = '*', mods = 'ALT', action = act.SendString("{") },
 }
 
+-- Функция для отображения активной таблицы клавиш
+wezterm.on('update-right-status', function(window, pane)
+    local name = window:active_key_table()
+    if name then
+        name = 'MODE: ' .. name
+    end
+    window:set_right_status(name or '')
+end)
+
 -- Все остальные настройки
 return {
-    debug_key_events = true,  -- Включаем отладку событий клавиш
-    disable_default_key_bindings = true,
-    disable_default_mouse_bindings = true,
-    leader = leader,
+    disable_default_key_bindings = true,      -- Отключаем стандартные привязки клавиш
+    disable_default_mouse_bindings = true,    -- Отключаем стандартные привязки мыши
+    leader = leader,                          -- Используем Alt+A как лидер-клавишу
     keys = keys,
     key_tables = {
         -- Таблица для управления панелями (Alt+A, затем p)
