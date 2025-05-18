@@ -18,6 +18,41 @@ end
 -- Устанавливаем лидер-клавишу Alt+A для специальных функций
 local leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
+-- Переменная для хранения активного режима, даже если ключевая таблица будет сброшена
+local active_mode = ""
+
+-- Функция для отображения активной таблицы клавиш 
+wezterm.on('update-right-status', function(window, pane)
+    local name = window:active_key_table()
+    
+    -- Если активна ключевая таблица, обновляем нашу переменную
+    if name then
+        active_mode = 'MODE: ' .. name
+    end
+    
+    -- Если статусная строка пустая, но у нас есть активный режим - отображаем его
+    local current_status = window:get_right_status()
+    if (current_status == nil or current_status == '') and active_mode ~= '' then
+        window:set_right_status(active_mode)
+    end
+    
+    -- Если активная ключевая таблица изменилась, обновляем статус
+    if name then
+        local new_status = 'MODE: ' .. name
+        if current_status ~= new_status then
+            window:set_right_status(new_status)
+        end
+    end
+end)
+
+-- Событие при выходе из режима - сбрасываем активный режим
+wezterm.on('user-var-changed', function(window, pane, name, value)
+    if name == "active_mode" then
+        active_mode = value
+        window:set_right_status(value)
+    end
+end)
+
 -- Клавиши для основных функций
 local keys = {
     -- Общие функции --
@@ -44,16 +79,33 @@ local keys = {
     { key = '0', mods = mod.SUPER, action = act.EmitEvent('set-black-background') },
     
     -- Активаторы для key_tables (таблиц клавиш)
-    { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable({
-        name = 'pane_control',   -- Alt+A, затем p для управления панелями
-        one_shot = false,
-        timeout_milliseconds = 1000,
-    })},
-    { key = 'f', mods = 'LEADER', action = act.ActivateKeyTable({
-        name = 'font_control',   -- Alt+A, затем f для управления шрифтом
-        one_shot = false,
-        timeout_milliseconds = 1000,
-    })},
+    { key = 'p', mods = 'LEADER', action = wezterm.action_callback(function(window, pane)
+        -- Активируем режим панелей
+        window:perform_action(
+            act.ActivateKeyTable({
+                name = 'pane_control',
+                one_shot = false,
+                timeout_milliseconds = 0,
+            }), 
+            pane
+        )
+        -- Устанавливаем пользовательскую переменную для режима
+        window:set_user_var("active_mode", "MODE: pane_control")
+    end)},
+    
+    { key = 'f', mods = 'LEADER', action = wezterm.action_callback(function(window, pane)
+        -- Активируем режим управления шрифтом
+        window:perform_action(
+            act.ActivateKeyTable({
+                name = 'font_control',
+                one_shot = false,
+                timeout_milliseconds = 0,
+            }), 
+            pane
+        )
+        -- Устанавливаем пользовательскую переменную для режима
+        window:set_user_var("active_mode", "MODE: font_control")
+    end)},
 
     -- Горячие клавиши для смены фона
     { key = 'b', mods = 'CMD|SHIFT', action = act.EmitEvent('change-background') }, -- Shift+Command+B
@@ -101,27 +153,9 @@ local keys = {
     { key = '*', mods = 'ALT', action = act.SendString("{") },
 }
 
--- Сохраняем предыдущее состояние статуса для предотвращения мерцания
-local last_status = ""
-
--- Функция для отображения активной таблицы клавиш без мерцания
-wezterm.on('update-right-status', function(window, pane)
-    local name = window:active_key_table()
-    local current_status = ""
-    
-    if name then
-        current_status = 'MODE: ' .. name
-    end
-    
-    -- Обновляем статус только если он изменился
-    if current_status ~= last_status then
-        window:set_right_status(current_status)
-        last_status = current_status
-    end
-end)
-
 -- Все остальные настройки
 return {
+    debug_key_events = true,      -- Включаем отладку событий клавиш
     disable_default_key_bindings = true,      -- Отключаем стандартные привязки клавиш
     disable_default_mouse_bindings = true,    -- Отключаем стандартные привязки мыши
     leader = leader,                          -- Используем Alt+A как лидер-клавишу
@@ -154,8 +188,14 @@ return {
             { key = 'RightArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Right', 1 }) }, -- Увеличить ширину
             
             -- Выход из режима
-            { key = 'Escape', action = 'PopKeyTable' },  -- Escape для выхода
-            { key = 'q', action = 'PopKeyTable' },       -- q для выхода
+            { key = 'Escape', action = wezterm.action_callback(function(window, pane)
+                window:perform_action(act.PopKeyTable(), pane)
+                window:set_user_var("active_mode", "")
+            end) },
+            { key = 'q', action = wezterm.action_callback(function(window, pane)
+                window:perform_action(act.PopKeyTable(), pane)
+                window:set_user_var("active_mode", "")
+            end) },
         },
         
         -- Отдельная таблица для управления шрифтом (Alt+A, затем f)
@@ -167,8 +207,14 @@ return {
             { key = '0', action = act.ResetFontSize },             -- Сбросить размер шрифта (альтернатива)
             
             -- Выход из режима
-            { key = 'Escape', action = 'PopKeyTable' },  -- Escape для выхода
-            { key = 'q', action = 'PopKeyTable' },       -- q для выхода
+            { key = 'Escape', action = wezterm.action_callback(function(window, pane)
+                window:perform_action(act.PopKeyTable(), pane)
+                window:set_user_var("active_mode", "")
+            end) },
+            { key = 'q', action = wezterm.action_callback(function(window, pane)
+                window:perform_action(act.PopKeyTable(), pane)
+                window:set_user_var("active_mode", "")
+            end) },
         },
     },
     
