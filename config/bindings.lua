@@ -101,13 +101,23 @@ local keys = {
     { key = '*', mods = 'ALT', action = act.SendString("{") },
 }
 
--- Функция для отображения активной таблицы клавиш
+-- Сохраняем предыдущее состояние статуса для предотвращения мерцания
+local last_status = ""
+
+-- Функция для отображения активной таблицы клавиш без мерцания
 wezterm.on('update-right-status', function(window, pane)
     local name = window:active_key_table()
+    local current_status = ""
+    
     if name then
-        name = 'MODE: ' .. name
+        current_status = 'MODE: ' .. name
     end
-    window:set_right_status(name or '')
+    
+    -- Обновляем статус только если он изменился
+    if current_status ~= last_status then
+        window:set_right_status(current_status)
+        last_status = current_status
+    end
 end)
 
 -- Все остальные настройки
