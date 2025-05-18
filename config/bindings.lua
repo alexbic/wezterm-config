@@ -15,8 +15,8 @@ else
     mod.SUPER_REV = 'ALT|CTRL'
 end
 
--- Устанавливаем лидер-клавишу Command+A (⌘+A) на macOS для специальных функций
-local leader = { key = 'a', mods = mod.SUPER, timeout_milliseconds = 1000 }
+-- Устанавливаем лидер-клавишу Alt+A для специальных функций
+local leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
 -- Клавиши для основных функций
 local keys = {
@@ -29,7 +29,7 @@ local keys = {
     { key = 'F12',    mods = 'NONE',        action = act.ShowDebugOverlay },
     { key = 'f',      mods = mod.SUPER,     action = act.Search({ CaseInSensitiveString = '' }) },
     
-    -- Различные уровни прозрачности (Command+A, затем цифра на macOS)
+    -- Различные уровни прозрачности (Alt+A, затем цифра)
     { key = '0', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.00') },  -- Полная прозрачность
     { key = '1', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.05') },  -- 5% непрозрачности
     { key = '2', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.15') },  -- 15% непрозрачности
@@ -45,12 +45,12 @@ local keys = {
     
     -- Активаторы для key_tables (таблиц клавиш)
     { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable({
-        name = 'pane_control',   -- Command+A, затем p для управления панелями
+        name = 'pane_control',   -- Alt+A, затем p для управления панелями
         one_shot = false,
         timeout_milliseconds = 1000,
     })},
     { key = 'f', mods = 'LEADER', action = act.ActivateKeyTable({
-        name = 'font_control',   -- Command+A, затем f для управления шрифтом
+        name = 'font_control',   -- Alt+A, затем f для управления шрифтом
         one_shot = false,
         timeout_milliseconds = 1000,
     })},
@@ -101,14 +101,23 @@ local keys = {
     { key = '*', mods = 'ALT', action = act.SendString("{") },
 }
 
+-- Функция для отображения активной таблицы клавиш
+wezterm.on('update-right-status', function(window, pane)
+    local name = window:active_key_table()
+    if name then
+        name = 'MODE: ' .. name
+    end
+    window:set_right_status(name or '')
+end)
+
 -- Все остальные настройки
 return {
     disable_default_key_bindings = true,      -- Отключаем стандартные привязки клавиш
     disable_default_mouse_bindings = true,    -- Отключаем стандартные привязки мыши
-    leader = leader,                          -- Используем Command+A как лидер-клавишу на macOS
+    leader = leader,                          -- Используем Alt+A как лидер-клавишу
     keys = keys,
     key_tables = {
-        -- Таблица для управления панелями (Command+A, затем p)
+        -- Таблица для управления панелями (Alt+A, затем p)
         pane_control = {
             -- Разделение панелей
             { key = '-', action = act.SplitHorizontal({ domain = 'CurrentPaneDomain' }) }, -- Горизонтальное разделение
@@ -122,6 +131,12 @@ return {
             { key = 'UpArrow', action = act.ActivatePaneDirection('Up') },        -- Панель сверху
             { key = 'RightArrow', action = act.ActivatePaneDirection('Right') },  -- Панель справа
             
+            -- Добавляем также навигацию клавишами h,j,k,l для vim-пользователей
+            { key = 'h', action = act.ActivatePaneDirection('Left') },
+            { key = 'j', action = act.ActivatePaneDirection('Down') },
+            { key = 'k', action = act.ActivatePaneDirection('Up') },
+            { key = 'l', action = act.ActivatePaneDirection('Right') },
+            
             -- Изменение размера панелей (Shift+стрелки)
             { key = 'LeftArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Left', 1 }) },   -- Уменьшить ширину
             { key = 'DownArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Down', 1 }) },   -- Увеличить высоту
@@ -133,7 +148,7 @@ return {
             { key = 'q', action = 'PopKeyTable' },       -- q для выхода
         },
         
-        -- Отдельная таблица для управления шрифтом (Command+A, затем f)
+        -- Отдельная таблица для управления шрифтом (Alt+A, затем f)
         font_control = {
             -- Управление шрифтом (стрелки вверх/вниз)
             { key = 'UpArrow', action = act.IncreaseFontSize },    -- Увеличить размер шрифта
