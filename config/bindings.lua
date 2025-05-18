@@ -15,7 +15,7 @@ else
     mod.SUPER_REV = 'ALT|CTRL'
 end
 
--- Устанавливаем ТОЛЬКО Alt в качестве лидер-клавиши
+-- Устанавливаем лидер-клавишу Alt+A для специальных функций
 local leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
 -- Функция для отображения активной таблицы клавиш
@@ -45,30 +45,7 @@ local keys = {
     { key = 'F12',    mods = 'NONE',        action = act.ShowDebugOverlay },
     { key = 'f',      mods = mod.SUPER,     action = act.Search({ CaseInSensitiveString = '' }) },
     
-    -- Активация режимов управления через Alt+A, затем нужная клавиша
-    -- Активируем режим управления панелями (Alt+A, p)
-    { 
-        key = 'p', 
-        mods = 'LEADER', 
-        action = act.ActivateKeyTable {
-            name = 'pane_control',
-            one_shot = false,
-            timeout_milliseconds = 0,
-        }
-    },
-    
-    -- Активируем режим управления шрифтом (Alt+A, f)
-    { 
-        key = 'f', 
-        mods = 'LEADER', 
-        action = act.ActivateKeyTable {
-            name = 'font_control',
-            one_shot = false,
-            timeout_milliseconds = 0,
-        }
-    },
-    
-    -- Различные уровни прозрачности (Alt+A, затем цифра)
+    -- Различные уровни прозрачности через лидер-клавишу
     { key = '0', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.00') },
     { key = '1', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.05') },
     { key = '2', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.15') },
@@ -79,7 +56,22 @@ local keys = {
     { key = '9', mods = 'LEADER', action = act.EmitEvent('reset-to-defaults') },
     { key = 'b', mods = 'LEADER', action = act.EmitEvent('change-background') },
     
-    -- Черный фон (Command+0 на macOS)
+    -- Активация режимов через прямые клавиши вместо LEADER
+    -- Alt+P - режим управления панелями
+    { key = 'p', mods = 'ALT', action = act.ActivateKeyTable {
+        name = 'pane_control',
+        one_shot = false,
+        timeout_milliseconds = 0,
+    }},
+    
+    -- Alt+F - режим управления шрифтом
+    { key = 'f', mods = 'ALT', action = act.ActivateKeyTable {
+        name = 'font_control',
+        one_shot = false,
+        timeout_milliseconds = 0,
+    }},
+    
+    -- Черный фон с хорошо видимой картинкой (Command+0 на macOS)
     { key = '0', mods = mod.SUPER, action = act.EmitEvent('set-black-background') },
     
     -- Горячие клавиши для смены фона
@@ -89,7 +81,8 @@ local keys = {
     { key = 'c', mods = mod.SUPER, action = act.CopyTo('Clipboard') },
     { key = 'v', mods = mod.SUPER, action = act.PasteFrom('Clipboard') },
     
-    -- Управление вкладками
+    -- Управление вкладками --
+    -- Создание/Закрытие вкладок
     { key = 't', mods = mod.SUPER, action = act.SpawnTab('DefaultDomain') },
     { key = 'w', mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = false }) },
     
@@ -99,13 +92,17 @@ local keys = {
     { key = 'LeftArrow', mods = mod.SUPER_REV, action = act.MoveTabRelative(-1) },
     { key = 'RightArrow', mods = mod.SUPER_REV, action = act.MoveTabRelative(1) },
     
-    -- Управление окнами
+    -- Управление окнами --
+    -- Создание нового окна
     { key = 'n', mods = mod.SUPER, action = act.SpawnWindow },
     
     -- Переименование вкладки
     { key = 'R', mods = 'CTRL|SHIFT', action = act.PromptInputLine({
         description = 'Enter new name for tab',
         action = wezterm.action_callback(function(window, pane, line)
+            -- line будет nil, если нажали escape
+            -- Пустая строка, если просто нажали enter
+            -- Или текст, который ввели
             if line then
                 window:active_tab():set_title(line)
             end
@@ -131,7 +128,7 @@ return {
     leader = leader,
     keys = keys,
     key_tables = {
-        -- Таблица для управления панелями (Alt+A, затем p)
+        -- Таблица для управления панелями (Alt+P активирует)
         pane_control = {
             -- Разделение панелей
             { key = '-', action = act.SplitHorizontal({ domain = 'CurrentPaneDomain' }) },
@@ -162,7 +159,7 @@ return {
             { key = 'q', action = 'PopKeyTable' },
         },
         
-        -- Таблица для управления шрифтом (Alt+A, затем f)
+        -- Таблица для управления шрифтом (Alt+F активирует)
         font_control = {
             -- Управление шрифтом (стрелки вверх/вниз)
             { key = 'UpArrow', action = act.IncreaseFontSize },
