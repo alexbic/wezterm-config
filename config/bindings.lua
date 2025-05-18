@@ -18,6 +18,22 @@ end
 -- Устанавливаем лидер-клавишу Alt+A для специальных функций
 local leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
+-- Функция для отображения активной таблицы клавиш - установлена в начале чтобы убрать моргание
+wezterm.on('update-right-status', function(window, pane)
+    local name = window:active_key_table()
+    local status = ""
+    
+    if name then
+        status = 'MODE: ' .. name
+    end
+    
+    -- Устанавливаем статус только если он изменился
+    local current_status = window:get_right_status()
+    if current_status ~= status then
+        window:set_right_status(status)
+    end
+end)
+
 -- Клавиши для основных функций
 local keys = {
     -- Общие функции --
@@ -43,16 +59,18 @@ local keys = {
     -- Черный фон с хорошо видимой картинкой (Command+0 на macOS)
     { key = '0', mods = mod.SUPER, action = act.EmitEvent('set-black-background') },
     
-    -- Активаторы для key_tables (таблиц клавиш)
+    -- Активаторы для key_tables (таблиц клавиш) - настроены на постоянные режимы
     { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable({
         name = 'pane_control',   -- Alt+A, затем p для управления панелями
-        one_shot = false,
-        timeout_milliseconds = 1000,
+        one_shot = false,        -- Отключаем одноразовый режим
+        timeout_milliseconds = 0, -- Отключаем таймаут (0 = бесконечно)
+        until_unknown = false,    -- Не выходить при неизвестной клавише
     })},
     { key = 'f', mods = 'LEADER', action = act.ActivateKeyTable({
         name = 'font_control',   -- Alt+A, затем f для управления шрифтом
-        one_shot = false,
-        timeout_milliseconds = 1000,
+        one_shot = false,        -- Отключаем одноразовый режим
+        timeout_milliseconds = 0, -- Отключаем таймаут (0 = бесконечно)
+        until_unknown = false,    -- Не выходить при неизвестной клавише
     })},
 
     -- Горячие клавиши для смены фона
@@ -100,15 +118,6 @@ local keys = {
     { key = 'ç', mods = 'ALT', action = act.SendString("}") },
     { key = '*', mods = 'ALT', action = act.SendString("{") },
 }
-
--- Функция для отображения активной таблицы клавиш
-wezterm.on('update-right-status', function(window, pane)
-    local name = window:active_key_table()
-    if name then
-        name = 'MODE: ' .. name
-    end
-    window:set_right_status(name or '')
-end)
 
 -- Все остальные настройки
 return {
