@@ -18,7 +18,10 @@ end
 -- Устанавливаем лидер-клавишу Alt+A для специальных функций
 local leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
--- Функция для отображения активной таблицы клавиш
+-- Храним последний статус чтобы избежать мерцания
+local last_status = ""
+
+-- Обновляем статус только если он изменился
 wezterm.on('update-right-status', function(window, pane)
     local name = window:active_key_table()
     local status = ""
@@ -27,10 +30,10 @@ wezterm.on('update-right-status', function(window, pane)
         status = 'MODE: ' .. name
     end
     
-    -- Устанавливаем статус только если он изменился
-    local current_status = window:get_right_status()
-    if current_status ~= status then
+    -- Обновляем только если статус действительно изменился
+    if last_status ~= status then
         window:set_right_status(status)
+        last_status = status
     end
 end)
 
@@ -45,59 +48,56 @@ local keys = {
     { key = 'F12',    mods = 'NONE',        action = act.ShowDebugOverlay },
     { key = 'f',      mods = mod.SUPER,     action = act.Search({ CaseInSensitiveString = '' }) },
     
-    -- Различные уровни прозрачности через лидер-клавишу
-    { key = '0', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.00') },
-    { key = '1', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.05') },
-    { key = '2', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.15') },
-    { key = '3', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.25') },
-    { key = '4', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.4') },
-    { key = '5', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.6') },
-    { key = '6', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.8') },
-    { key = '9', mods = 'LEADER', action = act.EmitEvent('reset-to-defaults') },
-    { key = 'b', mods = 'LEADER', action = act.EmitEvent('change-background') },
-    
-    -- Активация режимов через прямые клавиши вместо LEADER
-    -- Alt+P - режим управления панелями
-    { key = 'p', mods = 'ALT', action = act.ActivateKeyTable {
-        name = 'pane_control',
-        one_shot = false,
-        timeout_milliseconds = 0,
-    }},
-    
-    -- Alt+F - режим управления шрифтом
-    { key = 'f', mods = 'ALT', action = act.ActivateKeyTable {
-        name = 'font_control',
-        one_shot = false,
-        timeout_milliseconds = 0,
-    }},
+    -- Различные уровни прозрачности (Alt+A, затем цифра)
+    { key = '0', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.00') },  -- Полная прозрачность
+    { key = '1', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.05') },  -- 5% непрозрачности
+    { key = '2', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.15') },  -- 15% непрозрачности
+    { key = '3', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.25') },  -- 25% непрозрачности
+    { key = '4', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.4') },   -- 40% непрозрачности
+    { key = '5', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.6') },   -- 60% непрозрачности
+    { key = '6', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.8') },   -- 80% непрозрачности
+    { key = '9', mods = 'LEADER', action = act.EmitEvent('reset-to-defaults') }, -- Сброс к настройкам по умолчанию
+    { key = 'b', mods = 'LEADER', action = act.EmitEvent('change-background') }, -- Смена фона
     
     -- Черный фон с хорошо видимой картинкой (Command+0 на macOS)
     { key = '0', mods = mod.SUPER, action = act.EmitEvent('set-black-background') },
     
+    -- Активаторы для key_tables (таблиц клавиш) - для активации режимов
+    { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable({
+        name = 'pane_control',   -- Alt+A, затем p для управления панелями
+        one_shot = false,        -- Режим остается активным до явного выхода
+        timeout_milliseconds = 0, -- Нет таймаута
+    })},
+    { key = 'f', mods = 'LEADER', action = act.ActivateKeyTable({
+        name = 'font_control',   -- Alt+A, затем f для управления шрифтом
+        one_shot = false,        -- Режим остается активным до явного выхода
+        timeout_milliseconds = 0, -- Нет таймаута
+    })},
+
     -- Горячие клавиши для смены фона
-    { key = 'b', mods = 'CMD|SHIFT', action = act.EmitEvent('change-background') },
+    { key = 'b', mods = 'CMD|SHIFT', action = act.EmitEvent('change-background') }, -- Shift+Command+B
     
     -- Копирование/Вставка
-    { key = 'c', mods = mod.SUPER, action = act.CopyTo('Clipboard') },
-    { key = 'v', mods = mod.SUPER, action = act.PasteFrom('Clipboard') },
+    { key = 'c', mods = mod.SUPER, action = act.CopyTo('Clipboard') },       -- Command+C
+    { key = 'v', mods = mod.SUPER, action = act.PasteFrom('Clipboard') },    -- Command+V
     
     -- Управление вкладками --
     -- Создание/Закрытие вкладок
-    { key = 't', mods = mod.SUPER, action = act.SpawnTab('DefaultDomain') },
-    { key = 'w', mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = false }) },
+    { key = 't', mods = mod.SUPER, action = act.SpawnTab('DefaultDomain') },           -- Command+T: новая вкладка
+    { key = 'w', mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = false }) }, -- Command+Control+W: закрыть вкладку
     
     -- Навигация между вкладками
-    { key = 'LeftArrow', mods = mod.SUPER, action = act.ActivateTabRelative(-1) },
-    { key = 'RightArrow', mods = mod.SUPER, action = act.ActivateTabRelative(1) },
-    { key = 'LeftArrow', mods = mod.SUPER_REV, action = act.MoveTabRelative(-1) },
-    { key = 'RightArrow', mods = mod.SUPER_REV, action = act.MoveTabRelative(1) },
+    { key = 'LeftArrow', mods = mod.SUPER, action = act.ActivateTabRelative(-1) },    -- Command+← предыдущая вкладка
+    { key = 'RightArrow', mods = mod.SUPER, action = act.ActivateTabRelative(1) },    -- Command+→ следующая вкладка
+    { key = 'LeftArrow', mods = mod.SUPER_REV, action = act.MoveTabRelative(-1) },    -- Command+Control+← переместить влево
+    { key = 'RightArrow', mods = mod.SUPER_REV, action = act.MoveTabRelative(1) },    -- Command+Control+→ переместить вправо
     
     -- Управление окнами --
     -- Создание нового окна
-    { key = 'n', mods = mod.SUPER, action = act.SpawnWindow },
+    { key = 'n', mods = mod.SUPER, action = act.SpawnWindow },  -- Command+N: новое окно
     
     -- Переименование вкладки
-    { key = 'R', mods = 'CTRL|SHIFT', action = act.PromptInputLine({
+    { key = 'R', mods = 'CTRL|SHIFT', action = act.PromptInputLine({  -- Control+Shift+R
         description = 'Enter new name for tab',
         action = wezterm.action_callback(function(window, pane, line)
             -- line будет nil, если нажали escape
@@ -128,19 +128,19 @@ return {
     leader = leader,
     keys = keys,
     key_tables = {
-        -- Таблица для управления панелями (Alt+P активирует)
+        -- Таблица для управления панелями (Alt+A, затем p)
         pane_control = {
             -- Разделение панелей
-            { key = '-', action = act.SplitHorizontal({ domain = 'CurrentPaneDomain' }) },
-            { key = '_', action = act.SplitVertical({ domain = 'CurrentPaneDomain' }) },
-            { key = 'x', action = act.CloseCurrentPane({ confirm = true }) },
-            { key = 'z', action = act.TogglePaneZoomState },
+            { key = '-', action = act.SplitHorizontal({ domain = 'CurrentPaneDomain' }) }, -- Горизонтальное разделение
+            { key = '_', action = act.SplitVertical({ domain = 'CurrentPaneDomain' }) },   -- Вертикальное разделение
+            { key = 'x', action = act.CloseCurrentPane({ confirm = true }) },              -- Закрыть панель
+            { key = 'z', action = act.TogglePaneZoomState },                               -- Увеличить/уменьшить панель
             
             -- Навигация между панелями (стрелки)
-            { key = 'LeftArrow', action = act.ActivatePaneDirection('Left') },
-            { key = 'DownArrow', action = act.ActivatePaneDirection('Down') },
-            { key = 'UpArrow', action = act.ActivatePaneDirection('Up') },
-            { key = 'RightArrow', action = act.ActivatePaneDirection('Right') },
+            { key = 'LeftArrow', action = act.ActivatePaneDirection('Left') },    -- Панель слева
+            { key = 'DownArrow', action = act.ActivatePaneDirection('Down') },    -- Панель снизу
+            { key = 'UpArrow', action = act.ActivatePaneDirection('Up') },        -- Панель сверху
+            { key = 'RightArrow', action = act.ActivatePaneDirection('Right') },  -- Панель справа
             
             -- Добавляем также навигацию клавишами h,j,k,l для vim-пользователей
             { key = 'h', action = act.ActivatePaneDirection('Left') },
@@ -149,34 +149,34 @@ return {
             { key = 'l', action = act.ActivatePaneDirection('Right') },
             
             -- Изменение размера панелей (Shift+стрелки)
-            { key = 'LeftArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Left', 1 }) },
-            { key = 'DownArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Down', 1 }) },
-            { key = 'UpArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Up', 1 }) },
-            { key = 'RightArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Right', 1 }) },
+            { key = 'LeftArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Left', 1 }) },   -- Уменьшить ширину
+            { key = 'DownArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Down', 1 }) },   -- Увеличить высоту
+            { key = 'UpArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Up', 1 }) },       -- Уменьшить высоту
+            { key = 'RightArrow', mods = 'SHIFT', action = act.AdjustPaneSize({ 'Right', 1 }) }, -- Увеличить ширину
             
             -- Выход из режима
-            { key = 'Escape', action = 'PopKeyTable' },
-            { key = 'q', action = 'PopKeyTable' },
+            { key = 'Escape', action = 'PopKeyTable' },  -- Escape для выхода
+            { key = 'q', action = 'PopKeyTable' },       -- q для выхода
         },
         
-        -- Таблица для управления шрифтом (Alt+F активирует)
+        -- Отдельная таблица для управления шрифтом (Alt+A, затем f)
         font_control = {
             -- Управление шрифтом (стрелки вверх/вниз)
-            { key = 'UpArrow', action = act.IncreaseFontSize },
-            { key = 'DownArrow', action = act.DecreaseFontSize },
-            { key = 'r', action = act.ResetFontSize },
-            { key = '0', action = act.ResetFontSize },
+            { key = 'UpArrow', action = act.IncreaseFontSize },    -- Увеличить размер шрифта
+            { key = 'DownArrow', action = act.DecreaseFontSize },  -- Уменьшить размер шрифта
+            { key = 'r', action = act.ResetFontSize },             -- Сбросить размер шрифта
+            { key = '0', action = act.ResetFontSize },             -- Сбросить размер шрифта (альтернатива)
             
             -- Выход из режима
-            { key = 'Escape', action = 'PopKeyTable' },
-            { key = 'q', action = 'PopKeyTable' },
+            { key = 'Escape', action = 'PopKeyTable' },  -- Escape для выхода
+            { key = 'q', action = 'PopKeyTable' },       -- q для выхода
         },
     },
     
     mouse_bindings = {
         -- Перетаскивание окна с помощью мыши
-        { event = { Drag = { streak = 1, button = 'Left' } }, mods = 'SUPER', action = wezterm.action.StartWindowDrag },
-        { event = { Drag = { streak = 1, button = 'Left' } }, mods = 'CTRL|SHIFT', action = wezterm.action.StartWindowDrag },
+        { event = { Drag = { streak = 1, button = 'Left' } }, mods = 'SUPER', action = wezterm.action.StartWindowDrag },       -- Command+левая кнопка
+        { event = { Drag = { streak = 1, button = 'Left' } }, mods = 'CTRL|SHIFT', action = wezterm.action.StartWindowDrag },  -- Control+Shift+левая кнопка
         
         -- Control+клик для открытия ссылки под курсором
         { event = { Up = { streak = 1, button = 'Left' } }, mods = 'CTRL', action = act.OpenLinkAtMouseCursor },
