@@ -18,8 +18,26 @@ local function log(message)
   end
 end
 
+-- Проверка существования директории
+local function directory_exists(path)
+  local ok, err, code = os.rename(path, path)
+  if not ok and code == 13 then
+    -- Код 13 означает "Permission denied", но директория существует
+    return true
+  end
+  return ok
+end
+
+-- Имеет ли директория файлы изображений
+local has_background_images = false
+
 -- Получение всех картинок из директории
 local function get_files_from_dir(dir, extension)
+  if not directory_exists(dir) then
+    log("Директория " .. dir .. " не существует")
+    return {}
+  end
+  
   local files = {}
   local handle = io.popen('find "' .. dir .. '" -type f -name "*.' .. extension .. '" 2>/dev/null')
   if handle then
@@ -34,17 +52,24 @@ end
 -- Инициализация списка фоновых изображений
 local background_files = {}
 log("\n\n=============== Перезагрузка конфигурации ===============")
-for _, ext in ipairs({'png', 'jpg'}) do
-  local files = get_files_from_dir(backgrounds_dir, ext)
-  for _, file in ipairs(files) do
-    table.insert(background_files, file)
+
+if directory_exists(backgrounds_dir) then
+  for _, ext in ipairs({'png', 'jpg', 'jpeg'}) do
+    local files = get_files_from_dir(backgrounds_dir, ext)
+    for _, file in ipairs(files) do
+      table.insert(background_files, file)
+    end
   end
+  log("Найдено " .. #background_files .. " фоновых изображений")
+  has_background_images = #background_files > 0
+else
+  log("Директория фонов не существует: " .. backgrounds_dir)
 end
-log("Найдено " .. #background_files .. " фоновых изображений")
 
 -- Функция для получения случайного фона
 local function get_random_background()
-  if #background_files == 0 then return nil end
+  if not has_background_images then return nil end
+  
   math.randomseed(os.time())
   local index = math.random(1, #background_files)
   local bg = background_files[index]
@@ -56,9 +81,12 @@ end
 if not wezterm.GLOBALS then wezterm.GLOBALS = {} end
 if not wezterm.GLOBALS.tab_backgrounds then wezterm.GLOBALS.tab_backgrounds = {} end
 if not wezterm.GLOBALS.last_active_tab then wezterm.GLOBALS.last_active_tab = {} end
+if not wezterm.GLOBALS.current_opacity_index then wezterm.GLOBALS.current_opacity_index = 6 end -- Начинаем с непрозрачного (индекс 6)
 
 -- Получаем фон для вкладки
 local function get_background_for_tab(tab_id)
+  if not has_background_images then return nil end
+  
   if not wezterm.GLOBALS.tab_backgrounds[tab_id] then
     wezterm.GLOBALS.tab_backgrounds[tab_id] = get_random_background()
     log("Создан новый фон для вкладки " .. tab_id .. ": " .. (wezterm.GLOBALS.tab_backgrounds[tab_id] or "нет"))
@@ -99,10 +127,140 @@ local function set_appearance(config)
   end
 end
 
+-- Настройки для циклической смены прозрачности
+local opacity_settings = {
+  -- индекс 0: 10% непрозрачности (минимальная прозрачность)
+  {
+    opacity = 0.1,
+    hsb = has_background_images and {
+      brightness = 0.4,
+      saturation = 1.0,
+      hue = 1.0
+    } or nil,
+    title = "Opacity: 10%"
+  },
+  -- индекс 1: 20% непрозрачности
+  {
+    opacity = 0.2,
+    hsb = has_background_images and {
+      brightness = 0.4,
+      saturation = 1.0,
+      hue = 1.0
+    } or nil,
+    title = "Opacity: 20%"
+  },
+  -- индекс 2: 35% непрозрачности
+  {
+    opacity = 0.35,
+    hsb = has_background_images and {
+      brightness = 0.4,
+      saturation = 1.0,
+      hue = 1.0
+    } or nil,
+    title = "Opacity: 35%"
+  },
+  -- индекс 3: 50% непрозрачности
+  {
+    opacity = 0.5,
+    hsb = has_background_images and {
+      brightness = 0.4,
+      saturation = 1.0,
+      hue = 1.0
+    } or nil,
+    title = "Opacity: 50%"
+  },
+  -- индекс 4: 65% непрозрачности
+  {
+    opacity = 0.65,
+    hsb = has_background_images and {
+      brightness = 0.4,
+      saturation = 1.0,
+      hue = 1.0
+    } or nil,
+    title = "Opacity: 65%"
+  },
+  -- индекс 5: 80% непрозрачности
+  {
+    opacity = 0.8,
+    hsb = has_background_images and {
+      brightness = 0.4,
+      saturation = 1.0,
+      hue = 1.0
+    } or nil,
+    title = "Opacity: 80%"
+  },
+  -- индекс 6: 100% непрозрачности (черный фон для изображения)
+  {
+    opacity = 1.0,
+    hsb = has_background_images and {
+      brightness = 0.4,
+      saturation = 1.0,
+      hue = 1.0
+    } or nil,
+    title = "Opacity: 100%"
+  }
+}
+
+-- Обработчик для переключения видимости панели закладок
+wezterm.on("toggle-tab-bar", function(window, pane)
+  local overrides = window:get_config_overrides() or {}
+  overrides.enable_tab_bar = not overrides.enable_tab_bar
+  window:set_config_overrides(overrides)
+  log("Переключение видимости панели закладок: " .. tostring(overrides.enable_tab_bar))
+end)
+
+-- Обработчик для циклического переключения прозрачности вперед
+wezterm.on("cycle-opacity-forward", function(window, pane)
+  -- Увеличиваем индекс и обрабатываем переход к началу
+  wezterm.GLOBALS.current_opacity_index = (wezterm.GLOBALS.current_opacity_index + 1) % #opacity_settings
+  local settings = opacity_settings[wezterm.GLOBALS.current_opacity_index + 1]
+  
+  -- Применяем новые настройки
+  local overrides = window:get_config_overrides() or {}
+  overrides.window_background_opacity = settings.opacity
+  
+  if has_background_images and settings.hsb then
+    overrides.window_background_image_hsb = settings.hsb
+  end
+  
+  window:set_config_overrides(overrides)
+  
+  -- Выводим информацию о прозрачности
+  window:set_title(settings.title)
+  log("Установка прозрачности (вперед): " .. settings.opacity .. " (" .. settings.title .. ")")
+end)
+
+-- Обработчик для циклического переключения прозрачности назад
+wezterm.on("cycle-opacity-backward", function(window, pane)
+  -- Уменьшаем индекс и обрабатываем переход к концу
+  wezterm.GLOBALS.current_opacity_index = (wezterm.GLOBALS.current_opacity_index - 1)
+  if wezterm.GLOBALS.current_opacity_index < 0 then
+    wezterm.GLOBALS.current_opacity_index = #opacity_settings - 1
+  end
+  
+  local settings = opacity_settings[wezterm.GLOBALS.current_opacity_index + 1]
+  
+  -- Применяем новые настройки
+  local overrides = window:get_config_overrides() or {}
+  overrides.window_background_opacity = settings.opacity
+  
+  if has_background_images and settings.hsb then
+    overrides.window_background_image_hsb = settings.hsb
+  end
+  
+  window:set_config_overrides(overrides)
+  
+  -- Выводим информацию о прозрачности
+  window:set_title(settings.title)
+  log("Установка прозрачности (назад): " .. settings.opacity .. " (" .. settings.title .. ")")
+end)
+
 -- Регистрируем обработчики событий
 local function register_handlers()
   -- Обработчик смены фона при смене вкладки
   wezterm.on('update-status', function(window, pane)
+    if not has_background_images then return end
+    
     -- Проверяем, изменилась ли активная вкладка
     local tab = window:active_tab()
     if not tab then return end
@@ -131,6 +289,11 @@ local function register_handlers()
 
   -- Обработчик смены фона
   wezterm.on('change-background', function(window, pane)
+    if not has_background_images then
+      log("Смена фона невозможна - нет доступных изображений")
+      return
+    end
+    
     log("Событие смены фона")
     local tab = window:active_tab()
     if not tab then
@@ -148,88 +311,13 @@ local function register_handlers()
     window:set_config_overrides(overrides)
   end)
 
-  -- Использование универсальной функции для всех настроек внешнего вида
-  
-  -- Настройки прозрачности
-  wezterm.on('set-opacity-0.00', set_appearance({
-    opacity = 0.00,
-    title = "Opacity: 0%",
-    log_message = "Установка прозрачности 0.00"
-  }))
-  
-  wezterm.on('set-opacity-0.05', set_appearance({
-    opacity = 0.05,
-    title = "Opacity: 5%",
-    log_message = "Установка прозрачности 0.05"
-  }))
-  
-  wezterm.on('set-opacity-0.15', set_appearance({
-    opacity = 0.15,
-    title = "Opacity: 15%",
-    log_message = "Установка прозрачности 0.15"
-  }))
-  
-  wezterm.on('set-opacity-0.25', set_appearance({
-    opacity = 0.25,
-    title = "Opacity: 25%",
-    log_message = "Установка прозрачности 0.25"
-  }))
-  
-  wezterm.on('set-opacity-0.4', set_appearance({
-    opacity = 0.4,
-    title = "Opacity: 40%",
-    log_message = "Установка прозрачности 0.4"
-  }))
-  
-  wezterm.on('set-opacity-0.6', set_appearance({
-    opacity = 0.6,
-    title = "Opacity: 60%",
-    log_message = "Установка прозрачности 0.6"
-  }))
-  
-  wezterm.on('set-opacity-0.8', set_appearance({
-    opacity = 0.8,
-    title = "Opacity: 80%",
-    log_message = "Установка прозрачности 0.8"
-  }))
-
-  -- Установка черного фона
-  wezterm.on('set-black-background', set_appearance({
-    opacity = 1.0,
-    hsb = {
-      brightness = 0.4,
-      saturation = 1.0,
-      hue = 1.0,
-    },
-    title = "Solid Background (картинка на черном фоне)",
-    log_message = "Установка черного фона"
-  }))
-
-  -- Сброс к настройкам по умолчанию
-  wezterm.on('reset-to-defaults', set_appearance({
-    opacity = 1.0,  -- Изменено на 1.0 для непрозрачного фона
-    hsb = {
-      brightness = 0.4,
-      saturation = 1.0,
-      hue = 1.0,
-    },
-    title = "Default Settings (непрозрачный фон)",
-    log_message = "Сброс к настройкам по умолчанию"
-  }))
-
-  -- Командная палитра с командами для управления прозрачностью
+  -- Командная палитра с командами для управления
   wezterm.on('augment-command-palette', function(window, pane)
     return {
-      { brief = 'Прозрачность 0% (полностью прозрачный)', action = wezterm.action.EmitEvent('set-opacity-0.00') },
-      { brief = 'Прозрачность 5%', action = wezterm.action.EmitEvent('set-opacity-0.05') },
-      { brief = 'Прозрачность 15%', action = wezterm.action.EmitEvent('set-opacity-0.15') },
-      { brief = 'Прозрачность 25%', action = wezterm.action.EmitEvent('set-opacity-0.25') },
-      { brief = 'Прозрачность 40%', action = wezterm.action.EmitEvent('set-opacity-0.4') },
-      { brief = 'Прозрачность 60%', action = wezterm.action.EmitEvent('set-opacity-0.6') },
-      { brief = 'Прозрачность 80%', action = wezterm.action.EmitEvent('set-opacity-0.8') },
-      { brief = 'Сбросить настройки по умолчанию', action = wezterm.action.EmitEvent('reset-to-defaults') },
+      { brief = 'Циклическое переключение прозрачности (вперед)', action = wezterm.action.EmitEvent('cycle-opacity-forward') },
+      { brief = 'Циклическое переключение прозрачности (назад)', action = wezterm.action.EmitEvent('cycle-opacity-backward') },
       { brief = 'Сменить фоновое изображение', action = wezterm.action.EmitEvent('change-background') },
-      { brief = 'Черный фон + картинка', action = wezterm.action.EmitEvent('set-black-background') },
+      { brief = 'Переключить видимость панели закладок', action = wezterm.action.EmitEvent('toggle-tab-bar') },
     }
   end)
 end
@@ -251,22 +339,26 @@ local appearance = {
    -- color_scheme = 'Gruvbox dark, medium (base16)',
    color_scheme = 'Tangoesque (terminal.sexy)',
 
+   -- Настройки окна - улучшение поддержки полноэкранного режима
+   window_decorations = 'INTEGRATED_BUTTONS|RESIZE',
+   adjust_window_size_when_changing_font_size = true,
+   
+   -- Настройки для правильного заполнения экрана в полноэкранном режиме
+   maximized_workspace_usage = true,
+   native_fullscreen = true, -- Использовать нативный полноэкранный режим ОС
+
    -- background
    window_background_opacity = 1.0,  -- Изменено на 1.0 (непрозрачный)
-   window_background_image = get_random_background(), -- Добавляем случайный фон при запуске
-   window_background_image_hsb = {
+   window_background_image = has_background_images and get_random_background() or nil, -- Добавляем случайный фон при запуске
+   window_background_image_hsb = has_background_images and {
      brightness = 0.4,  -- Увеличена яркость для лучшей видимости
      saturation = 1.0,
      hue = 1.0,
-   },
+   } or nil,
 
-   -- scrollbar
-   enable_scroll_bar = true,
-   min_scroll_bar_height = '3cell',
-   colors = {
-      scrollbar_thumb = '#454545',
-   },
-
+   -- Полностью отключаем скроллбар
+   enable_scroll_bar = false,
+   
    -- tab bar
    enable_tab_bar = true,
    hide_tab_bar_if_only_one_tab = false,
@@ -282,24 +374,18 @@ local appearance = {
    cursor_blink_rate = 700,
 
    -- window
-   window_decorations = 'INTEGRATED_BUTTONS|RESIZE',
    integrated_title_button_style = 'Windows',
    integrated_title_button_color = 'auto',
    integrated_title_button_alignment = 'Right',
    initial_cols = 120,
    initial_rows = 24,
    window_padding = {
-      left = 5,
-      right = 10,
-      top = 12,
-      bottom = 7,
+      left = 20,   -- Уменьшаем до нуля для максимального места контенту
+      right = 20,  -- Уменьшаем до нуля для максимального места контенту
+      top = 2,    -- Уменьшаем до нуля для максимального места контенту
+      bottom = 2, -- Уменьшаем до нуля для максимального места контенту
    },
    window_close_confirmation = 'AlwaysPrompt',
-   window_frame = {
-      active_titlebar_bg = '#090909',
-      -- font = fonts.font,
-      -- font_size = fonts.font_size,
-   },
    inactive_pane_hsb = { saturation = 1.0, brightness = 1.0 },
 }
 

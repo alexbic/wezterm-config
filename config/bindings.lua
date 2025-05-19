@@ -20,13 +20,6 @@ local leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 1000 }
 
 -- Клавиши для основных функций
 local keys = {
-
-  -- Горячая клавиша для очистки мусора от Powerline (Alt+C)
-{ key = 'c', mods = 'ALT', action = wezterm.action.EmitEvent('user-var-changed', {
-  name = 'clean_powerline_artifacts',
-  value = 'clean',
- })},
-
     -- Общие функции --
     { key = 'F1',     mods = 'NONE',        action = 'ActivateCopyMode' },
     { key = 'F2',     mods = 'NONE',        action = act.ActivateCommandPalette },
@@ -36,20 +29,15 @@ local keys = {
     { key = 'F12',    mods = 'NONE',        action = act.ShowDebugOverlay },
     { key = 'f',      mods = mod.SUPER,     action = act.Search({ CaseInSensitiveString = '' }) },
 
-     -- Черный фон с хорошо видимой картинкой (Command+0 (⌘+0) на macOS)
-    { key = '0', mods = 'CTRL', action = act.EmitEvent('set-black-background') },
+    -- Циклическое изменение прозрачности
+    { key = '0', mods = 'CTRL', action = act.EmitEvent('cycle-opacity-forward') },         -- Ctrl+0: вперед
+    { key = '9', mods = 'CTRL', action = act.EmitEvent('cycle-opacity-backward') },        -- Ctrl+9: назад
     
-    -- Различные уровни прозрачности (Command+A, затем цифра на macOS)
-    { key = '0', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.00') },  -- Полная прозрачность
-    { key = '1', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.05') },  -- 5% непрозрачности
-    { key = '2', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.15') },  -- 15% непрозрачности
-    { key = '3', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.25') },  -- 25% непрозрачности
-    { key = '4', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.4') },   -- 40% непрозрачности
-    { key = '5', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.6') },   -- 60% непрозрачности
-    { key = '6', mods = 'LEADER', action = act.EmitEvent('set-opacity-0.8') },   -- 80% непрозрачности
-    { key = '9', mods = 'LEADER', action = act.EmitEvent('reset-to-defaults') }, -- Сброс к настройкам по умолчанию
-        -- Горячие клавиши для смены фона
-    { key = 'b', mods = 'CMD|SHIFT', action = act.EmitEvent('change-background') }, -- Command (⌘)+Shift+B 
+    -- Переключение видимости панели закладок
+    { key = 'h', mods = 'SHIFT|SUPER', action = act.EmitEvent('toggle-tab-bar') }, -- Command (⌘)+Shift+H на macOS
+    
+    -- Горячие клавиши для смены фона
+    { key = 'b', mods = 'SHIFT|SUPER', action = act.EmitEvent('change-background') }, -- Command (⌘)+Shift+B 
    
     -- Активаторы для key_tables (таблиц клавиш)
     { key = 'p', mods = 'LEADER', action = act.ActivateKeyTable({

@@ -2,17 +2,19 @@ local wezterm = require('wezterm')
 local math = require('utils.math')
 local M = {}
 
+-- Используем цвет из tab_bar.background (#333333)
 M.separator_char = ' '
 M.colors = {
+   -- Статичные цвета для разных элементов
    date_fg = '#dac835',
-   date_bg = '#181825',
+   date_bg = '#333333',  -- Устанавливаем цвет фона такой же, как у табов (#333333)
    battery_fg = '#dac835',
-   battery_bg = '#181825',
+   battery_bg = '#333333',  -- Устанавливаем цвет фона такой же, как у табов (#333333)
    separator_fg = '#dccb00',
-   separator_bg = '#181825',
+   separator_bg = '#333333',  -- Устанавливаем цвет фона такой же, как у табов (#333333)
    -- Цвета для режимов
    mode_fg = '#50fa7b', -- Зеленый для режимов
-   mode_bg = '#181825',
+   mode_bg = '#333333',  -- Устанавливаем цвет фона такой же, как у табов (#333333)
 }
 
 M.cells = {} -- wezterm FormatItems (ref: https://wezfurlong.org/wezterm/config/lua/wezterm/format.html)
@@ -85,6 +87,10 @@ end
 M.setup = function()
    wezterm.on('update-right-status', function(window, _pane)
       M.cells = {}
+      
+      -- Заполняем фон статусной строки цветом #333333
+      table.insert(M.cells, { Background = { Color = '#333333' } })
+      table.insert(M.cells, { Text = ' ' })
       
       -- Сначала отображаем активный режим (если есть)
       M.set_mode(window)
