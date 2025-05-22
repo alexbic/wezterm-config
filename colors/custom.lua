@@ -1,3 +1,12 @@
+-- cat > ~/.config/wezterm/colors/custom.lua << 'EOF'
+--
+-- ОПИСАНИЕ: Пользовательская цветовая схема
+-- Определяет модифицированную версию цветовой схемы catppucchin mocha
+-- для использования в терминале. Задаёт цвета для текста, фона, курсора,
+-- выделения, панели вкладок и других элементов интерфейса.
+--
+-- ЗАВИСИМОСТИ: Используется в config.appearance
+
 -- A slightly altered version of catppucchin mocha
 local mocha = {
    rosewater = "#f5e0dc",

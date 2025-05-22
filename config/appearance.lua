@@ -1,3 +1,13 @@
+-- cat > ~/.config/wezterm/config/appearance.lua << 'EOF'
+--
+-- ОПИСАНИЕ: Настройки внешнего вида WezTerm
+-- Управляет визуальным стилем и поведением терминала: цветовая схема,
+-- прозрачность, фоновое изображение, курсор, оформление вкладок и т.д.
+-- Включает функции для циклического изменения прозрачности, смены фона
+-- и другие эффекты.
+--
+-- ЗАВИСИМОСТИ: colors.custom
+
 local wezterm = require('wezterm')
 local colors = require('colors.custom')
 local gpus = wezterm.gui.enumerate_gpus()
@@ -311,7 +321,7 @@ local function register_handlers()
     window:set_config_overrides(overrides)
   end)
 
-  -- Командная палитра с командами для управления
+  -- Командная палитра с командами для управления прозрачностью
   wezterm.on('augment-command-palette', function(window, pane)
     return {
       { brief = 'Циклическое переключение прозрачности (вперед)', action = wezterm.action.EmitEvent('cycle-opacity-forward') },
@@ -339,13 +349,13 @@ local appearance = {
    -- color_scheme = 'Gruvbox dark, medium (base16)',
    color_scheme = 'Tangoesque (terminal.sexy)',
 
-   -- Настройки окна - улучшение поддержки полноэкранного режима
-   window_decorations = 'INTEGRATED_BUTTONS|RESIZE',
-   adjust_window_size_when_changing_font_size = true,
-   
+   -- Настройки окна
+   window_decorations = 'INTEGRATED_BUTTONS|RESIZE',  -- Возвращаем кнопки управления
+
    -- Настройки для правильного заполнения экрана в полноэкранном режиме
-   maximized_workspace_usage = true,
-   native_fullscreen = true, -- Использовать нативный полноэкранный режим ОС
+   -- Используем правильные имена параметров
+   adjust_window_size_when_changing_font_size = true,
+   native_macos_fullscreen_mode = true,  -- Правильное имя параметра для macOS
 
    -- background
    window_background_opacity = 1.0,  -- Изменено на 1.0 (непрозрачный)
@@ -380,12 +390,15 @@ local appearance = {
    initial_cols = 120,
    initial_rows = 24,
    window_padding = {
-      left = 20,   -- Уменьшаем до нуля для максимального места контенту
-      right = 20,  -- Уменьшаем до нуля для максимального места контенту
-      top = 2,    -- Уменьшаем до нуля для максимального места контенту
-      bottom = 2, -- Уменьшаем до нуля для максимального места контенту
+      left = 20,   -- 20 пикселей слева
+      right = 20,  -- 20 пикселей справа
+      top = 2,     -- 2 пикселя сверху
+      bottom = 2,  -- 2 пикселя снизу
    },
-   window_close_confirmation = 'AlwaysPrompt',
+   
+   -- Подтверждение только при закрытии окна
+   window_close_confirmation = "NeverPrompt",  -- Никогда не спрашивать подтверждение
+
    inactive_pane_hsb = { saturation = 1.0, brightness = 1.0 },
 }
 

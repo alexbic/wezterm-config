@@ -1,3 +1,11 @@
+-- cat > ~/.config/wezterm/config/domains.lua << 'EOF'
+--
+-- ОПИСАНИЕ: Определение доменов для подключения
+-- Настраивает домены для подключения по SSH, WSL и UNIX сокетам.
+-- В текущей версии все домены закомментированы и файл служит как шаблон.
+--
+-- ЗАВИСИМОСТИ: Импортируется в launch.lua и wezterm.lua
+
 -- Закомментированный файл domains.lua, будем использовать позже
 return {
    -- ref: https://wezfurlong.org/wezterm/config/lua/SshDomain.html

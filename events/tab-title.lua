@@ -1,15 +1,21 @@
+-- cat > ~/.config/wezterm/events/tab-title.lua << 'EOF'
+--
+-- ОПИСАНИЕ: Настройка заголовков вкладок
+-- Определяет внешний вид заголовков вкладок, включая форматирование, 
+-- отображение иконки администратора, и индикатор непрочитанного вывода.
+--
+-- ЗАВИСИМОСТИ: Загружается в основном wezterm.lua
+
 local wezterm = require("wezterm")
 
--- Inspired by https://github.com/wez/wezterm/discussions/628#discussioncomment-1874614
+-- Inspired by https://github.com/wez/wezterm/discussions/628\#discussioncomment-1874614
 
-local GLYPH_SEMI_CIRCLE_LEFT = ""
--- local GLYPH_SEMI_CIRCLE_LEFT = utf8.char(0xe0b6)
-local GLYPH_SEMI_CIRCLE_RIGHT = ""
--- local GLYPH_SEMI_CIRCLE_RIGHT = utf8.char(0xe0b4)
-local GLYPH_CIRCLE = ""
--- local GLYPH_CIRCLE = utf8.char(0xf111)
-local GLYPH_ADMIN = "ﱾ"
--- local GLYPH_ADMIN = utf8.char(0xfc7e)
+-- Используем UTF-8 символы вместо строковых литералов
+local GLYPH_SEMI_CIRCLE_LEFT = utf8.char(0xe0b6) -- ""
+local GLYPH_SEMI_CIRCLE_RIGHT = utf8.char(0xe0b4) -- ""
+local GLYPH_CIRCLE = utf8.char(0xf111) -- ""
+local GLYPH_ADMIN = utf8.char(0xfc7e) -- "ﱾ"
+local GLYPH_TILDE = utf8.char(0x223c) -- "~"
 
 local M = {}
 
@@ -41,11 +47,11 @@ M.set_title = function(process_name, static_title, active_title, max_width, inse
    inset = inset or 6
 
    if process_name:len() > 0 and static_title:len() == 0 then
-      title = process_name .. " ~ " .. " "
+      title = process_name .. " " .. GLYPH_TILDE .. " " -- Используем явный UTF-8 символ для тильды
    elseif static_title:len() > 0 then
-      title = static_title .. " ~ " .. " "
+      title = static_title .. " " .. GLYPH_TILDE .. " " -- Используем явный UTF-8 символ для тильды
    else
-      title = active_title .. " ㉿ " .. " "
+      title = active_title .. " ㉿ " -- Используем явный Unicode символ
    end
 
    if title:len() > max_width - inset then
@@ -130,27 +136,3 @@ M.setup = function()
 end
 
 return M
-
--- local CMD_ICON = utf8.char(0xe62a)
--- local NU_ICON = utf8.char(0xe7a8)
--- local PS_ICON = utf8.char(0xe70f)
--- local ELV_ICON = utf8.char(0xfc6f)
--- local WSL_ICON = utf8.char(0xf83c)
--- local YORI_ICON = utf8.char(0xf1d4)
--- local NYA_ICON = utf8.char(0xf61a)
---
--- local VIM_ICON = utf8.char(0xe62b)
--- local PAGER_ICON = utf8.char(0xf718)
--- local FUZZY_ICON = utf8.char(0xf0b0)
--- local HOURGLASS_ICON = utf8.char(0xf252)
--- local SUNGLASS_ICON = utf8.char(0xf9df)
---
--- local PYTHON_ICON = utf8.char(0xf820)
--- local NODE_ICON = utf8.char(0xe74e)
--- local DENO_ICON = utf8.char(0xe628)
--- local LAMBDA_ICON = utf8.char(0xfb26)
---
--- local SOLID_LEFT_ARROW = utf8.char(0xe0ba)
--- local SOLID_LEFT_MOST = utf8.char(0x2588)
--- local SOLID_RIGHT_ARROW = utf8.char(0xe0bc)
--- local ADMIN_ICON = utf8.char(0xf49c)
