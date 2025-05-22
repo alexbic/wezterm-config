@@ -39,7 +39,8 @@ if not wezterm.GLOBALS.session_status then
       color = "#FFFFFF",
       duration = 0,
       start_time = 0,
-      timer_id = nil
+      timer_id = nil,
+      hide_mode = false -- флаг для скрытия режима во время уведомления
     },
     
     -- Состояние операций
@@ -169,7 +170,7 @@ M.start_loading = function(window)
     if elapsed > status.loading.max_duration then
       wezterm.log_info("🔄 Таймаут анимации")
       M.stop_loading(window)
-      M.show_notification(window, "Операция превысила лимит времени", "⏰", "#FF9800", 10000)
+      M.show_notification(window, "Операция превысила лимит времени", "⏰", "#FF9800", 10000, true)
       return
     end
     
@@ -204,7 +205,7 @@ M.stop_loading = function(window)
 end
 
 -- Функция для показа уведомления
-M.show_notification = function(window, message, icon, color, duration)
+M.show_notification = function(window, message, icon, color, duration, hide_mode)
   local status = wezterm.GLOBALS.session_status
   
   M.clear_notification(window)
@@ -215,12 +216,19 @@ M.show_notification = function(window, message, icon, color, duration)
   status.notification.color = color or "#FFFFFF"
   status.notification.duration = duration or 10000
   status.notification.start_time = os.time() * 1000
+  status.notification.hide_mode = hide_mode or false -- скрывать ли режим
   
-  wezterm.log_info("📢 Показ уведомления: " .. message)
+  wezterm.log_info("📢 Показ уведомления на " .. duration .. "мс: " .. message .. " (скрыть режим: " .. tostring(hide_mode) .. ")")
   
   status.notification.timer_id = wezterm.time.call_after(duration / 1000, function()
+    wezterm.log_info("📢 Таймер уведомления истек, очищаем уведомление и режим")
     M.clear_notification(window)
-    M.clear_saved_mode()
+    -- ВАЖНО: очищаем режим только ПОСЛЕ показа уведомления о результате
+    if hide_mode then
+      wezterm.time.call_after(0.1, function()
+        M.clear_saved_mode()
+      end)
+    end
   end)
 end
 
@@ -231,6 +239,7 @@ M.clear_notification = function(window)
   if not status.notification.active then return end
   
   status.notification.active = false
+  status.notification.hide_mode = false
   
   if status.notification.timer_id then
     status.notification.timer_id:cancel()
@@ -256,16 +265,18 @@ M.get_status_elements = function()
     })
   end
   
-  -- 2. Режим - показываем ЛИБО текущий ЛИБО сохраненный
-  local mode_to_show = status.current_mode or status.saved_mode
-  if mode_to_show and mode_icons[mode_to_show] then
-    local mode = mode_icons[mode_to_show]
-    table.insert(elements, {
-      type = "mode",
-      icon = mode.icon,
-      text = mode.name,
-      color = mode.color
-    })
+  -- 2. Режим - показываем ТОЛЬКО если уведомление не скрывает его
+  if not status.notification.hide_mode then
+    local mode_to_show = status.current_mode or status.saved_mode
+    if mode_to_show and mode_icons[mode_to_show] then
+      local mode = mode_icons[mode_to_show]
+      table.insert(elements, {
+        type = "mode",
+        icon = mode.icon,
+        text = mode.name,
+        color = mode.color
+      })
+    end
   end
   
   -- 3. Уведомления о результатах
@@ -288,14 +299,14 @@ M.save_session_success = function(window, session_name)
   wezterm.log_info("💾 Успешное сохранение: " .. session_name)
   M.stop_loading(window)
   M.finish_operation()
-  M.show_notification(window, "Сохранено: " .. session_name, "✅", "#4CAF50", 10000)
+  M.show_notification(window, "Сохранено: " .. session_name, "✅", "#4CAF50", 10000, true)
 end
 
 M.save_session_error = function(window, error_msg)
   wezterm.log_info("💾 Ошибка сохранения: " .. error_msg)
   M.stop_loading(window)
   M.finish_operation()
-  M.show_notification(window, "Ошибка сохранения", "❌", "#F44336", 10000)
+  M.show_notification(window, "Ошибка сохранения", "❌", "#F44336", 10000, true)
 end
 
 -- Загрузка сессий
@@ -305,11 +316,34 @@ M.load_session_start = function(window)
   M.start_loading(window)
 end
 
+M.load_session_list_shown = function(window, count)
+  wezterm.log_info("📂 Список показан: " .. count .. " состояний")
+  M.stop_loading(window)
+  M.mark_list_shown()
+  
+  if count == 0 then
+    M.show_notification(window, "Список пуст", "❌", "#FF9800", 10000, true)
+  else
+    -- Краткое уведомление о количестве, НЕ скрывающее режим
+    M.show_notification(window, "Найдено " .. count .. " состояний", "✅", "#2196F3", 2000, false)
+    
+    -- Отменяем автоочистку режима для этого уведомления
+    local status = wezterm.GLOBALS.session_status
+    if status.notification.timer_id then
+      status.notification.timer_id:cancel()
+      status.notification.timer_id = wezterm.time.call_after(2, function()
+        M.clear_notification(window)
+        -- НЕ очищаем режим здесь
+      end)
+    end
+  end
+end
+
 M.load_session_success = function(window, session_name)
-  wezterm.log_info("📂 Успешная загрузка: " .. session_name)
+  wezterm.log_info("📂 Успешная загрузка сессии: " .. session_name)
   M.stop_loading(window)
   M.finish_operation()
-  M.show_notification(window, "Состояние восстановлено: " .. session_name, "✅", "#4CAF50", 10000)
+  M.show_notification(window, "Состояние восстановлено: " .. session_name, "✅", "#4CAF50", 10000, true)
 end
 
 M.load_session_cancelled = function(window)
@@ -326,11 +360,34 @@ M.delete_session_start = function(window)
   M.start_loading(window)
 end
 
+M.delete_session_list_shown = function(window, count)
+  wezterm.log_info("🗑️ Список для удаления показан: " .. count .. " состояний")
+  M.stop_loading(window)
+  M.mark_list_shown()
+  
+  if count == 0 then
+    M.show_notification(window, "Список пуст", "❌", "#FF9800", 10000, true)
+  else
+    -- Краткое уведомление о количестве, НЕ скрывающее режим
+    M.show_notification(window, "Найдено " .. count .. " состояний", "✅", "#2196F3", 2000, false)
+    
+    -- Отменяем автоочистку режима для этого уведомления
+    local status = wezterm.GLOBALS.session_status
+    if status.notification.timer_id then
+      status.notification.timer_id:cancel()
+      status.notification.timer_id = wezterm.time.call_after(2, function()
+        M.clear_notification(window)
+        -- НЕ очищаем режим здесь
+      end)
+    end
+  end
+end
+
 M.delete_session_success = function(window, session_name)
-  wezterm.log_info("🗑️ Успешное удаление: " .. session_name)
+  wezterm.log_info("🗑️ Успешное удаление сессии: " .. session_name)
   M.stop_loading(window)
   M.finish_operation()
-  M.show_notification(window, "Состояние удалено: " .. session_name, "✅", "#9C27B0", 10000)
+  M.show_notification(window, "Состояние удалено: " .. session_name, "✅", "#9C27B0", 10000, true)
 end
 
 M.delete_session_cancelled = function(window)
@@ -345,14 +402,14 @@ M.load_session_error = function(window, error_msg)
   wezterm.log_info("📂 Ошибка загрузки: " .. error_msg)
   M.stop_loading(window)
   M.finish_operation()
-  M.show_notification(window, "Ошибка загрузки", "❌", "#F44336", 10000)
+  M.show_notification(window, "Ошибка загрузки", "❌", "#F44336", 10000, true)
 end
 
 M.delete_session_error = function(window, error_msg)
   wezterm.log_info("🗑️ Ошибка удаления: " .. error_msg)
   M.stop_loading(window)
   M.finish_operation()
-  M.show_notification(window, "Ошибка удаления", "❌", "#F44336", 10000)
+  M.show_notification(window, "Ошибка удаления", "❌", "#F44336", 10000, true)
 end
 
 -- Функция для отладки

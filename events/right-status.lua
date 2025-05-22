@@ -116,14 +116,14 @@ local function setup()
     
     -- ПОРЯДОК: [анимация] [режим] [уведомление] | 📅 дата время
     
-    local has_elements = false
+    local has_mode_elements = false
     
     -- 1. Добавляем анимацию загрузки (самый левый элемент)
     for _, element in ipairs(status_elements) do
       if element.type == "loading" then
         table.insert(display_elements, { Foreground = { Color = element.color } })
         table.insert(display_elements, { Text = element.icon .. " " })
-        has_elements = true
+        has_mode_elements = true
         break
       end
     end
@@ -133,7 +133,7 @@ local function setup()
       if element.type == "mode" then
         table.insert(display_elements, { Foreground = { Color = element.color } })
         table.insert(display_elements, { Text = element.icon .. " " .. element.text .. " " })
-        has_elements = true
+        has_mode_elements = true
         break
       end
     end
@@ -145,13 +145,13 @@ local function setup()
         table.insert(display_elements, { Text = element.icon .. " " })
         table.insert(display_elements, { Foreground = { Color = "#FFFFFF" } })
         table.insert(display_elements, { Text = element.text .. " " })
-        has_elements = true
+        has_mode_elements = true
         break
       end
     end
     
-    -- 4. Добавляем разделитель если есть элементы
-    if has_elements then
+    -- 4. Добавляем разделитель если есть элементы режима
+    if has_mode_elements then
       table.insert(display_elements, { Foreground = { Color = "#666666" } })
       table.insert(display_elements, { Text = "| " })
     end
@@ -164,7 +164,14 @@ local function setup()
     table.insert(display_elements, { Foreground = { Color = '#F8F8F2' } })
     table.insert(display_elements, { Text = time })
     
+    -- Устанавливаем статус
     window:set_right_status(wezterm.format(display_elements))
+    
+    -- Отладочная информация
+    wezterm.log_info("📊 Статус обновлен - элементов: " .. #status_elements .. ", режим: " .. (current_key_table or "нет"))
+    for i, element in ipairs(status_elements) do
+      wezterm.log_info("  - Элемент " .. i .. ": " .. element.type .. " = " .. (element.text or element.icon))
+    end
   end)
   
   -- Добавляем горячую клавишу для принудительной остановки анимации (для отладки)
