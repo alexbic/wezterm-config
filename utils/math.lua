@@ -7,7 +7,7 @@
 -- ЗАВИСИМОСТИ: Используется в различных модулях для математических операций.
 
 local _math = math
-local locale = require('config.locale')
+local environment = require('config.environment')
 
 _math.clamp = function(x, min, max)
    return x < min and min or (x > max and max or x)
@@ -22,9 +22,11 @@ end
 
 function _math.safe_divide(a, b)
    if b == 0 then
-      error(locale.t("division_by_zero"))
+      error(environment.locale.t("division_by_zero"))
    end
    return a / b
 end
+
+wezterm.log_info(environment.locale.t("some_key"))
 
 return _math

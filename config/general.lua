@@ -6,7 +6,7 @@
 --
 -- ЗАВИСИМОСТИ: Импортируется и применяется в wezterm.lua
 
-local locale = require('config.locale')
+local environment = require('config.environment')
 
 return {
    -- behaviours
@@ -58,19 +58,11 @@ return {
       },
    },
 
-   -- Было:
-   -- default_prog = { "/bin/zsh", "-l" },
-   -- welcome_message = "Добро пожаловать в WezTerm!",
-   -- profile_description = "Основной профиль терминала",
-   -- tips = { "Используйте Ctrl+Shift+T для новой вкладки", ... },
-
-   -- Стало:
-   -- default_prog = { "/bin/zsh", "-l" },
-   welcome_message = locale.t("welcome_message"),
-   profile_description = locale.t("profile_description"),
+   welcome_message = environment.locale.t("welcome_message"),
+   profile_description = environment.locale.t("profile_description"),
    tips = {
-     locale.t("tip_new_tab"),
-     locale.t("tip_split_pane"),
+     environment.locale.t("tip_new_tab"),
+     environment.locale.t("tip_split_pane"),
      -- ...другие подсказки...
    },
 }

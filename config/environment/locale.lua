@@ -1,11 +1,14 @@
--- cat > ~/.config/wezterm/config/locale.lua << 'EOF'
+-- cat > ~/.config/wezterm/config/environment/locale.lua << 'EOF'
 --
--- ОПИСАНИЕ: Настройки локали и языка для WezTerm
--- Централизованное управление языковыми настройками интерфейса.
--- Позволяет переопределить системную локаль для отображения даты/времени.
+-- ОПИСАНИЕ: Локализация и языковые настройки окружения WezTerm
+-- Централизованное управление языковыми настройками интерфейса и переменными окружения.
+-- Позволяет переопределить системную локаль для отображения даты/времени и предоставляет переводы интерфейса.
 --
--- ЗАВИСИМОСТИ: Используется в utils.platform и events.right-status
+-- ЗАВИСИМОСТИ: wezterm, используется в utils.platform, events.right-status, config.environment
 
+local wezterm = require('wezterm')
+
+-- Таблица переводов и языковых настроек (см. предыдущий полный пример)
 local available_languages = {
   ru = {
     locale = "ru_RU.UTF-8",
@@ -92,43 +95,33 @@ local available_languages = {
     search_mode = "Search mode",
     operation_completed = "Operation completed",
     error = "Error",
-  },
-  de = {
-    locale = "de_DE.UTF-8",
-    name = "Deutsch",
-    days = {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"},
-    months = {"Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"},
-  },
-  fr = {
-    locale = "fr_FR.UTF-8",
-    name = "Français",
-    days = {"Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"},
-    months = {"Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"},
-  },
-  es = {
-    locale = "es_ES.UTF-8",
-    name = "Español",
-    days = {"Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"},
-    months = {"Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"},
-  },
-  it = { locale = "it_IT.UTF-8", name = "Italiano" },
-  pt = { locale = "pt_BR.UTF-8", name = "Português" },
-  zh = { locale = "zh_CN.UTF-8", name = "中文" },
-  ja = { locale = "ja_JP.UTF-8", name = "日本語" },
-  ko = { locale = "ko_KR.UTF-8", name = "한국어" },
+  }
 }
 
-local M = {
-  available_languages = available_languages,
-  t = function(key)
-    local lang = os.getenv("LANG") or "ru"
-    lang = lang:match("^([a-z]+)") or "ru"
-    return (available_languages[lang] and available_languages[lang][key]) or available_languages["ru"][key] or key
-  end,
-  get_language_table = function(lang)
-    lang = lang or (os.getenv("LANG") or "ru")
-    lang = lang:match("^([a-z]+)") or "ru"
-    return available_languages[lang] or available_languages["ru"]
-  end
+local default_language = os.getenv("WEZTERM_LANG") or "ru"
+local lang_table = available_languages[default_language] or available_languages["ru"]
+
+local function t(key)
+  return lang_table[key] or key
+end
+
+local locale_config = {
+  force_language = default_language,
+  force_locale = lang_table.locale or "ru_RU.UTF-8"
 }
+
+wezterm.log_info(t("set_locale") .. ": " .. locale_config.force_locale)
+
+local M = {
+  t = t,
+  get_language_table = function() return lang_table end,
+  settings = {
+    LANG = locale_config.force_locale,
+    LC_ALL = locale_config.force_locale,
+    LC_TIME = locale_config.force_locale,
+    LC_NUMERIC = locale_config.force_locale,
+    LC_MONETARY = locale_config.force_locale,
+  }
+}
+
 return M

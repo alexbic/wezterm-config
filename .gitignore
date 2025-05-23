@@ -3,9 +3,7 @@
 debug.log
 *.tmp
 *.log
-backdrops/*
-bakup/*
-screenshots/*
-LICENSE
-plugins/*
+*.cache
+*.lock
+	
 

@@ -10,7 +10,7 @@ local wezterm = require('wezterm')
 local platform_module = require('utils.platform')
 local session_status = require('utils.session-status')
 local platform = platform_module()
-local locale = require('config.locale')
+local environment = require('config.environment')
 
 -- Получение дней и месяцев из locale
 local function get_localized_strings(lang)

@@ -1,4 +1,4 @@
-local locale = require('config.locale')
+local environment = require('config.environment')
 
 -- cat > ~/.config/wezterm/config/domains.lua << 'EOF'
 --
@@ -8,7 +8,6 @@ local locale = require('config.locale')
 --
 -- ЗАВИСИМОСТИ: Импортируется в launch.lua и wezterm.lua
 
--- Закомментированный файл domains.lua, будем использовать позже
 return {
    -- ref: https://wezfurlong.org/wezterm/config/lua/SshDomain.html
    ssh_domains = {
@@ -56,5 +55,5 @@ return {
       },
       ]]--
    },
-   description = locale.t("local_terminal"),
+   description = environment.locale.t("local_terminal"),
 }

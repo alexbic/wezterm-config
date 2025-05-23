@@ -8,7 +8,7 @@
 local wezterm = require('wezterm')
 local platform = require('utils.platform')()
 local act = wezterm.action
-local locale = require('config.locale')
+local environment = require('config.environment')
 
 local mod = {}
 if platform.is_mac then
@@ -16,6 +16,8 @@ if platform.is_mac then
 else
   mod.SUPER = 'ALT'    -- Используем ALT на других платформах
 end
+
+wezterm.log_info(environment.locale.t("some_key"))
 
 return {
    -- Перетаскивание окна с помощью мыши

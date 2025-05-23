@@ -7,7 +7,8 @@
 -- ЗАВИСИМОСТИ: Используется в config.fonts, config.bindings, config.launch, events.right-status
 
 local wezterm = require('wezterm')
-local locale = require('config.locale')
+local locale = require('config.environment.locale')
+local environment = require('config.environment')
 
 local function is_found(str, pattern)
    return string.find(str, pattern) ~= nil

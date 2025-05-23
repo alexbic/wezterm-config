@@ -11,7 +11,7 @@ local wezterm = require('wezterm')
 local platform = require('utils.platform')()
 local act = wezterm.action
 local key_tables = require('config.bindings.keyboard-tables')
-local locale = require('config.locale')
+local environment = require('config.environment')
 
 local mod = {}
 
@@ -146,7 +146,7 @@ local keys = {
      key = "t",
      mods = "CTRL|SHIFT",
      action = wezterm.action.SpawnTab "CurrentPaneDomain",
-     description = locale.t("open_new_tab"),
+     description = environment.locale.t("open_new_tab"),
    },
 }
 

@@ -1,13 +1,11 @@
--- cat > ~/.config/wezterm/colors/custom.lua << 'EOF'
+-- cat > ~/.config/wezterm/config/environment/colors.lua << 'EOF'
 --
--- ОПИСАНИЕ: Пользовательская цветовая схема
--- Определяет модифицированную версию цветовой схемы catppucchin mocha
--- для использования в терминале. Задаёт цвета для текста, фона, курсора,
--- выделения, панели вкладок и других элементов интерфейса.
+-- ОПИСАНИЕ: Цветовые схемы и переменные для командной строки и интерфейса
+-- Содержит пользовательскую цветовую схему (catppucchin mocha) и переменные для ls, grep и других утилит.
 --
--- ЗАВИСИМОСТИ: Используется в config.appearance
+-- ЗАВИСИМОСТИ: используется в config.appearance
 
--- A slightly altered version of catppucchin mocha
+-- Пользовательская цветовая схема catppucchin mocha
 local mocha = {
    rosewater = "#f5e0dc",
    flamingo = "#f2cdcd",
@@ -46,24 +44,12 @@ local colorscheme = {
    selection_bg = mocha.surface2,
    selection_fg = mocha.text,
    ansi = {
-      "#0C0C0C", -- black
-      "#C50F1F", -- red
-      "#13A10E", -- green
-      "#C19C00", -- yellow
-      "#0037DA", -- blue
-      "#881798", -- magenta/purple
-      "#3A96DD", -- cyan
-      "#CCCCCC", -- white
+      "#0C0C0C", "#C50F1F", "#13A10E", "#C19C00",
+      "#0037DA", "#881798", "#3A96DD", "#CCCCCC",
    },
    brights = {
-      "#767676", -- black
-      "#E74856", -- red
-      "#16C60C", -- green
-      "#F9F1A5", -- yellow
-      "#3B78FF", -- blue
-      "#B4009E", -- magenta/purple
-      "#61D6D6", -- cyan
-      "#F2F2F2", -- white
+      "#767676", "#E74856", "#16C60C", "#F9F1A5",
+      "#3B78FF", "#B4009E", "#61D6D6", "#F2F2F2",
    },
    tab_bar = {
       background = "#000000",
@@ -96,7 +82,18 @@ local colorscheme = {
    },
    scrollbar_thumb = mocha.surface2,
    split = mocha.overlay0,
-   compose_cursor = mocha.flamingo, -- nightbuild only
+   compose_cursor = mocha.flamingo,
 }
 
-return colorscheme
+local M = {
+  mocha = mocha,
+  colorscheme = colorscheme,
+  -- переменные для командной строки:
+  CLICOLOR = '1',
+  LSCOLORS = 'ExFxBxDxCxegedabagacad',
+  LS_COLORS = 'di=1;34:ln=1;35:so=1;32:pi=1;33:ex=1;31:bd=34;46:cd=34;43:su=30;41:sg=30;46:tw=30;42:ow=30;43',
+  GREP_COLOR = '1;32',
+  GREP_OPTIONS = '--color=auto',
+}
+
+return M

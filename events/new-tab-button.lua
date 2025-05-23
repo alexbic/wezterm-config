@@ -7,7 +7,7 @@
 -- ЗАВИСИМОСТИ: Загружается в основном wezterm.lua
 
 local wezterm = require('wezterm')
-local locale = require('config.locale')
+local environment = require('config.environment')
 
 local M = {}
 
@@ -27,6 +27,6 @@ M.setup = function()
    end)
 end
 
-local tooltip = locale.t("new_tab_tooltip")
+wezterm.log_info(environment.locale.t("some_key"))
 
 return M

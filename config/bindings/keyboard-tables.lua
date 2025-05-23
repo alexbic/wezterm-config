@@ -8,7 +8,7 @@
 
 local wezterm = require('wezterm')
 local act = wezterm.action
-local locale = require('config.locale')
+local environment = require('config.environment')
 
 return {
     session_control = {

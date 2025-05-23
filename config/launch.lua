@@ -7,7 +7,7 @@
 -- ЗАВИСИМОСТИ: utils.platform
 
 local platform = require('utils.platform')()
-local locale = require('config.locale')
+local environment = require('config.environment')
 
 local options = {
    default_prog = {'/bin/zsh', '-l'},
@@ -41,6 +41,6 @@ elseif platform.is_mac then
    }
 end
 
-options.description = locale.t("local_terminal")
+options.description = environment.locale.t("some_key")
 
 return options
