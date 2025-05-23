@@ -7,5 +7,5 @@ backdrops/*
 bakup/*
 screenshots/*
 LICENSE
-plugins/resurrect.wezterm
+plugins/*
 
