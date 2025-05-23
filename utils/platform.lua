@@ -12,6 +12,12 @@ local function is_found(str, pattern)
    return string.find(str, pattern) ~= nil
 end
 
+-- Определяем платформу заранее
+local is_win = is_found(wezterm.target_triple, 'windows')
+local is_linux = is_found(wezterm.target_triple, 'linux')
+local is_mac = is_found(wezterm.target_triple, 'apple')
+local is_wsl = os.getenv("WSL_DISTRO_NAME") ~= nil
+
 -- Безопасная загрузка конфигурации локали (только один раз)
 local locale_config = {}
 local locale_config_loaded = false
@@ -158,11 +164,159 @@ local function refresh_locale_info(platform_info)
   return platform_info
 end
 
+-- НОВАЯ ФУНКЦИЯ: Безопасное выполнение команды с проверкой результата
+local function safe_execute(cmd)
+  local handle = io.popen(cmd .. " 2>&1")
+  if not handle then
+    return nil, "Failed to execute command"
+  end
+  
+  local result = handle:read("*a")
+  local success = handle:close()
+  
+  if success then
+    return result
+  else
+    return nil, result
+  end
+end
+
+-- НОВАЯ ФУНКЦИЯ: Получение списка файлов в директории (кроссплатформенно)
+local function get_files_in_directory(dir, pattern)
+  local files = {}
+  
+  if not dir or dir == "" then
+    return files
+  end
+  
+  local cmd
+  if is_win then
+    -- Windows команда для получения файлов
+    -- Используем where или dir в зависимости от паттерна
+    if pattern then
+      -- Экранируем путь для Windows
+      dir = dir:gsub("/", "\\")
+      cmd = string.format('dir /b /s "%s\\%s" 2>nul', dir, pattern)
+    else
+      dir = dir:gsub("/", "\\")
+      cmd = string.format('dir /b /s "%s" 2>nul', dir)
+    end
+  else
+    -- Unix-подобные системы
+    if pattern then
+      cmd = string.format('find "%s" -type f -name "%s" 2>/dev/null', dir, pattern)
+    else
+      cmd = string.format('find "%s" -type f 2>/dev/null', dir)
+    end
+  end
+  
+  local result, err = safe_execute(cmd)
+  if result then
+    -- Разбираем результат по строкам
+    for line in result:gmatch("[^\r\n]+") do
+      local trimmed = line:match("^%s*(.-)%s*$") -- trim whitespace
+      if trimmed and trimmed ~= "" then
+        -- На Windows преобразуем обратные слеши в прямые для консистентности
+        if is_win then
+          trimmed = trimmed:gsub("\\", "/")
+        end
+        table.insert(files, trimmed)
+      end
+    end
+  else
+    wezterm.log_warn("Ошибка при получении списка файлов: " .. (err or "unknown error"))
+  end
+  
+  return files
+end
+
+-- НОВАЯ ФУНКЦИЯ: Проверка существования директории
+local function directory_exists(path)
+  if not path or path == "" then
+    return false
+  end
+  
+  local cmd
+  
+  if is_win then
+    path = path:gsub("/", "\\")
+    cmd = string.format('if exist "%s\\" (echo 1) else (echo 0)', path)
+  else
+    cmd = string.format('[ -d "%s" ] && echo 1 || echo 0', path)
+  end
+  
+  local result, err = safe_execute(cmd)
+  if result then
+    return result:match("1") ~= nil
+  end
+  
+  return false
+end
+
+-- НОВАЯ ФУНКЦИЯ: Проверка существования файла
+local function file_exists(path)
+  if not path or path == "" then
+    return false
+  end
+  
+  local cmd
+  
+  if is_win then
+    path = path:gsub("/", "\\")
+    cmd = string.format('if exist "%s" (echo 1) else (echo 0)', path)
+  else
+    cmd = string.format('[ -f "%s" ] && echo 1 || echo 0', path)
+  end
+  
+  local result, err = safe_execute(cmd)
+  if result then
+    return result:match("1") ~= nil
+  end
+  
+  return false
+end
+
+-- НОВАЯ ФУНКЦИЯ: Нормализация путей для текущей платформы
+local function normalize_path(path)
+  if not path then return "" end
+  
+  if is_win then
+    -- Для Windows преобразуем / в \
+    return path:gsub("/", "\\")
+  else
+    -- Для Unix преобразуем \ в /
+    return path:gsub("\\", "/")
+  end
+end
+
+-- НОВАЯ ФУНКЦИЯ: Объединение путей
+local function join_paths(...)
+  local separator = is_win and "\\" or "/"
+  
+  local parts = {...}
+  local result = ""
+  
+  for i, part in ipairs(parts) do
+    if part and part ~= "" then
+      if result == "" then
+        result = part
+      else
+        -- Убираем лишние разделители
+        if result:sub(-1) == separator or result:sub(-1) == "/" or result:sub(-1) == "\\" then
+          result = result:sub(1, -2)
+        end
+        if part:sub(1, 1) == separator or part:sub(1, 1) == "/" or part:sub(1, 1) == "\\" then
+          part = part:sub(2)
+        end
+        result = result .. separator .. part
+      end
+    end
+  end
+  
+  return normalize_path(result)
+end
+
 local function platform()
-   local is_win = is_found(wezterm.target_triple, 'windows')
-   local is_linux = is_found(wezterm.target_triple, 'linux')
-   local is_mac = is_found(wezterm.target_triple, 'apple')
-   
    -- Инициализируем кэш только один раз
    if not cache_initialized then
      cached_locale = get_system_locale()
@@ -176,10 +330,18 @@ local function platform()
       is_win = is_win,
       is_linux = is_linux,
       is_mac = is_mac,
+      is_wsl = is_wsl,
       arch = arch,
       target_triple = wezterm.target_triple,
       locale = cached_locale,
       language = cached_language,
+      
+      -- Добавляем новые функции для работы с файловой системой
+      get_files_in_directory = get_files_in_directory,
+      directory_exists = directory_exists,
+      file_exists = file_exists,
+      normalize_path = normalize_path,
+      join_paths = join_paths,
       
       refresh_locale = function(self)
          return refresh_locale_info(self)

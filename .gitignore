@@ -1,4 +1,10 @@
 # WezTerm logs and cache
+.DS_Store
 debug.log
 *.tmp
 *.log
+backdrops/*
+bakup/*
+screenshots/*
+LICENSE
+plugins/resurrect.wezterm

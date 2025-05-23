@@ -40,6 +40,90 @@ elseif platform.is_win then
   paths.appdata = os.getenv("APPDATA") or ""
 end
 
+-- НОВЫЙ РАЗДЕЛ: Настройки путей для внешнего вида
+local appearance_paths = {
+  -- Директория с фоновыми изображениями
+  backgrounds_dir = platform.join_paths(wezterm.config_dir, "backgrounds"),
+  
+  -- Альтернативные пути для фонов (в порядке приоритета)
+  alternative_backgrounds = {
+    platform.join_paths(wezterm.home_dir, ".wezterm", "backgrounds"),
+    platform.join_paths(wezterm.home_dir, "Pictures", "wezterm-backgrounds"),
+    platform.join_paths(wezterm.home_dir, "Documents", "wezterm-backgrounds"),
+  },
+  
+  -- Директория для кастомных цветовых схем
+  color_schemes_dir = platform.join_paths(wezterm.config_dir, "colors"),
+  
+  -- Директория для логов
+  logs_dir = platform.is_win and "C:\\temp" or "/tmp",
+  
+  -- Файл отладки
+  debug_log = platform.is_win and "C:\\temp\\wezterm_debug.log" or "/tmp/wezterm_debug.log",
+  
+  -- Кэш фоновых изображений
+  cache_file = platform.join_paths(wezterm.config_dir, ".backgrounds_cache.json"),
+}
+
+-- НОВЫЙ РАЗДЕЛ: Настройки внешнего вида
+local appearance_settings = {
+  -- Поддерживаемые форматы изображений
+  image_formats = {'png', 'jpg', 'jpeg', 'PNG', 'JPG', 'JPEG', 'webp', 'WEBP'},
+  
+  -- Настройки прозрачности по умолчанию
+  default_opacity = 1.0,
+  default_opacity_step = 0.1,
+  
+  -- HSB настройки для фоновых изображений
+  background_hsb = {
+    brightness = 0.4,
+    saturation = 1.0,
+    hue = 1.0,
+  },
+  
+  -- Настройки логирования
+  enable_debug_logging = true,
+  log_rotation_size = 10 * 1024 * 1024, -- 10MB
+  
+  -- Настройки кэширования
+  enable_background_cache = true,
+  cache_expiry_hours = 24,
+  
+  -- Настройки анимации
+  animation_fps = 60,
+  max_fps = 60,
+  
+  -- Настройки панели вкладок
+  tab_bar_settings = {
+    enable = true,
+    hide_if_only_one = false,
+    use_fancy = true,
+    max_width = 25,
+    show_index = true,
+  },
+  
+  -- Настройки курсора
+  cursor_settings = {
+    style = 'BlinkingBlock',
+    blink_rate = 700,
+    blink_ease_in = 'Constant',
+    blink_ease_out = 'Constant',
+  },
+  
+  -- Настройки окна
+  window_settings = {
+    decorations = 'INTEGRATED_BUTTONS|RESIZE',
+    padding = {
+      left = 20,
+      right = 20,
+      top = 2,
+      bottom = 2,
+    },
+    initial_cols = 120,
+    initial_rows = 24,
+  },
+}
+
 -- Настройки локали с приоритетом конфигурации
 local locale_settings = {}
 
@@ -200,4 +284,7 @@ end
 -- Возвращаем только сериализуемые данные (без функций)
 return {
   set_environment_variables = get_environment_variables(),
+  -- Экспортируем новые настройки для использования в других модулях
+  appearance_paths = appearance_paths,
+  appearance_settings = appearance_settings,
 }

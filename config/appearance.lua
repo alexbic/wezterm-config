@@ -6,74 +6,91 @@
 -- Включает функции для циклического изменения прозрачности, смены фона
 -- и другие эффекты.
 --
--- ЗАВИСИМОСТИ: colors.custom
+-- ЗАВИСИМОСТИ: colors.custom, utils.platform, config.environment
 
 local wezterm = require('wezterm')
 local colors = require('colors.custom')
+local platform = require('utils.platform')()
+local environment = require('config.environment')
 local gpus = wezterm.gui.enumerate_gpus()
-local io = require('io')
-local os = require('os')
 
--- Используем путь относительно конфигурации
-local config_dir = wezterm.config_dir
-local backgrounds_dir = config_dir .. "/backgrounds"
+-- Получаем настройки из environment
+local appearance_paths = environment.appearance_paths
+local appearance_settings = environment.appearance_settings
 
 -- Функция для логгирования
-local debug_file = "/tmp/wezterm_debug.log"
 local function log(message)
-  local file = io.open(debug_file, "a")
+  if not appearance_settings.enable_debug_logging then
+    return
+  end
+  
+  local file = io.open(appearance_paths.debug_log, "a")
   if file then
     file:write(os.date("%Y-%m-%d %H:%M:%S") .. " - " .. message .. "\n")
     file:close()
   end
 end
 
--- Проверка существования директории
-local function directory_exists(path)
-  local ok, err, code = os.rename(path, path)
-  if not ok and code == 13 then
-    -- Код 13 означает "Permission denied", но директория существует
-    return true
-  end
-  return ok
-end
-
 -- Имеет ли директория файлы изображений
 local has_background_images = false
 
--- Получение всех картинок из директории
-local function get_files_from_dir(dir, extension)
-  if not directory_exists(dir) then
-    log("Директория " .. dir .. " не существует")
-    return {}
+-- Функция для поиска изображений во всех возможных директориях
+local function find_all_background_images()
+  local all_files = {}
+  local checked_dirs = {}
+  
+  -- Проверяем основную директорию
+  table.insert(checked_dirs, appearance_paths.backgrounds_dir)
+  
+  -- Добавляем альтернативные директории
+  for _, alt_dir in ipairs(appearance_paths.alternative_backgrounds) do
+    table.insert(checked_dirs, alt_dir)
   end
   
-  local files = {}
-  local handle = io.popen('find "' .. dir .. '" -type f -name "*.' .. extension .. '" 2>/dev/null')
-  if handle then
-    for file in handle:lines() do
-      table.insert(files, file)
+  -- Ищем изображения во всех директориях
+  for _, dir in ipairs(checked_dirs) do
+    if platform.directory_exists(dir) then
+      log("Проверка директории: " .. dir)
+      
+      for _, ext in ipairs(appearance_settings.image_formats) do
+        local pattern = "*." .. ext
+        local files = platform.get_files_in_directory(dir, pattern)
+        
+        for _, file in ipairs(files) do
+          if platform.file_exists(file) then
+            table.insert(all_files, file)
+            log("Найден файл: " .. file)
+          end
+        end
+      end
+    else
+      log("Директория не существует: " .. dir)
     end
-    handle:close()
   end
-  return files
+  
+  return all_files
 end
 
 -- Инициализация списка фоновых изображений
 local background_files = {}
 log("\n\n=============== Перезагрузка конфигурации ===============")
 
-if directory_exists(backgrounds_dir) then
-  for _, ext in ipairs({'png', 'jpg', 'jpeg'}) do
-    local files = get_files_from_dir(backgrounds_dir, ext)
-    for _, file in ipairs(files) do
-      table.insert(background_files, file)
-    end
+-- Ищем изображения
+background_files = find_all_background_images()
+log("Всего найдено " .. #background_files .. " фоновых изображений")
+has_background_images = #background_files > 0
+
+-- Если не нашли изображения, пробуем создать основную директорию
+if not has_background_images and not platform.directory_exists(appearance_paths.backgrounds_dir) then
+  local mkdir_cmd
+  if platform.is_win then
+    mkdir_cmd = 'mkdir "' .. platform.normalize_path(appearance_paths.backgrounds_dir) .. '"'
+  else
+    mkdir_cmd = 'mkdir -p "' .. appearance_paths.backgrounds_dir .. '"'
   end
-  log("Найдено " .. #background_files .. " фоновых изображений")
-  has_background_images = #background_files > 0
-else
-  log("Директория фонов не существует: " .. backgrounds_dir)
+  
+  os.execute(mkdir_cmd)
+  log("Создана директория для фонов: " .. appearance_paths.backgrounds_dir)
 end
 
 -- Функция для получения случайного фона
@@ -83,8 +100,24 @@ local function get_random_background()
   math.randomseed(os.time())
   local index = math.random(1, #background_files)
   local bg = background_files[index]
-  log("Выбран случайный фон: " .. bg)
-  return bg
+  
+  -- Проверяем что файл все еще существует
+  if platform.file_exists(bg) then
+    log("Выбран случайный фон: " .. bg)
+    return bg
+  else
+    -- Если файл был удален, убираем его из списка
+    table.remove(background_files, index)
+    has_background_images = #background_files > 0
+    
+    -- Пробуем еще раз если остались файлы
+    if has_background_images then
+      return get_random_background()
+    else
+      log("Не осталось доступных фоновых изображений")
+      return nil
+    end
+  end
 end
 
 -- Глобальное хранилище для фонов вкладок
@@ -142,71 +175,43 @@ local opacity_settings = {
   -- индекс 0: 10% непрозрачности (минимальная прозрачность)
   {
     opacity = 0.1,
-    hsb = has_background_images and {
-      brightness = 0.4,
-      saturation = 1.0,
-      hue = 1.0
-    } or nil,
+    hsb = has_background_images and appearance_settings.background_hsb or nil,
     title = "Opacity: 10%"
   },
   -- индекс 1: 20% непрозрачности
   {
     opacity = 0.2,
-    hsb = has_background_images and {
-      brightness = 0.4,
-      saturation = 1.0,
-      hue = 1.0
-    } or nil,
+    hsb = has_background_images and appearance_settings.background_hsb or nil,
     title = "Opacity: 20%"
   },
   -- индекс 2: 35% непрозрачности
   {
     opacity = 0.35,
-    hsb = has_background_images and {
-      brightness = 0.4,
-      saturation = 1.0,
-      hue = 1.0
-    } or nil,
+    hsb = has_background_images and appearance_settings.background_hsb or nil,
     title = "Opacity: 35%"
   },
   -- индекс 3: 50% непрозрачности
   {
     opacity = 0.5,
-    hsb = has_background_images and {
-      brightness = 0.4,
-      saturation = 1.0,
-      hue = 1.0
-    } or nil,
+    hsb = has_background_images and appearance_settings.background_hsb or nil,
     title = "Opacity: 50%"
   },
   -- индекс 4: 65% непрозрачности
   {
     opacity = 0.65,
-    hsb = has_background_images and {
-      brightness = 0.4,
-      saturation = 1.0,
-      hue = 1.0
-    } or nil,
+    hsb = has_background_images and appearance_settings.background_hsb or nil,
     title = "Opacity: 65%"
   },
   -- индекс 5: 80% непрозрачности
   {
     opacity = 0.8,
-    hsb = has_background_images and {
-      brightness = 0.4,
-      saturation = 1.0,
-      hue = 1.0
-    } or nil,
+    hsb = has_background_images and appearance_settings.background_hsb or nil,
     title = "Opacity: 80%"
   },
   -- индекс 6: 100% непрозрачности (черный фон для изображения)
   {
     opacity = 1.0,
-    hsb = has_background_images and {
-      brightness = 0.4,
-      saturation = 1.0,
-      hue = 1.0
-    } or nil,
+    hsb = has_background_images and appearance_settings.background_hsb or nil,
     title = "Opacity: 100%"
   }
 }
@@ -338,8 +343,8 @@ register_handlers()
 -- Оригинальная конфигурация с добавлением начального фона
 local appearance = {
    term = 'xterm-256color',
-   animation_fps = 60,
-   max_fps = 60,
+   animation_fps = appearance_settings.animation_fps,
+   max_fps = appearance_settings.max_fps,
    webgpu_preferred_adapter = gpus[1],
    front_end = 'WebGpu', -- WebGpu OpenGL
    webgpu_power_preference = 'HighPerformance',
@@ -350,7 +355,7 @@ local appearance = {
    color_scheme = 'Tangoesque (terminal.sexy)',
 
    -- Настройки окна
-   window_decorations = 'INTEGRATED_BUTTONS|RESIZE',  -- Возвращаем кнопки управления
+   window_decorations = appearance_settings.window_settings.decorations,
 
    -- Настройки для правильного заполнения экрана в полноэкранном режиме
    -- Используем правильные имена параметров
@@ -358,43 +363,34 @@ local appearance = {
    native_macos_fullscreen_mode = true,  -- Правильное имя параметра для macOS
 
    -- background
-   window_background_opacity = 1.0,  -- Изменено на 1.0 (непрозрачный)
-   window_background_image = has_background_images and get_random_background() or nil, -- Добавляем случайный фон при запуске
-   window_background_image_hsb = has_background_images and {
-     brightness = 0.4,  -- Увеличена яркость для лучшей видимости
-     saturation = 1.0,
-     hue = 1.0,
-   } or nil,
+   window_background_opacity = appearance_settings.default_opacity,
+   window_background_image = has_background_images and get_random_background() or nil,
+   window_background_image_hsb = has_background_images and appearance_settings.background_hsb or nil,
 
    -- Полностью отключаем скроллбар
    enable_scroll_bar = false,
    
    -- tab bar
-   enable_tab_bar = true,
-   hide_tab_bar_if_only_one_tab = false,
-   use_fancy_tab_bar = true,
-   tab_max_width = 25,
-   show_tab_index_in_tab_bar = true,
+   enable_tab_bar = appearance_settings.tab_bar_settings.enable,
+   hide_tab_bar_if_only_one_tab = appearance_settings.tab_bar_settings.hide_if_only_one,
+   use_fancy_tab_bar = appearance_settings.tab_bar_settings.use_fancy,
+   tab_max_width = appearance_settings.tab_bar_settings.max_width,
+   show_tab_index_in_tab_bar = appearance_settings.tab_bar_settings.show_index,
    switch_to_last_active_tab_when_closing_tab = true,
 
    -- cursor
-   default_cursor_style = 'BlinkingBlock',
-   cursor_blink_ease_in = 'Constant',
-   cursor_blink_ease_out = 'Constant',
-   cursor_blink_rate = 700,
+   default_cursor_style = appearance_settings.cursor_settings.style,
+   cursor_blink_ease_in = appearance_settings.cursor_settings.blink_ease_in,
+   cursor_blink_ease_out = appearance_settings.cursor_settings.blink_ease_out,
+   cursor_blink_rate = appearance_settings.cursor_settings.blink_rate,
 
    -- window
    integrated_title_button_style = 'Windows',
    integrated_title_button_color = 'auto',
    integrated_title_button_alignment = 'Right',
-   initial_cols = 120,
-   initial_rows = 24,
-   window_padding = {
-      left = 20,   -- 20 пикселей слева
-      right = 20,  -- 20 пикселей справа
-      top = 2,     -- 2 пикселя сверху
-      bottom = 2,  -- 2 пикселя снизу
-   },
+   initial_cols = appearance_settings.window_settings.initial_cols,
+   initial_rows = appearance_settings.window_settings.initial_rows,
+   window_padding = appearance_settings.window_settings.padding,
    
    -- Подтверждение только при закрытии окна
    window_close_confirmation = "NeverPrompt",  -- Никогда не спрашивать подтверждение
