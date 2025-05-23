@@ -10,7 +10,8 @@
 local wezterm = require('wezterm')
 local platform = require('utils.platform')()
 local act = wezterm.action
-local key_tables = require('config.keyboard.key-tables')
+local key_tables = require('config.bindings.keyboard-tables')
+local locale = require('config.locale')
 
 local mod = {}
 
@@ -141,6 +142,12 @@ local keys = {
          end
        end),
    }},
+   {
+     key = "t",
+     mods = "CTRL|SHIFT",
+     action = wezterm.action.SpawnTab "CurrentPaneDomain",
+     description = locale.t("open_new_tab"),
+   },
 }
 
 -- Экспортируем настройки клавиатуры

@@ -7,6 +7,7 @@
 -- ЗАВИСИМОСТИ: Используется в events.resurrect-events и config.resurrect
 
 local wezterm = require('wezterm')
+local locale = require('config.locale')
 local M = {}
 
 -- Инициализируем глобальные переменные для уведомлений

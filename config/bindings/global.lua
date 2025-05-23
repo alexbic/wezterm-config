@@ -6,8 +6,8 @@
 --
 -- ЗАВИСИМОСТИ: config.keyboard.bindings, config.mouse.bindings
 
-local keyboard = require('config.keyboard.bindings')
-local mouse = require('config.mouse.bindings')
+local keyboard = require('config.bindings.keyboard')
+local mouse = require('config.bindings.mouse')
 
 -- Объединяем все настройки и экспортируем
 return {

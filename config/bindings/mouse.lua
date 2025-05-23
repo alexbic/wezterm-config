@@ -8,6 +8,7 @@
 local wezterm = require('wezterm')
 local platform = require('utils.platform')()
 local act = wezterm.action
+local locale = require('config.locale')
 
 local mod = {}
 if platform.is_mac then

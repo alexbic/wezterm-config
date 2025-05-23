@@ -1,3 +1,5 @@
+local locale = require('config.locale')
+
 -- cat > ~/.config/wezterm/config/domains.lua << 'EOF'
 --
 -- ОПИСАНИЕ: Определение доменов для подключения
@@ -54,4 +56,5 @@ return {
       },
       ]]--
    },
+   description = locale.t("local_terminal"),
 }

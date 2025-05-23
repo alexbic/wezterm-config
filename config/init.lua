@@ -7,6 +7,7 @@
 -- ЗАВИСИМОСТИ: Используется во всех модулях конфигурации
 
 local wezterm = require('wezterm')
+local locale = require('config.locale')
 
 ---@class Config
 ---@field options table
@@ -37,5 +38,7 @@ function Config:append(new_options)
     end
     return self
 end
+
+print(locale.t("config_loaded"))
 
 return Config

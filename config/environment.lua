@@ -8,6 +8,7 @@
 
 local wezterm = require('wezterm')
 local platform = require('utils.platform')()
+local locale = require('config.locale') -- добавляем для локализации
 
 -- Безопасная загрузка конфигурации локали
 local locale_config = {}
@@ -274,9 +275,14 @@ local function get_environment_variables()
   env_vars.WEZTERM_HOME = paths.home
   
   -- Логируем некоторые важные настройки
-  wezterm.log_info("Установка локали: " .. (env_vars.LANG or "не задана"))
-  wezterm.log_info("Редактор: " .. (env_vars.EDITOR or "не задан"))
-  wezterm.log_info("Платформа: " .. (platform.is_mac and "macOS" or platform.is_linux and "Linux" or platform.is_win and "Windows" or "Unknown"))
+  wezterm.log_info(locale.t("set_locale") .. ": " .. (env_vars.LANG or locale.t("not_set")))
+  wezterm.log_info(locale.t("editor") .. ": " .. (env_vars.EDITOR or locale.t("not_set")))
+  wezterm.log_info(locale.t("platform") .. ": " .. (
+    platform.is_mac and locale.t("macos")
+    or platform.is_linux and locale.t("linux")
+    or platform.is_win and locale.t("windows")
+    or locale.t("unknown")
+  ))
   
   return env_vars
 end

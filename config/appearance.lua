@@ -12,6 +12,7 @@ local wezterm = require('wezterm')
 local colors = require('colors.custom')
 local platform = require('utils.platform')()
 local environment = require('config.environment')
+local locale = require('config.locale')
 local gpus = wezterm.gui.enumerate_gpus()
 
 -- Получаем настройки из environment

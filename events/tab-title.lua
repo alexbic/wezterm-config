@@ -7,6 +7,7 @@
 -- ЗАВИСИМОСТИ: Загружается в основном wezterm.lua
 
 local wezterm = require("wezterm")
+local locale = require('config.locale')
 
 -- Inspired by https://github.com/wez/wezterm/discussions/628\#discussioncomment-1874614
 

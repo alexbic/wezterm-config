@@ -10,61 +10,32 @@ local wezterm = require('wezterm')
 local platform_module = require('utils.platform')
 local session_status = require('utils.session-status')
 local platform = platform_module()
+local locale = require('config.locale')
 
--- Локализованные названия дней недели и месяцев
-local localized_strings = {
-  -- Русский
-  ru = {
-    days = {"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"},
-    months = {"янв", "фев", "мар", "апр", "май", "июн", 
-              "июл", "авг", "сен", "окт", "ноя", "дек"}
-  },
-  -- Английский
-  en = {
-    days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"},
-    months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
-  },
-  -- Немецкий
-  de = {
-    days = {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"},
-    months = {"Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
-              "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"}
-  },
-  -- Французский
-  fr = {
-    days = {"Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"},
-    months = {"Jan", "Fév", "Mar", "Avr", "Mai", "Jun",
-              "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc"}
-  },
-  -- Испанский
-  es = {
-    days = {"Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"},
-    months = {"Ene", "Feb", "Mar", "Abr", "May", "Jun",
-              "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"}
-  },
-}
-
--- Переменные для отслеживания инициализации и кэширования
-local locale_initialized = false
-local cached_date_lang = nil
-local last_active_key_table = nil
+-- Получение дней и месяцев из locale
+local function get_localized_strings(lang)
+  local l = locale.get_language_table(lang)
+  return {
+    days = l.days or {},
+    months = l.months or {},
+  }
+end
 
 -- Функция для получения локализованной даты
 local function get_localized_date()
   local lang = cached_date_lang or platform.language
-  
+
   if not cached_date_lang or cached_date_lang ~= lang then
     cached_date_lang = lang
-    wezterm.log_info("Язык для даты установлен: " .. lang .. " (локаль: " .. platform.locale .. ")")
+    wezterm.log_info(locale.t("date_lang_set") .. ": " .. lang .. " (" .. platform.locale .. ")")
   end
-  
+
   local day_of_week = tonumber(wezterm.strftime("%w"))
   local day_of_month = wezterm.strftime("%d")
   local month_num = tonumber(wezterm.strftime("%m")) - 1
-  
-  local strings = localized_strings[lang]
-  if strings then
+
+  local strings = get_localized_strings(lang)
+  if #strings.days > 0 and #strings.months > 0 then
     local day_name = strings.days[day_of_week + 1]
     local month_name = strings.months[month_num + 1]
     return day_name .. ", " .. day_of_month .. " " .. month_name
@@ -72,6 +43,11 @@ local function get_localized_date()
     return wezterm.strftime("%a, %d %b")
   end
 end
+
+-- Переменные для отслеживания инициализации и кэширования
+local locale_initialized = false
+local cached_date_lang = nil
+local last_active_key_table = nil
 
 local function setup()
   if not locale_initialized then

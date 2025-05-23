@@ -9,6 +9,7 @@
 
 local wezterm = require('wezterm')
 local session_status = require('utils.session-status')
+local locale = require('config.locale')
 local M = {}
 
 -- Инициализация плагина resurrect.wezterm

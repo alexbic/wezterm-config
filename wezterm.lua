@@ -8,6 +8,7 @@
 
 local wezterm = require('wezterm')
 local Config = require('config')
+local locale = require('config.locale') -- добавить после require('wezterm') и require('config')
 
 -- ВАЖНО: Загружаем настройки окружения В САМОМ НАЧАЛЕ
 local environment = require('config.environment')
@@ -15,7 +16,7 @@ local environment = require('config.environment')
 -- Принудительно устанавливаем переменные окружения в процессе
 for key, value in pairs(environment.set_environment_variables) do
   if key ~= "PATH" then -- PATH обрабатывается отдельно
-    wezterm.log_info("Установка переменной окружения: " .. key .. " = " .. tostring(value))
+    wezterm.log_info(locale.t("set_env_var") .. ": " .. key .. " = " .. tostring(value))
   end
 end
 
