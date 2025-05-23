@@ -5,5 +5,5 @@ debug.log
 *.log
 *.cache
 *.lock
-	
+plugins/
 
