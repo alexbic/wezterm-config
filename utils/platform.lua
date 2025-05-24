@@ -7,8 +7,6 @@
 -- ЗАВИСИМОСТИ: Используется в config.fonts, config.bindings, config.launch, events.right-status
 
 local wezterm = require('wezterm')
-local locale = require('config.environment.locale')
-local environment = require('config.environment')
 
 local function is_found(str, pattern)
    return string.find(str, pattern) ~= nil
@@ -353,15 +351,5 @@ local function platform()
    return platform_info
 end
 
--- Логирование информации о платформе
-if is_mac then
-  wezterm.log_info(locale.t("platform") .. ": " .. locale.t("macos"))
-elseif is_win then
-  wezterm.log_info(locale.t("platform") .. ": " .. locale.t("windows"))
-elseif is_linux then
-  wezterm.log_info(locale.t("platform") .. ": " .. locale.t("linux"))
-else
-  wezterm.log_error(locale.t("unknown_platform"))
-end
 
 return platform

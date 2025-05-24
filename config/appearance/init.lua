@@ -7,13 +7,13 @@
 
 local backgrounds = require('config.appearance.backgrounds')
 local transparency = require('config.appearance.transparency')
-local events = require('config.appearance.events')
 local colors = require('config.environment.colors')
 local scheme = colors.colorscheme
 local mocha = colors.mocha
 
 return {
-  backgrounds = backgrounds,
+  background_image = backgrounds.random_background,
   transparency = transparency,
-  events = events,
+  -- никаких events и других модулей с функциями!
+  -- можно добавить другие параметры, но только данные!
 }

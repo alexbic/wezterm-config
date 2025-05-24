@@ -8,7 +8,7 @@
 
 local wezterm = require('wezterm')
 local platform_module = require('utils.platform')
-local session_status = require('utils.session-status')
+local session_status = require('events.session-status')
 local platform = platform_module()
 local environment = require('config.environment')
 
@@ -198,6 +198,4 @@ local function setup()
   end)
 end
 
-return {
-  setup = setup
-}
+return setup

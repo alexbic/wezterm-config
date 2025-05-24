@@ -18,8 +18,4 @@ M.opacity_settings = {
   { opacity = 1.0, title = "Opacity: 100%" }
 }
 
-local colors = require('config.environment.colors')
-local scheme = colors.colorscheme
-local mocha = colors.mocha
-
 return M

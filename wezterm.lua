@@ -5,8 +5,18 @@
 -- Он импортирует и инициализирует все остальные модули конфигурации.
 
 local wezterm = require('wezterm')
-local Config = require('config')
 local environment = require('config.environment')
+local platform = require('utils.platform')()
+
+if platform.is_mac then
+  wezterm.log_info(environment.locale.t("platform") .. ": " .. environment.locale.t("macos"))
+elseif platform.is_win then
+  wezterm.log_info(environment.locale.t("platform") .. ": " .. environment.locale.t("windows"))
+elseif platform.is_linux then
+  wezterm.log_info(environment.locale.t("platform") .. ": " .. environment.locale.t("linux"))
+else
+  wezterm.log_error(environment.locale.t("unknown_platform"))
+end
 
 ---@class Config
 ---@field options table
@@ -63,9 +73,9 @@ for key, value in pairs(set_env) do
 end
 
 -- Настраиваем все события ПОСЛЕ установки переменных окружения
-require('events.right-status').setup()
-require('events.tab-title').setup()
-require('events.new-tab-button').setup()
+require('events.right-status')()         -- вызов функции setup
+require('events.tab-title').setup()      -- если там экспортируется таблица с функцией setup
+require('events.new-tab-button').setup() -- если там экспортируется таблица с функцией setup
 
 -- Подключаем модуль resurrect
 require('config.resurrect')
