@@ -11,8 +11,8 @@ local session_state = {
 local mode_icons = {
   session_control = { icon = "◎", name = "", color = "#4ECDC4" },
   pane_control = { icon = "◫", name = "", color = "#4ECDC4" },
-  font_control = { icon = "ƒ", name = "", color = "#4ECDC4" }
-}
+  font_control = { icon = "ƒ", name = "", color = "#4ECDC4" },
+  workspace_search = { icon = "🔍", name = "", color = "#F1FA8C" },}
 
 local function log_status()
   wezterm.log_info("🔍 СТАТУС МОДУЛЯ: current_mode=" .. tostring(session_state.current_mode) .. ", saved_mode=" .. tostring(session_state.saved_mode))

@@ -98,6 +98,11 @@ end)
 -- Подключаем модуль resurrect
 require('config.resurrect')
 
+-- Подключаем workspace switcher
+require("config.workspace-switcher")
+
+-- Регистрируем события workspace
+require("events.workspace-events")()
 -- Получаем настройки bindings
 local bindings = require('config.bindings.global')
 

@@ -148,7 +148,8 @@ local keys = {
      action = wezterm.action.SpawnTab "CurrentPaneDomain",
      description = environment.locale.t("open_new_tab"),
    },
-}
+   -- Workspace Switcher test
+   { key = "w", mods = "CTRL|SHIFT", action = act.EmitEvent("workspace.switch") },}
 
 -- Экспортируем настройки клавиатуры
 return {
