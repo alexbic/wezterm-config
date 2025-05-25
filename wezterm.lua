@@ -82,6 +82,21 @@ if appearance_events and appearance_events.register then
    appearance_events.register()
 end
 
+
+-- Обработчик для выхода из режимов
+wezterm.on("clear-saved-mode", function(window, pane)
+
+-- Обработчик для выхода из других режимов
+wezterm.on("update-status-on-key-table-exit", function(window, pane)
+  wezterm.log_info("🚨 Событие update-status-on-key-table-exit получено!")
+  local session_status = require("events.session-status")
+  session_status.clear_saved_mode()
+end)
+  wezterm.log_info("🚨 Событие clear-saved-mode получено!")
+  local session_status = require("events.session-status")
+  session_status.clear_saved_mode()
+end)
+
 -- Подключаем модуль resurrect
 require('config.resurrect')
 

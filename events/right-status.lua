@@ -73,7 +73,7 @@ local function setup()
         wezterm.log_info("🎯 Активирована таблица клавиш: " .. current_key_table)
       else
         -- Очищаем ТОЛЬКО текущий режим при выходе из таблицы клавиш
-        session_status.clear_mode()
+        wezterm.log_info("🚨 RIGHT-STATUS вызывает clear_mode"); session_status.clear_mode()
         wezterm.log_info("🎯 Таблица клавиш деактивирована")
       end
       last_active_key_table = current_key_table
@@ -108,7 +108,10 @@ local function setup()
     for _, element in ipairs(status_elements) do
       if element.type == "mode" then
         table.insert(display_elements, { Foreground = { Color = element.color } })
-        table.insert(display_elements, { Text = element.icon .. " " .. element.text .. " " })
+        table.insert(display_elements, { Foreground = { Color = "#666666" } })
+        table.insert(display_elements, { Text = "| " })
+        table.insert(display_elements, { Foreground = { Color = element.color } })
+        table.insert(display_elements, { Text = element.icon .. " " })
         has_mode_elements = true
         break
       end
@@ -132,9 +135,9 @@ local function setup()
       table.insert(display_elements, { Text = "| " })
     end
     
-    -- 5. Добавляем календарь и дату (самый правый блок)
-    table.insert(display_elements, { Foreground = { Color = '#8BE9FD' } })
-    table.insert(display_elements, { Text = calendar_icon .. " " })
+    -- 5. Добавляем дату (без иконки)
+    table.insert(display_elements, { Background = { Color = "#313244" } })
+    table.insert(display_elements, { Foreground = { Color = '#BD93F9' } })
     table.insert(display_elements, { Foreground = { Color = '#BD93F9' } })
     table.insert(display_elements, { Text = date .. " " })
     table.insert(display_elements, { Foreground = { Color = '#F8F8F2' } })

@@ -6,6 +6,8 @@
 --
 -- ЗАВИСИМОСТИ: Импортируется и применяется в wezterm.lua
 
+local wezterm = require('wezterm')
+
 return {
    -- Показывать кнопки управления окном в заголовке
    window_decorations = "INTEGRATED_BUTTONS|RESIZE",
@@ -62,9 +64,17 @@ return {
    use_fancy_tab_bar = true,
    window_decorations = "INTEGRATED_BUTTONS|RESIZE",
    tab_bar_at_bottom = false,
+   
+   -- Настройки шрифта для tab bar и статуса
+   window_frame = {
+     font = wezterm.font("Menlo", { weight = "Light" }),
+     font_size = 11,
+   },
 
    -- Интегрированные кнопки управления окном
    integrated_title_button_style = "Windows",
    integrated_title_button_color = "auto",
    integrated_title_button_alignment = "Right",
+   window_close_confirmation = "NeverPrompt",
+   skip_close_confirmation_for_processes_named = { "bash", "sh", "zsh", "fish", "tmux" },
 }

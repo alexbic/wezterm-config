@@ -14,7 +14,7 @@ local font = 'JetBrainsMono Nerd Font Mono' -- JetBrains Mono
 local font_size = platform().is_win and 12 or 14
 
 local M = {
-    font = wezterm.font(font),
+    font = wezterm.font(font, { weight = "Light" }),
     font_size = font_size,
     warn_about_missing_glyphs = false,
     --ref: https://wezfurlong.org/wezterm/config/lua/config/freetype_pcf_long_family_names.html#why-doesnt-wezterm-use-the-distro-freetype-or-match-its-configuration
