@@ -27,6 +27,5 @@ function _math.safe_divide(a, b)
    return a / b
 end
 
-wezterm.log_info(environment.locale.t("some_key"))
 
 return _math

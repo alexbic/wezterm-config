@@ -27,6 +27,5 @@ M.setup = function()
    end)
 end
 
-wezterm.log_info(environment.locale.t("some_key"))
 
 return M

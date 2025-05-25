@@ -1,4 +1,6 @@
--- cat > ~/.config/wezterm/config/environment/domains.lua << 'EOF'
+local environment = require('config.environment')
+
+-- cat > ~/.config/wezterm/config/domains.lua << 'EOF'
 --
 -- ОПИСАНИЕ: Определение доменов для подключения
 -- Настраивает домены для подключения по SSH, WSL и UNIX сокетам.
@@ -53,4 +55,5 @@ return {
       },
       ]]--
    },
+   description = environment.locale.t("local_terminal"),
 }

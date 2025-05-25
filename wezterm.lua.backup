@@ -9,13 +9,13 @@ local environment = require('config.environment')
 local platform = require('utils.platform')()
 
 if platform.is_mac then
-  wezterm.log_info("Платформа: macOS")
+  wezterm.log_info(environment.locale.t("platform") .. ": " .. environment.locale.t("macos"))
 elseif platform.is_win then
-  wezterm.log_info("Платформа: Windows")
+  wezterm.log_info(environment.locale.t("platform") .. ": " .. environment.locale.t("windows"))
 elseif platform.is_linux then
-  wezterm.log_info("Платформа: Linux")
+  wezterm.log_info(environment.locale.t("platform") .. ": " .. environment.locale.t("linux"))
 else
-  wezterm.log_error("Неизвестная платформа")
+  wezterm.log_error(environment.locale.t("unknown_platform"))
 end
 
 ---@class Config
@@ -43,7 +43,7 @@ function ConfigClass:append(new_options)
    return self
 end
 
-print("Конфигурация загружена")
+print(environment.locale.t("config_loaded"))
 
 -- Собираем все переменные окружения из подмодулей
 local set_env = {}
@@ -67,7 +67,8 @@ end
 -- Принудительно устанавливаем переменные окружения в процессе
 for key, value in pairs(set_env) do
   if key ~= "PATH" then -- PATH обрабатывается отдельно
-    wezterm.log_info("Установка переменной окружения: " .. key .. " = " .. tostring(value))
+    wezterm.log_info(environment.locale.t("set_env_var") .. ": " .. key .. " = " .. tostring(value))
+    -- os.setenv(key, tostring(value)) -- если нужно реально установить переменную
   end
 end
 
@@ -76,17 +77,8 @@ require('events.right-status')()         -- вызов функции setup
 require('events.tab-title').setup()      -- если там экспортируется таблица с функцией setup
 require('events.new-tab-button').setup() -- если там экспортируется таблица с функцией setup
 
--- Регистрируем события appearance
-local appearance_events = require("config.appearance.events")
-if appearance_events and appearance_events.register then
-   appearance_events.register()
-end
-
 -- Подключаем модуль resurrect
 require('config.resurrect')
-
--- Получаем настройки bindings
-local bindings = require('config.bindings.global')
 
 -- Применяем конфигурацию
 return ConfigClass:init()
@@ -94,5 +86,5 @@ return ConfigClass:init()
   :append(require('config.environment.fonts'))
   :append(require('config.appearance'))
   :append(require('config.launch'))
-  :append(bindings)  -- Используем bindings напрямую, а не config.bindings
+  :append(require('config.bindings'))
   .options

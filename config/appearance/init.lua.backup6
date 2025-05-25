@@ -9,7 +9,7 @@ local backgrounds = require('config.appearance.backgrounds')
 local colors = require('config.environment.colors')
 
 return {
-  window_background_image = backgrounds.random_background,
+  background_image = backgrounds.random_background,
   -- Применяем цветовую схему напрямую
   colors = colors.colorscheme,
   -- никаких других параметров, только валидные поля WezTerm!

@@ -1,0 +1,14 @@
+-- cat > ~/.config/wezterm/config/appearance/events.lua << 'EOF'
+-- ОПИСАНИЕ: Обработчики событий внешнего вида WezTerm (только регистрация)
+
+local function register_appearance_events()
+  local transparency = require('config.appearance.transparency')
+  local appearance = require('utils.appearance')
+  
+  -- Регистрируем события только при вызове этой функции
+  appearance.register_opacity_events(transparency)
+end
+
+return {
+  register = register_appearance_events
+}

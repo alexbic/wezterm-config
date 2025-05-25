@@ -5,10 +5,10 @@
 -- инициализацию, настройку, обработчики событий, и вспомогательные функции.
 -- Централизует всю логику сохранения и восстановления сессий.
 --
--- ЗАВИСИМОСТИ: events.session-status
+-- ЗАВИСИМОСТИ: utils.session-status
 
 local wezterm = require('wezterm')
-local session_status = require('events.session-status')
+local session_status = require('utils.session-status')
 local environment = require('config.environment')
 local M = {}
 
@@ -39,24 +39,41 @@ local save_timeout_timer = nil
 local pending_restore = nil -- для отслеживания отложенного восстановления
 
 -- Функция для принудительного закрытия всех вкладок
-local function safe_clear_tabs(window)
+local function force_close_all_tabs(window)
   local mux_window = window:mux_window()
+  
+  wezterm.log_info("🔄 Принудительно закрываем все вкладки")
+  
+  -- Получаем список всех вкладок
   local tabs = mux_window:tabs()
+  wezterm.log_info("🔄 Найдено вкладок: " .. #tabs)
   
-  wezterm.log_info("🔄 Безопасная очистка - найдено вкладок: " .. #tabs)
-  
-  -- Оставляем только первую вкладку, остальные закрываем
-  for i = #tabs, 2, -1 do
+  -- Закрываем все вкладки начиная с последней
+  for i = #tabs, 1, -1 do
     local tab = tabs[i]
     if tab then
       wezterm.log_info("🔄 Закрываем вкладку " .. i)
-      tab:activate()
-      window:perform_action(wezterm.action.CloseCurrentTab({confirm = false}), tab:active_pane())
+      -- Получаем все панели в вкладке
+      local panes = tab:panes()
+      for j, pane in ipairs(panes) do
+        if pane then
+          wezterm.log_info("🔄 Закрываем панель " .. j .. " в вкладке " .. i)
+          -- Отправляем команду выхода
+          pane:send_text("exit\r")
+        end
+      end
     end
   end
   
-  wezterm.log_info("🔄 Очистка завершена, осталась 1 вкладка")
+  -- Создаем новую чистую вкладку
+  wezterm.time.call_after(0.5, function()
+    local new_tab = mux_window:spawn_tab({})
+    if new_tab then
+      wezterm.log_info("🔄 Создана новая чистая вкладка")
+    end
+  end)
 end
+
 -- Функция для выполнения восстановления состояния
 local function perform_restore(window, pane, id, session_name, type_info)
   wezterm.log_info("🎯 === НАЧИНАЕМ ВОССТАНОВЛЕНИЕ ===")
@@ -82,7 +99,7 @@ local function perform_restore(window, pane, id, session_name, type_info)
   wezterm.log_info("🎯 Обработанный ID: " .. (clean_id or "unknown"))
   
   -- Принудительно закрываем все вкладки
-  safe_clear_tabs(window) -- безопасная очистка вкладок
+  force_close_all_tabs(window)
   
   -- Ждем перед восстановлением
   wezterm.time.call_after(1.0, function()
@@ -134,11 +151,7 @@ local function perform_restore(window, pane, id, session_name, type_info)
     
     if not success then
       session_status.load_session_error(window, "Не удалось загрузить состояние")
-      
-      -- Очищаем состояние после ошибки восстановления
       pending_operation = nil
-      current_operation = nil
-      selected_session_name = nil      pending_operation = nil
     else
       wezterm.log_info("🎯 Восстановление инициировано успешно")
     end
@@ -265,10 +278,6 @@ local function register_event_handlers()
       wezterm.log_info("🎯 Обрабатываем ожидающую операцию загрузки: " .. session_name)
       session_status.load_session_success(window, session_name)
       
-      -- Очищаем состояние после успешного восстановления
-      pending_operation = nil
-      current_operation = nil
-      selected_session_name = nil      
       pending_operation = nil
       current_operation = nil
       selected_session_name = nil
@@ -376,7 +385,7 @@ local function register_event_handlers()
     
     local state = resurrect.state_manager.load_state(workspace_name, "workspace")
     if state then
-      safe_clear_tabs(window) -- безопасная очистка вкладок
+      force_close_all_tabs(window)
       wezterm.time.call_after(1.0, function()
         resurrect.workspace_state.restore_workspace(state, {
           window = window:mux_window(),
@@ -424,10 +433,6 @@ local function register_event_handlers()
       function(id, label)
         wezterm.log_info("🎯 fuzzy_load callback вызван с id: " .. id .. ", label: " .. (label or "no_label"))
         
-        -- ОТЛАДКА: Проверим состояние переменных
-        wezterm.log_info("🔍 ОТЛАДКА: pending_operation = " .. tostring(pending_operation))
-        wezterm.log_info("🔍 ОТЛАДКА: current_operation = " .. tostring(current_operation))
-        wezterm.log_info("🔍 ОТЛАДКА: selected_session_name = " .. tostring(selected_session_name))        
         -- Определяем тип состояния для отображения пользователю
         local type = string.match(id, "^([^/]+)")
         local type_display = "неизвестно"
@@ -451,7 +456,7 @@ local function register_event_handlers()
         
         -- Спрашиваем пользователя о сохранении текущего состояния - НАЧИНАЕМ С ВОПРОСА
         local confirm_message = string.format(
-          "Выбрано для загрузки:\n🎯 %s (%s)\n\nСохранить текущее состояние перед загрузкой?\n(y/да = сохранить, Enter/любая клавиша = не сохранять)\n",
+          "Сохранить текущее состояние перед загрузкой? Выбрано: '%s' (%s). (y/да/Enter=нет)",
           selected_session_name or "неизвестно",
           type_display
         )

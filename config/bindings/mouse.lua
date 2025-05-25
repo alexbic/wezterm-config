@@ -17,7 +17,6 @@ else
   mod.SUPER = 'ALT'    -- Используем ALT на других платформах
 end
 
-wezterm.log_info(environment.locale.t("some_key"))
 
 return {
    -- Перетаскивание окна с помощью мыши

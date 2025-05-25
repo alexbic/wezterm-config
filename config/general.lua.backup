@@ -8,7 +8,7 @@
 
 return {
    -- Показывать кнопки управления окном в заголовке
-   window_decorations = "INTEGRATED_BUTTONS|RESIZE",
+   window_decorations = "TITLE | RESIZE",
    -- НЕ показывать заголовок в панели вкладок (чтобы системные кнопки были видны)
    -- behaviours
    automatically_reload_config = true,
@@ -57,14 +57,11 @@ return {
          format = 'mailto:$0',
       },
    },
-
-   -- Настройки для fancy tab bar с интегрированными кнопками управления
-   use_fancy_tab_bar = true,
-   window_decorations = "INTEGRATED_BUTTONS|RESIZE",
-   tab_bar_at_bottom = false,
-
-   -- Интегрированные кнопки управления окном
-   integrated_title_button_style = "Windows",
-   integrated_title_button_color = "auto",
-   integrated_title_button_alignment = "Right",
 }
+
+   -- Настройки для fancy tab bar с системными кнопками
+   use_fancy_tab_bar = true,
+   -- Скрыть системный заголовок и показать кнопки в tab bar
+   window_decorations = "RESIZE",
+   -- Встроенные кнопки управления в tab bar
+   tab_bar_at_bottom = false,

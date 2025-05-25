@@ -48,23 +48,15 @@ function M.register_opacity_events(transparency)
     wezterm.GLOBALS.current_opacity_index = 6 -- начинаем с 100% (последний элемент)
   end
   wezterm.on("cycle-opacity-forward", function(window, pane)
-    if not window then
-      window = wezterm.mux.get_active_window()
-    end
-    if not window then return end
-    
     wezterm.GLOBALS.current_opacity_index = (wezterm.GLOBALS.current_opacity_index + 1) % #transparency.opacity_settings
     local settings = transparency.opacity_settings[wezterm.GLOBALS.current_opacity_index + 1]
     local overrides = window:get_config_overrides() or {}
     overrides.window_background_opacity = settings.opacity
     window:set_config_overrides(overrides)
+    window:set_title(settings.title)
   end)
+
   wezterm.on("cycle-opacity-backward", function(window, pane)
-    if not window then
-      window = wezterm.mux.get_active_window()
-    end
-    if not window then return end
-    
     wezterm.GLOBALS.current_opacity_index = (wezterm.GLOBALS.current_opacity_index - 1)
     if wezterm.GLOBALS.current_opacity_index < 0 then
       wezterm.GLOBALS.current_opacity_index = #transparency.opacity_settings - 1
@@ -73,7 +65,9 @@ function M.register_opacity_events(transparency)
     local overrides = window:get_config_overrides() or {}
     overrides.window_background_opacity = settings.opacity
     window:set_config_overrides(overrides)
-  end)end
+    window:set_title(settings.title)
+  end)
+end
 
 -- === Transparency (заглушка для будущих функций) ===
 -- function M.set_opacity(window, value)

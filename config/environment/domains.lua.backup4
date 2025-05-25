@@ -6,6 +6,14 @@
 --
 -- ЗАВИСИМОСТИ: Импортируется в launch.lua и wezterm.lua
 
+local function get_description()
+   local ok, environment = pcall(require, 'config.environment')
+   if ok and environment.locale then
+      return environment.locale.t("local_terminal")
+   end
+   return "Local terminal"
+end
+
 return {
    -- ref: https://wezfurlong.org/wezterm/config/lua/SshDomain.html
    ssh_domains = {
@@ -53,4 +61,5 @@ return {
       },
       ]]--
    },
+   description = get_description(),
 }
