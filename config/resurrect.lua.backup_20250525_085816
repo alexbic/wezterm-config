@@ -27,9 +27,6 @@ resurrect.state_manager.periodic_save({
 -- Ограничение на количество сохраняемых строк
 resurrect.state_manager.set_max_nlines(5000)
 
--- Настройка папки сохранения для нашего проекта (кроссплатформенно)
-local paths = require("config.environment.paths")
-resurrect.state_manager.change_state_save_dir(paths.resurrect_state_dir)
 -- Переменные для отслеживания состояния
 local is_periodic_save = false
 local is_user_save = false
@@ -160,11 +157,6 @@ end
 
 -- ========================== ОБРАБОТЧИКИ СОБЫТИЙ ==========================
 
-  -- Обработка отмены workspace switcher
-  wezterm.on("smart_workspace_switcher.workspace_switcher.canceled", function(window)
-    wezterm.log_info("❌ Workspace switcher отменен")
-    session_status.clear_saved_mode()
-  end)
 local function register_event_handlers()
   -- Обработка ошибок
   wezterm.on('resurrect.error', function(error)
@@ -364,7 +356,7 @@ local function register_event_handlers()
             end)
             
             wezterm.time.call_after(0.1, function()
-              local state = resurrect.workspace_state.get_workspace_state()
+              local state = safe_get_workspace_state()
               if state then
                 wezterm.log_info("🎯 Состояние получено, сохраняем...")
                 resurrect.state_manager.save_state(state, line)
@@ -476,11 +468,6 @@ local function register_event_handlers()
 end
 
 -- Инициализация
-  -- Обработка отмены workspace switcher
-  wezterm.on("smart_workspace_switcher.workspace_switcher.canceled", function(window)
-    wezterm.log_info("❌ Workspace switcher отменен")
-    session_status.clear_saved_mode()
-  end)
 register_event_handlers()
 
 return M
