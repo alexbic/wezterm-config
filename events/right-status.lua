@@ -72,8 +72,10 @@ local function setup()
         session_status.set_mode(current_key_table)
         wezterm.log_info("🎯 Активирована таблица клавиш: " .. current_key_table)
       else
-        -- Очищаем ТОЛЬКО текущий режим при выходе из таблицы клавиш
-        wezterm.log_info("🚨 RIGHT-STATUS вызывает clear_mode"); session_status.clear_mode()
+        -- ВАЖНО: НЕ очищаем saved_mode при выходе из key table
+        -- Очищаем только current_mode
+        wezterm.log_info("🚨 RIGHT-STATUS: выход из key table, очищаем только current_mode")
+        session_status.clear_mode()
         wezterm.log_info("🎯 Таблица клавиш деактивирована")
       end
       last_active_key_table = current_key_table

@@ -14,15 +14,15 @@ return {
     session_control = {
         { key = "s", action = act.Multiple({
             act.EmitEvent("resurrect.save_state"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
+            act.PopKeyTable
         })},
         { key = "l", action = act.Multiple({
             act.EmitEvent("resurrect.load_state"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
+            act.PopKeyTable
         })},
         { key = "d", action = act.Multiple({
             act.EmitEvent("resurrect.delete_state"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
+            act.PopKeyTable
         })},
         { key = "Escape", action = act.Multiple({
             act.EmitEvent("clear-saved-mode"),
