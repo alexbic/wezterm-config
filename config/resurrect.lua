@@ -460,7 +460,7 @@ local function register_event_handlers()
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
-            local tab_state = resurrect.tab_state.get_tab_state(inner_pane:tab())
+            local tab = inner_pane:tab(); if not tab then wezterm.log_error("Tab is nil - cannot save tab state"); session_status.save_session_error(inner_win, "Ошибка: невозможно получить вкладку"); return end; local tab_state = resurrect.tab_state.get_tab_state(tab)
             resurrect.state_manager.save_state(tab_state, save_name, "tab")
             local session_status = require("events.session-status")
             session_status.clear_saved_mode()            wezterm.log_info("Tab сохранен как: " .. save_name)
