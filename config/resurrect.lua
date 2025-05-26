@@ -340,6 +340,7 @@ local function register_event_handlers()
   -- Сохранение window
   wezterm.on('resurrect.save_window', function(window, pane)
     local current_workspace = window:active_workspace()
+    local window_title = (window and window.get_title and window:get_title()) or "window"
     local default_name = current_workspace .. "_window_" .. os.date("%H%M%S")
     
     window:perform_action(
@@ -361,53 +362,9 @@ local function register_event_handlers()
 
   -- Сохранение tab
   wezterm.on('resurrect.save_tab', function(window, pane)
-    local current_workspace = window:active_workspace()
-    local default_name = current_workspace .. "_tab_" .. os.date("%H%M%S")
-    
-    window:perform_action(
-      wezterm.action.PromptInputLine({
-        description = "Сохранить tab как:\nПо умолчанию: " .. default_name .. "\n\nEnter = использовать по умолчанию | Esc = отмена",
-        action = wezterm.action_callback(function(inner_win, inner_pane, line)
-          local save_name = (line == "" or line == nil) and default_name or line
-          if save_name then
-            local tab_state = resurrect.tab_state.get_tab_state(inner_pane:tab())
-            resurrect.state_manager.save_state(tab_state, save_name, "tab")
-            local session_status = require("events.session-status")
-            session_status.clear_saved_mode()            wezterm.log_info("Tab сохранен как: " .. save_name)
-          end
-        end),
-      }),
-      pane
-    )
-  end)
-  -- Сохранение window
-  wezterm.on('resurrect.save_window', function(window, pane)
-    local current_workspace = window:active_workspace()
-    local window_title = (window and window.get_title and window:get_title()) or "window"
-    local default_name = current_workspace .. "_" .. window_title
-    
-    window:perform_action(
-      wezterm.action.PromptInputLine({
-        description = "Сохранить window как:\nПо умолчанию: " .. default_name .. "\n\nEnter = использовать по умолчанию | Esc = отмена",
-        action = wezterm.action_callback(function(inner_win, inner_pane, line)
-          local save_name = (line == "" or line == nil) and default_name or line
-          if save_name then
-            local window_state = resurrect.window_state.get_window_state(inner_win:mux_window())
-            resurrect.state_manager.save_state(window_state, save_name, "window")
-            local session_status = require("events.session-status")
-            session_status.clear_saved_mode()            wezterm.log_info("Window сохранено как: " .. save_name)
-          end
-        end),
-      }),
-      pane
-    )
-  end)
-
-  -- Сохранение tab
-  wezterm.on('resurrect.save_tab', function(window, pane)
     local tab_title = (pane and pane.tab and pane:tab() and pane:tab().get_title and pane:tab():get_title()) or "tab"
     local workspace = window:active_workspace()
-    local default_name = workspace .. "_" .. tab_title
+    local default_name = workspace .. "_tab_" .. os.date("%H%M%S")
     
     window:perform_action(
       wezterm.action.PromptInputLine({
@@ -415,52 +372,7 @@ local function register_event_handlers()
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
-            local tab_state = resurrect.tab_state.get_tab_state(inner_pane:tab())
-            resurrect.state_manager.save_state(tab_state, save_name, "tab")
-            local session_status = require("events.session-status")
-            session_status.clear_saved_mode()            wezterm.log_info("Tab сохранен как: " .. save_name)
-          end
-        end),
-      }),
-      pane
-    )
-  end)
-  -- Сохранение window
-  wezterm.on('resurrect.save_window', function(window, pane)
-    local current_workspace = window:active_workspace()
-    local window_title = (window and window.get_title and window:get_title()) or "window"
-    local default_name = current_workspace .. "_" .. window_title
-    
-    window:perform_action(
-      wezterm.action.PromptInputLine({
-        description = "Сохранить window как:\nПо умолчанию: " .. default_name .. "\n\nEnter = использовать по умолчанию | Esc = отмена",
-        action = wezterm.action_callback(function(inner_win, inner_pane, line)
-          local save_name = (line == "" or line == nil) and default_name or line
-          if save_name then
-            local window_state = resurrect.window_state.get_window_state(inner_win:mux_window())
-            resurrect.state_manager.save_state(window_state, save_name, "window")
-            local session_status = require("events.session-status")
-            session_status.clear_saved_mode()            wezterm.log_info("Window сохранено как: " .. save_name)
-          end
-        end),
-      }),
-      pane
-    )
-  end)
-
-  -- Сохранение tab
-  wezterm.on('resurrect.save_tab', function(window, pane)
-    local tab_title = (pane and pane.tab and pane:tab() and pane:tab().get_title and pane:tab():get_title()) or "tab"
-    local workspace = window:active_workspace()
-    local default_name = workspace .. "_" .. tab_title
-    
-    window:perform_action(
-      wezterm.action.PromptInputLine({
-        description = "Сохранить tab как:\nПо умолчанию: " .. default_name .. "\n\nEnter = использовать по умолчанию | Esc = отмена",
-        action = wezterm.action_callback(function(inner_win, inner_pane, line)
-          local save_name = (line == "" or line == nil) and default_name or line
-          if save_name then
-            local tab = inner_pane:tab(); if not tab then wezterm.log_error("Tab is nil - cannot save tab state"); session_status.save_session_error(inner_win, "Ошибка: невозможно получить вкладку"); return end; local tab_state = resurrect.tab_state.get_tab_state(tab)
+            local tab = inner_pane:tab() or inner_win:active_tab(); if not tab then wezterm.log_error("Cannot get tab from pane or window"); session_status.save_session_error(inner_win, "Ошибка: невозможно получить вкладку"); return end; local tab_state = resurrect.tab_state.get_tab_state(tab)
             resurrect.state_manager.save_state(tab_state, save_name, "tab")
             local session_status = require("events.session-status")
             session_status.clear_saved_mode()            wezterm.log_info("Tab сохранен как: " .. save_name)
