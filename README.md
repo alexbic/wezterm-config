@@ -21,16 +21,49 @@
 
 Проект организован по модульному принципу с четким разделением ответственности:
 
-- **wezterm.lua** - главный файл конфигурации
-- **config/** - основные модули конфигурации (general, resurrect, launch, workspace-switcher)
-- **config/appearance/** - модули внешнего вида (backgrounds, events, transparency)
-- **config/bindings/** - привязки клавиш и мыши (keyboard, mouse, key tables)
-- **config/environment/** - настройки окружения (apps, colors, fonts, locale, paths)
-- **events/** - обработчики событий (right-status, session-status, tab-title)
-- **utils/** - утилиты и вспомогательные функции (appearance, platform, notifications)
-- **backdrops/** - фоновые изображения для вкладок
-- **plugins/resurrect.wezterm/** - плагин сохранения/восстановления сессий
-- **scripts/** - вспомогательные скрипты
+```
+wezterm-config/
+├── 📄 wezterm.lua                   # Главный файл конфигурации
+├── 📁 config/                       # Основные модули конфигурации
+│   ├── 📄 general.lua               # Общие настройки
+│   ├── 📄 resurrect.lua             # Настройки восстановления сессий
+│   ├── 📄 launch.lua                # Настройки запуска
+│   ├── 📄 workspace-switcher.lua    # Переключатель рабочих пространств
+│   ├── 📁 appearance/               # Модули внешнего вида
+│   │   ├── 📄 backgrounds.lua       # Управление фонами
+│   │   ├── 📄 events.lua            # События внешнего вида
+│   │   └── 📄 transparency.lua      # Настройки прозрачности
+│   ├── 📁 bindings/                 # Привязки клавиш и мыши
+│   │   ├── 📄 keyboard.lua          # Горячие клавиши
+│   │   ├── 📄 mouse.lua             # Управление мышью
+│   │   └── 📄 key-tables.lua        # Таблицы клавиш
+│   └── 📁 environment/              # Настройки окружения
+│       ├── 📄 apps.lua              # Настройки приложений
+│       ├── 📄 colors.lua            # Цветовые схемы
+│       ├── 📄 fonts.lua             # Настройки шрифтов
+│       ├── 📄 locale.lua            # Локализация
+│       └── 📄 paths.lua             # Пути и директории
+├── 📁 events/                       # Обработчики событий
+│   ├── 📄 right-status.lua          # Правый статус
+│   ├── 📄 session-status.lua        # Статус сессии
+│   └── 📄 tab-title.lua             # Заголовки вкладок
+├── 📁 utils/                        # Утилиты и вспомогательные функции
+│   ├── 📄 appearance.lua            # Утилиты внешнего вида
+│   ├── 📄 platform.lua              # Определение платформы
+│   └── 📄 notifications.lua         # Система уведомлений
+├── 📁 backdrops/                    # Фоновые изображения для вкладок
+│   ├── 🖼️ image1.jpg
+│   ├── 🖼️ image2.png
+│   └── 🖼️ ...
+├── 📁 plugins/                      # Плагины
+│   └── 📁 resurrect.wezterm         # Плагин сохранения/восстановления сессий
+│       ├── 📄 plugin/
+│       └── 📄 ...
+└── 📁 scripts/                      # Вспомогательные скрипты
+    ├── 📄 install.sh                # Скрипт установки
+    └── 📄 backup.sh                 # Скрипт резервного копирования
+```
+
 
 ## 🛠️ Установка
 
