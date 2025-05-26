@@ -148,8 +148,7 @@ local keys = {
      action = wezterm.action.SpawnTab "CurrentPaneDomain",
      description = environment.locale.t("open_new_tab"),
    },
-}
-
+   -- Workspace Switcher test
 -- Экспортируем настройки клавиатуры
 return {
    disable_default_key_bindings = true,

@@ -1,0 +1,161 @@
+local wezterm = require('wezterm')
+
+local function register_workspace_events()
+  wezterm.on('workspace.switch', function(window, pane)
+    local workspace_switcher = require('config.workspace-switcher')
+    window:perform_action(workspace_switcher.workspace_switcher.switch_workspace(), pane)
+  
+  -- Восстановление сохранённых workspace при выборе
+  wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
+    local paths = require("config.environment.paths")
+    local workspace_file = paths.resurrect_state_dir .. "workspace/" .. workspace .. ".json"
+    local file = io.open(workspace_file, "r")
+    if file then
+      file:close()
+      wezterm.log_info("🎯 Восстанавливаем: " .. workspace)
+      -- Небольшая задержка, затем восстановление
+      wezterm.time.call_after(0.1, function()
+        local resurrect = require("config.resurrect").resurrect
+        local state = resurrect.state_manager.load_state(workspace, "workspace")
+        if state then
+          resurrect.workspace_state.restore_workspace(state, {relative = false})
+        end
+      end)
+    end
+  end)  end)
+  
+  -- Восстановление сохранённых workspace
+  wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
+    local paths = require("config.environment.paths")
+    local workspace_file = paths.resurrect_state_dir .. "workspace/" .. workspace .. ".json"
+    -- Проверяем, что это НЕ активный workspace
+    local active_workspaces = {}
+    for _, ws in ipairs(wezterm.mux.get_workspace_names()) do
+      active_workspaces[ws] = true
+  
+  -- Восстановление сохранённых workspace при выборе
+  wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
+    local paths = require("config.environment.paths")
+    local workspace_file = paths.resurrect_state_dir .. "workspace/" .. workspace .. ".json"
+    local file = io.open(workspace_file, "r")
+    if file then
+      file:close()
+      wezterm.log_info("🎯 Восстанавливаем: " .. workspace)
+      -- Небольшая задержка, затем восстановление
+      wezterm.time.call_after(0.1, function()
+        local resurrect = require("config.resurrect").resurrect
+        local state = resurrect.state_manager.load_state(workspace, "workspace")
+        if state then
+          resurrect.workspace_state.restore_workspace(state, {relative = false})
+        end
+      end)
+    end
+  end)    end
+    
+    local file = io.open(workspace_file, "r")
+    -- Восстанавливаем только если workspace сохранён И не активен
+    if file then
+      file:close()
+      wezterm.log_info("🎯 Восстанавливаем сохранённый workspace: " .. workspace)
+      wezterm.time.call_after(0.2, function()
+        local resurrect = require("config.resurrect").resurrect
+        local state = resurrect.state_manager.load_state(workspace, "workspace")
+        if state then
+          resurrect.workspace_state.restore_workspace(state, {relative = false})
+  
+  -- Восстановление сохранённых workspace при выборе
+  wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
+    local paths = require("config.environment.paths")
+    local workspace_file = paths.resurrect_state_dir .. "workspace/" .. workspace .. ".json"
+    local file = io.open(workspace_file, "r")
+    if file then
+      file:close()
+      wezterm.log_info("🎯 Восстанавливаем: " .. workspace)
+      -- Небольшая задержка, затем восстановление
+      wezterm.time.call_after(0.1, function()
+        local resurrect = require("config.resurrect").resurrect
+        local state = resurrect.state_manager.load_state(workspace, "workspace")
+        if state then
+          resurrect.workspace_state.restore_workspace(state, {relative = false})
+        end
+      end)
+    end
+  end)        end
+  
+  -- Восстановление сохранённых workspace при выборе
+  wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
+    local paths = require("config.environment.paths")
+    local workspace_file = paths.resurrect_state_dir .. "workspace/" .. workspace .. ".json"
+    local file = io.open(workspace_file, "r")
+    if file then
+      file:close()
+      wezterm.log_info("🎯 Восстанавливаем: " .. workspace)
+      -- Небольшая задержка, затем восстановление
+      wezterm.time.call_after(0.1, function()
+        local resurrect = require("config.resurrect").resurrect
+        local state = resurrect.state_manager.load_state(workspace, "workspace")
+        if state then
+          resurrect.workspace_state.restore_workspace(state, {relative = false})
+        end
+      end)
+    end
+  end)      end)
+  
+  -- Восстановление сохранённых workspace при выборе
+  wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
+    local paths = require("config.environment.paths")
+    local workspace_file = paths.resurrect_state_dir .. "workspace/" .. workspace .. ".json"
+    local file = io.open(workspace_file, "r")
+    if file then
+      file:close()
+      wezterm.log_info("🎯 Восстанавливаем: " .. workspace)
+      -- Небольшая задержка, затем восстановление
+      wezterm.time.call_after(0.1, function()
+        local resurrect = require("config.resurrect").resurrect
+        local state = resurrect.state_manager.load_state(workspace, "workspace")
+        if state then
+          resurrect.workspace_state.restore_workspace(state, {relative = false})
+        end
+      end)
+    end
+  end)    end
+  
+  -- Восстановление сохранённых workspace при выборе
+  wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
+    local paths = require("config.environment.paths")
+    local workspace_file = paths.resurrect_state_dir .. "workspace/" .. workspace .. ".json"
+    local file = io.open(workspace_file, "r")
+    if file then
+      file:close()
+      wezterm.log_info("🎯 Восстанавливаем: " .. workspace)
+      -- Небольшая задержка, затем восстановление
+      wezterm.time.call_after(0.1, function()
+        local resurrect = require("config.resurrect").resurrect
+        local state = resurrect.state_manager.load_state(workspace, "workspace")
+        if state then
+          resurrect.workspace_state.restore_workspace(state, {relative = false})
+        end
+      end)
+    end
+  end)  end)
+  
+  -- Восстановление сохранённых workspace при выборе
+  wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
+    local paths = require("config.environment.paths")
+    local workspace_file = paths.resurrect_state_dir .. "workspace/" .. workspace .. ".json"
+    local file = io.open(workspace_file, "r")
+    if file then
+      file:close()
+      wezterm.log_info("🎯 Восстанавливаем: " .. workspace)
+      -- Небольшая задержка, затем восстановление
+      wezterm.time.call_after(0.1, function()
+        local resurrect = require("config.resurrect").resurrect
+        local state = resurrect.state_manager.load_state(workspace, "workspace")
+        if state then
+          resurrect.workspace_state.restore_workspace(state, {relative = false})
+        end
+      end)
+    end
+  end)end
+
+return register_workspace_events

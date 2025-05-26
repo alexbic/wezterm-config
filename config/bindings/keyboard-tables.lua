@@ -15,15 +15,23 @@ return {
         { key = "s", action = act.Multiple({
             act.EmitEvent("resurrect.save_state"),
             act.PopKeyTable
-        })},
+        })}, -- Save workspace
         { key = "l", action = act.Multiple({
-            act.EmitEvent("resurrect.load_state"),
+            act.EmitEvent("workspace.switch"),
             act.PopKeyTable
-        })},
+        })}, -- List workspace switcher
+        { key = "w", action = act.Multiple({
+            act.EmitEvent("resurrect.save_window"),
+            act.PopKeyTable
+        })}, -- Save current window
+        { key = "t", action = act.Multiple({
+            act.EmitEvent("resurrect.save_tab"),
+            act.PopKeyTable
+        })}, -- Save current tab
         { key = "d", action = act.Multiple({
             act.EmitEvent("resurrect.delete_state"),
             act.PopKeyTable
-        })},
+        })}, -- Delete saved state
         { key = "Escape", action = act.Multiple({
             act.EmitEvent("clear-saved-mode"),
             act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })

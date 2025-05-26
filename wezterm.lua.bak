@@ -82,25 +82,33 @@ if appearance_events and appearance_events.register then
    appearance_events.register()
 end
 
--- Добавляем отладочное логирование событий
+
+-- Обработчик для выхода из режимов
 wezterm.on("clear-saved-mode", function(window, pane)
-  wezterm.log_info("🔥 ГЛАВНОЕ СОБЫТИЕ: clear-saved-mode получено!")
+
+-- Обработчик для выхода из других режимов
+wezterm.on("update-status-on-key-table-exit", function(window, pane)
+  wezterm.log_info("🚨 Событие update-status-on-key-table-exit получено!")
   local session_status = require("events.session-status")
   session_status.clear_saved_mode()
 end)
-
-wezterm.on("update-status-on-key-table-exit", function(window, pane)
-  wezterm.log_info("🔥 ГЛАВНОЕ СОБЫТИЕ: update-status-on-key-table-exit получено!")
+  wezterm.log_info("🚨 Событие clear-saved-mode получено!")
   local session_status = require("events.session-status")
   session_status.clear_saved_mode()
 end)
 
 -- Подключаем модуль resurrect
+
+-- Подключаем smart workspace switcher
+local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+workspace_switcher.zoxide_path = "/opt/homebrew/bin/zoxide"
 require('config.resurrect')
 
 -- Получаем настройки bindings
 local bindings = require('config.bindings.global')
 
+
+-- Создаём пустые workspace для сохранённых файлов
 -- Применяем конфигурацию
 return ConfigClass:init()
   :append(require('config.general'))

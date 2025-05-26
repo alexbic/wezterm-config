@@ -17,10 +17,16 @@ return {
             act.PopKeyTable
         })},
         { key = "l", action = act.Multiple({
-            wezterm.action_callback(function(window, pane) window:perform_action(wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm").switch_workspace(), pane) end),
+            act.EmitEvent("resurrect.load_state"),
             act.PopKeyTable
         })},
-        { key = "d", action = act.Multiple({
+        { key = "w", action = act.Multiple({
+            act.EmitEvent("workspace.switch"),
+            act.PopKeyTable
+        { key = "w", action = act.Multiple({
+            act.EmitEvent("workspace.switch"),
+            act.PopKeyTable
+        })},        })},        { key = "d", action = act.Multiple({
             act.EmitEvent("resurrect.delete_state"),
             act.PopKeyTable
         })},
@@ -149,75 +155,4 @@ return {
         { key = "q", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) },
         { key = "Enter", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) }
     }
-}
-
-    workspace_control = {
-        { key = "s", action = act.Multiple({
-            act.EmitEvent("workspace.smart_switch"),
-            act.PopKeyTable
-        })},
-        { key = "l", action = act.Multiple({
-            act.EmitEvent("workspace.show_sessions"),
-            act.PopKeyTable
-        })},
-        { key = "w", action = act.Multiple({
-            act.EmitEvent("workspace.save"),
-            act.PopKeyTable
-        })},
-        { key = "n", action = act.Multiple({
-            act.ShowLauncherArgs({ flags = "FUZZY|WORKSPACES" }),
-            act.PopKeyTable
-        })},
-        { key = "Escape", action = act.Multiple({
-            act.EmitEvent("clear-saved-mode"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
-        })},
-        { key = "q", action = act.Multiple({
-            act.EmitEvent("clear-saved-mode"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
-        })}
-}
-
-    session_management = {
-        -- Workspace операции
-        { key = "s", action = wezterm.action_callback(function(window, pane)
-            local session_mgmt = require('config.session-management')
-            window:perform_action(session_mgmt.switch_workspace(), pane)
-        end), description = "Поиск workspace (zoxide)" },
-        
-        { key = "p", action = wezterm.action_callback(function(window, pane)
-            local session_mgmt = require('config.session-management')
-            window:perform_action(session_mgmt.switch_to_previous_workspace(), pane)
-        end), description = "Предыдущий workspace" },
-        
-        { key = "w", action = wezterm.action_callback(function(window, pane)
-            local session_mgmt = require('config.session-management')
-            window:perform_action(session_mgmt.show_workspaces(), pane)
-        end), description = "Показать все workspace" },
-        
-        -- Session операции
-        { key = "S", action = wezterm.action_callback(function(window, pane)
-            local session_mgmt = require('config.session-management')
-            window:perform_action(session_mgmt.save_session(), pane)
-        end), description = "Сохранить сессию" },
-        
-        { key = "l", action = wezterm.action_callback(function(window, pane)
-            local session_mgmt = require('config.session-management')
-            window:perform_action(session_mgmt.load_session(), pane)
-        end), description = "Загрузить сессию" },
-        
-        { key = "d", action = wezterm.action_callback(function(window, pane)
-            local session_mgmt = require('config.session-management')
-            window:perform_action(session_mgmt.delete_session(), pane)
-        end), description = "Удалить сессию" },
-        
-        -- Выход из режима
-        { key = "Escape", action = act.Multiple({
-            act.EmitEvent("clear-saved-mode"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
-        })},
-        { key = "q", action = act.Multiple({
-            act.EmitEvent("clear-saved-mode"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
-        })}
 }

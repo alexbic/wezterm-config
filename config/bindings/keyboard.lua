@@ -1,11 +1,7 @@
--- cat > ~/.config/wezterm/config/keyboard/bindings.lua << 'EOF'
---
 -- ОПИСАНИЕ: Настройки привязок клавиш
 -- Определяет сочетания клавиш для различных действий: управление вкладками,
 -- окнами, копирование/вставка, поиск, изменение внешнего вида.
 -- Активирует модальные таблицы клавиш.
---
--- ЗАВИСИМОСТИ: utils.platform, config.keyboard.key-tables
 
 local wezterm = require('wezterm')
 local platform = require('utils.platform')()
@@ -43,13 +39,13 @@ local keys = {
    -- Циклическое изменение прозрачности
    { key = '0', mods = 'CTRL', action = act.EmitEvent('cycle-opacity-forward') },
    { key = '9', mods = 'CTRL', action = act.EmitEvent('cycle-opacity-backward') },
-   
+
    -- Переключение видимости панели закладок
    { key = 'h', mods = 'SHIFT|SUPER', action = act.EmitEvent('toggle-tab-bar') },
-   
+
    -- Горячие клавиши для смены фона
    { key = 'b', mods = 'SHIFT|SUPER', action = act.EmitEvent('change-background') },
-  
+
    -- Активаторы для key_tables (таблиц клавиш) с принудительным обновлением статуса
    { key = 'p', mods = 'LEADER', action = act.Multiple({
        act.ActivateKeyTable({
@@ -59,7 +55,7 @@ local keys = {
        }),
        act.EmitEvent('force-update-status')
    })},
-   
+
    { key = 'f', mods = 'LEADER', action = act.Multiple({
        act.ActivateKeyTable({
          name = 'font_control',
@@ -68,7 +64,7 @@ local keys = {
        }),
        act.EmitEvent('force-update-status')
    })},
-   
+
    { key = 's', mods = 'LEADER', action = act.Multiple({
        act.ActivateKeyTable({
          name = 'session_control',
@@ -80,29 +76,29 @@ local keys = {
 
    -- Тестовая клавиша для проверки уведомлений
    { key = 'n', mods = 'CTRL|SHIFT', action = act.EmitEvent('resurrect.test_notification') },
-   
+
    -- Отладка анимации - принудительная остановка (для тестирования)
    { key = 'x', mods = 'CTRL|SHIFT', action = act.EmitEvent('stop-loading-debug') },
 
    -- Копирование/Вставка
    { key = 'c', mods = mod.SUPER, action = act.CopyTo('Clipboard') },
    { key = 'v', mods = mod.SUPER, action = act.PasteFrom('Clipboard') },
-   
+
    -- Управление вкладками --
    { key = 't', mods = mod.SUPER, action = act.SpawnTab('DefaultDomain') },
    { key = 'w', mods = mod.SUPER, action = act.CloseCurrentTab({ confirm = false }) },
    { key = 'w', mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = false }) },
-   
+
    -- Навигация между вкладками
    { key = 'LeftArrow', mods = mod.SUPER, action = act.ActivateTabRelative(-1) },
    { key = 'RightArrow', mods = mod.SUPER, action = act.ActivateTabRelative(1) },
    { key = 'LeftArrow', mods = mod.SUPER_REV, action = act.MoveTabRelative(-1) },
    { key = 'RightArrow', mods = mod.SUPER_REV, action = act.MoveTabRelative(1) },
-   
+
    -- Управление окнами --
    { key = 'n', mods = mod.SUPER, action = act.SpawnWindow },
    { key = 'q', mods = mod.SUPER, action = act.QuitApplication },
-   
+
    -- Переименование вкладки
    { key = 'R', mods = 'CTRL|SHIFT', action = act.PromptInputLine({
        description = 'Enter new name for tab',
@@ -112,7 +108,7 @@ local keys = {
            end
        end),
    })},
-   
+
    -- Отправка специальных символов через Alt (Option)
    { key = "'", mods = 'ALT', action = act.SendString("\\") },
    { key = 'ñ', mods = 'ALT', action = act.SendString("~") },
@@ -123,7 +119,7 @@ local keys = {
    { key = 'ç', mods = 'ALT', action = act.SendString("}") },
    { key = '*', mods = 'ALT', action = act.SendString("{") },
    { key = '3', mods = 'ALT', action = act.SendString("#") },
-   
+
    -- Создание нового workspace
    { key = "w", mods = "CTRL|SHIFT", action = act.PromptInputLine {
        description = wezterm.format {
@@ -142,14 +138,18 @@ local keys = {
          end
        end),
    }},
+   
    {
      key = "t",
      mods = "CTRL|SHIFT",
      action = wezterm.action.SpawnTab "CurrentPaneDomain",
      description = environment.locale.t("open_new_tab"),
    },
-   -- Workspace Switcher test
-   { key = "w", mods = "CTRL|SHIFT", action = act.EmitEvent("workspace.switch") },}
+   
+   -- Горячие клавиши для workspace управления
+   { key = "w", mods = "LEADER", action = act.EmitEvent("workspace.switch") },
+   { key = "W", mods = "LEADER", action = act.EmitEvent("workspace.restore") },
+}
 
 -- Экспортируем настройки клавиатуры
 return {
