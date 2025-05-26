@@ -383,7 +383,7 @@ local function register_event_handlers()
   -- Сохранение window
   wezterm.on('resurrect.save_window', function(window, pane)
     local current_workspace = window:active_workspace()
-    local window_title = window:get_title() or "window" or "window"
+    local window_title = (window and window.get_title and window:get_title()) or "window"
     local default_name = current_workspace .. "_" .. window_title
     
     window:perform_action(
@@ -405,7 +405,7 @@ local function register_event_handlers()
 
   -- Сохранение tab
   wezterm.on('resurrect.save_tab', function(window, pane)
-    local tab_title = pane:tab():get_title() or "tab" or "tab"
+    local tab_title = (pane and pane.tab and pane:tab() and pane:tab().get_title and pane:tab():get_title()) or "tab"
     local workspace = window:active_workspace()
     local default_name = workspace .. "_" .. tab_title
     
@@ -428,7 +428,7 @@ local function register_event_handlers()
   -- Сохранение window
   wezterm.on('resurrect.save_window', function(window, pane)
     local current_workspace = window:active_workspace()
-    local window_title = window:get_title() or "window" or "window"
+    local window_title = (window and window.get_title and window:get_title()) or "window"
     local default_name = current_workspace .. "_" .. window_title
     
     window:perform_action(
@@ -450,7 +450,7 @@ local function register_event_handlers()
 
   -- Сохранение tab
   wezterm.on('resurrect.save_tab', function(window, pane)
-    local tab_title = pane:tab():get_title() or "tab" or "tab"
+    local tab_title = (pane and pane.tab and pane:tab() and pane:tab().get_title and pane:tab():get_title()) or "tab"
     local workspace = window:active_workspace()
     local default_name = workspace .. "_" .. tab_title
     
