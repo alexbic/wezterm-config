@@ -11,6 +11,15 @@ local wezterm = require('wezterm')
 return {
    -- Показывать кнопки управления окном в заголовке
    window_decorations = "INTEGRATED_BUTTONS|RESIZE",
+   -- Настройки позиционирования и размера окна
+   initial_cols = 120,
+   initial_rows = 30,
+   window_padding = {
+     left = 10,
+     right = 10,
+     top = 10,
+     bottom = 10,
+   },
    -- НЕ показывать заголовок в панели вкладок (чтобы системные кнопки были видны)
    -- behaviours
    automatically_reload_config = true,
