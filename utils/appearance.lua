@@ -75,6 +75,24 @@ function M.register_opacity_events(transparency)
     window:set_config_overrides(overrides)
   end)end
 
+-- === Window Positioning ===
+function M.setup_window_centering()
+  wezterm.on("gui-startup", function(cmd)
+    local screen = wezterm.gui.screens().active
+    local ratio = 0.6  -- 60% от размера экрана
+    local width, height = screen.width * ratio, screen.height * ratio
+    
+    local tab, pane, window = wezterm.mux.spawn_window(cmd or {
+      position = {
+        x = (screen.width - width) / 2,
+        y = (screen.height - height) / 2,
+        origin = "ActiveScreen"
+      }
+    })
+    
+    window:gui_window():set_inner_size(width, height)
+  end)
+end
 -- === Transparency (заглушка для будущих функций) ===
 -- function M.set_opacity(window, value)
 --   -- ...

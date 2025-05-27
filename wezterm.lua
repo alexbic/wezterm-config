@@ -77,7 +77,9 @@ require('events.tab-title').setup()      -- если там экспортиру
 require('events.new-tab-button').setup() -- если там экспортируется таблица с функцией setup
 
 -- Регистрируем события appearance
-local appearance_events = require("config.appearance.events")
+-- Настраиваем центрирование окна
+local appearance_utils = require("utils.appearance")
+appearance_utils.setup_window_centering()local appearance_events = require("config.appearance.events")
 if appearance_events and appearance_events.register then
    appearance_events.register()
 end
@@ -109,22 +111,6 @@ local bindings = require('config.bindings.global')
 
 
 -- Создаём пустые workspace для сохранённых файлов
--- Центрирование окна при запуске
-wezterm.on("gui-startup", function(cmd)
-  local screen = wezterm.gui.screens().active
-  local ratio = 0.6  -- 60% от размера экрана
-  local width, height = screen.width * ratio, screen.height * ratio
-  
-  local tab, pane, window = wezterm.mux.spawn_window(cmd or {
-    position = {
-      x = (screen.width - width) / 2,
-      y = (screen.height - height) / 2,
-      origin = "ActiveScreen"
-    }
-  })
-  
-  window:gui_window():set_inner_size(width, height)
-end)
 -- Регистрируем события workspace
 require("events.workspace-events")()
 
