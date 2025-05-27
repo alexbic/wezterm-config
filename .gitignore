@@ -1,9 +1,12 @@
-# WezTerm logs and cache
-.DS_Store
-debug.log
+# Резервные файлы
+*.backup
+*.bak
 *.tmp
 *.log
+
+# Временные файлы
+.DS_Store
+debug.log
 *.cache
 *.lock
-plugins/
-
+*.backup_*

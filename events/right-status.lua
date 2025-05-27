@@ -3,6 +3,7 @@
 -- ОПИСАНИЕ: Настройка строки состояния
 -- Выводит информацию в правой части строки состояния, включая 
 -- статус режима, часы, дату, календарь, индикатор загрузки и др.
+-- ДОБАВЛЕНО: Визуальная индикация copy_mode через толстую оранжевую рамку
 --
 -- ЗАВИСИМОСТИ: utils.platform, events.session-status
 
@@ -61,10 +62,58 @@ local function setup()
     wezterm.log_info("=== КОНЕЦ ИНИЦИАЛИЗАЦИИ ===")
   end
 
+  -- 🚪 НОВЫЙ ОБРАБОТЧИК: Выход из copy_mode по Escape
+  wezterm.on('exit-copy-mode', function(window, pane)
+    wezterm.log_info("🚪 Выход из copy_mode по Escape")
+    if window then
+      -- Убираем рамку при выходе
+      local overrides = window:get_config_overrides() or {}
+      overrides.window_frame = {
+        border_left_width = '0px',
+        border_right_width = '0px',
+        border_bottom_width = '0px', 
+        border_top_height = '0px',
+      }
+      window:set_config_overrides(overrides)
+      
+      -- Принудительно выходим из copy_mode
+      window:perform_action(wezterm.action.PopKeyTable, pane)
+    end
+  end)
+
   -- Основной обработчик обновления строки состояния
   wezterm.on('update-right-status', function(window, pane)
     -- Получаем текущую активную таблицу клавиш
     local current_key_table = window:active_key_table()
+    
+    -- 🖼️ ОБНОВЛЕННЫЙ КОД: Проверяем copy_mode и добавляем ТОЛСТУЮ ОРАНЖЕВУЮ рамку
+    local copy_mode_active = (current_key_table == 'copy_mode')
+    local overrides = window:get_config_overrides() or {}
+    
+    if copy_mode_active then
+      -- COPY MODE: добавляем ТОЛСТУЮ ЯРКУЮ ОРАНЖЕВУЮ рамку
+      overrides.window_frame = {
+        border_left_width = '6px',       -- Увеличил с 2px до 6px
+        border_right_width = '6px', 
+        border_bottom_width = '6px',
+        border_top_height = '6px',
+        border_left_color = '#FF8C00',   -- Яркий оранжевый (DarkOrange)
+        border_right_color = '#FF8C00',
+        border_bottom_color = '#FF8C00', 
+        border_top_color = '#FF8C00',
+      }
+      wezterm.log_info("🖼️ COPY MODE: толстая оранжевая рамка активирована")
+    else
+      -- ОБЫЧНЫЙ РЕЖИМ: убираем рамку
+      overrides.window_frame = {
+        border_left_width = '0px',
+        border_right_width = '0px',
+        border_bottom_width = '0px', 
+        border_top_height = '0px',
+      }
+    end
+    
+    window:set_config_overrides(overrides)
     
     -- Обновляем режим если таблица изменилась
     if current_key_table ~= last_active_key_table then

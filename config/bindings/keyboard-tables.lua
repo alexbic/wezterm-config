@@ -35,10 +35,6 @@ return {
         { key = "Escape", action = act.Multiple({
             act.EmitEvent("clear-saved-mode"),
             act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
-        })},
-        { key = "q", action = act.Multiple({
-            act.EmitEvent("clear-saved-mode"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
         })}
     },
     pane_control = {
@@ -55,7 +51,6 @@ return {
         { key = "UpArrow", mods = 'SHIFT', action = act.AdjustPaneSize({ 'Up', 1 }) },
         { key = "RightArrow", mods = 'SHIFT', action = act.AdjustPaneSize({ 'Right', 1 }) },
         { key = "Escape", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) },
-        { key = "q", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) },
         { key = "Enter", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) }
     },
     font_control = {
@@ -64,41 +59,58 @@ return {
         { key = "r", action = act.ResetFontSize },
         { key = "0", action = act.ResetFontSize },
         { key = "Escape", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) },
-        { key = "q", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) },
         { key = "Enter", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) }
     },
     copy_mode = {
-        { key = "Escape", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) },
+        -- 🚪 ЕДИНСТВЕННЫЙ способ выхода из copy_mode
+        { key = "Escape", action = act.CopyMode('Close') },
+        
+        -- Основные действия копирования
         { key = "Enter", action = act.Multiple({
             act.CopyTo("Clipboard"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
+            act.CopyMode('Close')
         })},
-        { key = "v", action = act.PasteFrom("Clipboard") },
+        { key = "y", action = act.Multiple({
+            act.CopyTo("Clipboard"),
+            act.CopyMode('Close')
+        })},
         { key = "c", action = act.CopyTo("Clipboard") },
-        { key = "f", action = act.Multiple({
-            act.EmitEvent("activate-copy-mode"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
-        })},
-        { key = "m", action = act.Multiple({
-            act.EmitEvent("activate-multi-select-mode"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
-        })},
-        { key = "UpArrow", action = act.ScrollByLine(-1) },
-        { key = "DownArrow", action = act.ScrollByLine(1) },
-        { key = "LeftArrow", action = act.ScrollByPage(-1) },
-        { key = "RightArrow", action = act.ScrollByPage(1) },
-        { key = "Home", action = act.ScrollToTop },
-        { key = "End", action = act.ScrollToBottom },
-        { key = "PageUp", action = act.ScrollByPage(-1) },
-        { key = "PageDown", action = act.ScrollByPage(1) },
+        { key = "v", action = act.PasteFrom("Clipboard") },
+        
+        -- Навигация
+        { key = "h", action = act.CopyMode('MoveLeft') },
+        { key = "j", action = act.CopyMode('MoveDown') },
+        { key = "k", action = act.CopyMode('MoveUp') },
+        { key = "l", action = act.CopyMode('MoveRight') },
+        { key = "LeftArrow", action = act.CopyMode('MoveLeft') },
+        { key = "DownArrow", action = act.CopyMode('MoveDown') },
+        { key = "UpArrow", action = act.CopyMode('MoveUp') },
+        { key = "RightArrow", action = act.CopyMode('MoveRight') },
+        
+        -- Прокрутка
+        { key = "PageUp", action = act.CopyMode('PageUp') },
+        { key = "PageDown", action = act.CopyMode('PageDown') },
+        { key = "Home", action = act.CopyMode('MoveToStartOfLine') },
+        { key = "End", action = act.CopyMode('MoveToEndOfLineContent') },
+        { key = "g", action = act.CopyMode('MoveToScrollbackTop') },
+        { key = "G", action = act.CopyMode('MoveToScrollbackBottom') },
+        
+        -- Выделение
+        { key = "v", action = act.CopyMode({ SetSelectionMode = 'Cell' }) },
+        { key = "V", action = act.CopyMode({ SetSelectionMode = 'Line' }) },
+        { key = " ", action = act.CopyMode({ SetSelectionMode = 'Cell' }) },
+        
+        -- 🔄 ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК с выходом из copy_mode
         { key = "Tab", action = act.Multiple({
-            act.EmitEvent("activate-next-tab"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
+            act.ActivateTabRelative(1),
+            act.CopyMode('Close')  -- Выходим из copy_mode после переключения
         })},
         { key = "Tab", mods = "SHIFT", action = act.Multiple({
-            act.EmitEvent("activate-previous-tab"),
-            act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") })
+            act.ActivateTabRelative(-1),
+            act.CopyMode('Close')  -- Выходим из copy_mode после переключения
         })},
+        
+        -- Прямое переключение на вкладку по номеру (ОСТАЕМСЯ в copy_mode)
         { key = "1", action = act.ActivateTab(0) },
         { key = "2", action = act.ActivateTab(1) },
         { key = "3", action = act.ActivateTab(2) },
@@ -108,9 +120,7 @@ return {
         { key = "7", action = act.ActivateTab(6) },
         { key = "8", action = act.ActivateTab(7) },
         { key = "9", action = act.ActivateTab(8) },
-        { key = "0", action = act.ActivateTab(9) },
-        { key = "q", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) },
-        { key = "Enter", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) }
+        { key = "0", action = act.ActivateTab(9) }
     },
     search_mode = {
         { key = "Escape", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) },
@@ -154,7 +164,6 @@ return {
         { key = "8", action = act.ActivateTab(7) },
         { key = "9", action = act.ActivateTab(8) },
         { key = "0", action = act.ActivateTab(9) },
-        { key = "q", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) },
         { key = "Enter", action = act.Multiple({ act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }), act.EmitEvent("update-status-on-key-table-exit") }) }
     }
 }
