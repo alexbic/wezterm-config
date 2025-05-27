@@ -198,7 +198,6 @@ local function setup()
     window:set_right_status(wezterm.format(display_elements))
     
     -- Отладочная информация
-    wezterm.log_info("📊 Статус обновлен - элементов: " .. #status_elements .. ", режим: " .. (current_key_table or "нет"))
     for i, element in ipairs(status_elements) do
       wezterm.log_info("  - Элемент " .. i .. ": " .. element.type .. " = " .. (element.text or element.icon))
     end

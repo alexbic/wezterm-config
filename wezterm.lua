@@ -80,7 +80,10 @@ require('events.new-tab-button').setup() -- если там экспортиру
 -- Настраиваем центрирование окна
 local appearance_utils = require("utils.appearance")
 appearance_utils.setup_window_centering()local appearance_events = require("config.appearance.events")
-if appearance_events and appearance_events.register then
+
+-- Тестирование системы отладки
+local debug = require("utils.debug")
+debug.enable_debug("session_status")if appearance_events and appearance_events.register then
    appearance_events.register()
 end
 

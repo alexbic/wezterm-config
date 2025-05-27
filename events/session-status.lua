@@ -17,7 +17,6 @@ local mode_icons = {
   workspace_search = { icon = "🔍", name = "", color = "#F1FA8C" },}
 
 local function log_status()
-  wezterm.log_info("🔍 СТАТУС МОДУЛЯ: current_mode=" .. tostring(session_state.current_mode) .. ", saved_mode=" .. tostring(session_state.saved_mode))
 end
 
 M.set_mode = function(mode_name)
@@ -51,13 +50,11 @@ end
 M.get_status_elements = function()
   local elements = {}
   
-  wezterm.log_info("🔍 get_status_elements: проверяем saved_mode=" .. tostring(session_state.saved_mode))
   
   -- Показываем saved_mode если он есть
   local mode_to_show = session_state.saved_mode
   if mode_to_show and mode_icons[mode_to_show] then
     local mode = mode_icons[mode_to_show]
-    wezterm.log_info("🔍 get_status_elements: добавляем элемент режима " .. mode_to_show)
     table.insert(elements, {
       type = "mode",
       icon = mode.icon,
@@ -65,10 +62,8 @@ M.get_status_elements = function()
       color = mode.color
     })
   else
-    wezterm.log_info("🔍 get_status_elements: НЕТ элементов режима для отображения")
   end
   
-  wezterm.log_info("🔍 get_status_elements: возвращаем " .. #elements .. " элементов")
   return elements
 end
 
