@@ -30,6 +30,7 @@ resurrect.state_manager.set_max_nlines(5000)
 -- Настройка папки сохранения для нашего проекта (кроссплатформенно)
 local paths = require("config.environment.paths")
 resurrect.state_manager.change_state_save_dir(paths.resurrect_state_dir)
+
 -- Переменные для отслеживания состояния
 local is_periodic_save = false
 local is_user_save = false
@@ -160,12 +161,13 @@ end
 
 -- ========================== ОБРАБОТЧИКИ СОБЫТИЙ ==========================
 
+local function register_event_handlers()
   -- Обработка отмены workspace switcher
   wezterm.on("smart_workspace_switcher.workspace_switcher.canceled", function(window)
     wezterm.log_info("❌ Workspace switcher отменен")
     session_status.clear_saved_mode()
   end)
-local function register_event_handlers()
+
   -- Обработка ошибок
   wezterm.on('resurrect.error', function(error)
     wezterm.log_info("Событие resurrect.error: " .. tostring(error))
@@ -352,7 +354,8 @@ local function register_event_handlers()
             local window_state = resurrect.window_state.get_window_state(inner_win:mux_window())
             resurrect.state_manager.save_state(window_state, save_name, "window")
             local session_status = require("events.session-status")
-            session_status.clear_saved_mode()            wezterm.log_info("Window сохранено как: " .. save_name)
+            session_status.clear_saved_mode()
+            wezterm.log_info("Window сохранено как: " .. save_name)
           end
         end),
       }),
@@ -372,21 +375,29 @@ local function register_event_handlers()
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
-            local tab = inner_pane:tab() or inner_win:active_tab(); if not tab then wezterm.log_error("Cannot get tab from pane or window"); session_status.save_session_error(inner_win, "Ошибка: невозможно получить вкладку"); return end; local tab_state = resurrect.tab_state.get_tab_state(tab)
+            local tab = inner_pane:tab() or inner_win:active_tab()
+            if not tab then
+              wezterm.log_error("Cannot get tab from pane or window")
+              session_status.save_session_error(inner_win, "Ошибка: невозможно получить вкладку")
+              return
+            end
+            local tab_state = resurrect.tab_state.get_tab_state(tab)
             resurrect.state_manager.save_state(tab_state, save_name, "tab")
             local session_status = require("events.session-status")
-            session_status.clear_saved_mode()            wezterm.log_info("Tab сохранен как: " .. save_name)
+            session_status.clear_saved_mode()
+            wezterm.log_info("Tab сохранен как: " .. save_name)
           end
         end),
       }),
       pane
     )
-  end)  wezterm.on('resurrect.save_state', function(window, pane)
+  end)
+
+  wezterm.on('resurrect.save_state', function(window, pane)
     wezterm.log_info("Обработчик события resurrect.save_state")
     
     window:perform_action(
       wezterm.action.PromptInputLine({
-        description = "Введите имя для сохранения сессии",
         description = "Введите имя для сохранения сессии\nТекущая workspace: " .. window:active_workspace() .. "\n\nEnter = сохранить как текущую | Esc = отмена | или введите новое имя",
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name
@@ -403,7 +414,8 @@ local function register_event_handlers()
             wezterm.log_info("🎯 Сохранение с введённым именем: " .. save_name)
           end
           
-          if save_name and save_name ~= "" then            is_user_save = true
+          if save_name and save_name ~= "" then
+            is_user_save = true
             current_save_name = save_name
             current_operation = "save"
             
@@ -524,8 +536,7 @@ local function register_event_handlers()
           selected_session_name = nil
         end)
       end,
-      {
-        title = "Удаление сессии",
+      {title = "Удаление сессии",
         description = "Выберите сессию для удаления и нажмите Enter = удалить, Esc = отмена, / = фильтр",
         fuzzy_description = "Поиск сессии для удаления: ",
         is_fuzzy = true,
@@ -535,11 +546,7 @@ local function register_event_handlers()
 end
 
 -- Инициализация
-  -- Обработка отмены workspace switcher
-  wezterm.on("smart_workspace_switcher.workspace_switcher.canceled", function(window)
-    wezterm.log_info("❌ Workspace switcher отменен")
-    session_status.clear_saved_mode()
-  end)
 register_event_handlers()
 
 return M
+-- EOF

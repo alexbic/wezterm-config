@@ -31,12 +31,6 @@ local base_keys = {
    { key = 'F12',    mods = 'NONE',        action = act.ShowDebugOverlay },
    { key = 'f',      mods = mod.SUPER,     action = act.Search({ CaseInSensitiveString = '' }) },
 
-   -- Тестовая клавиша для проверки уведомлений
-   { key = 'n', mods = 'CTRL|SHIFT', action = act.EmitEvent('resurrect.test_notification') },
-
-   -- Отладка анимации - принудительная остановка (для тестирования)
-   { key = 'x', mods = 'CTRL|SHIFT', action = act.EmitEvent('stop-loading-debug') },
-
    -- Копирование/Вставка
    { key = 'c', mods = mod.SUPER, action = act.CopyTo('Clipboard') },
    { key = 'v', mods = mod.SUPER, action = act.PasteFrom('Clipboard') },
@@ -108,3 +102,4 @@ return {
    keys = build_keys(),
    key_tables = key_tables,
 }
+-- EOF

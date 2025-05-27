@@ -204,12 +204,6 @@ local function setup()
     end
   end)
   
-  -- Добавляем горячую клавишу для принудительной остановки анимации (для отладки)
-  wezterm.on('stop-loading-debug', function(window, pane)
-    wezterm.log_info("🚨 Горячая клавиша: принудительная остановка анимации")
-    session_status.force_stop_loading(window)
-  end)
-  
   -- Обработчик для принудительного обновления статуса
   wezterm.on('force-update-status', function(window, pane)
     wezterm.log_info("Событие force-update-status")
@@ -253,3 +247,4 @@ local function setup()
 end
 
 return setup
+-- EOF
