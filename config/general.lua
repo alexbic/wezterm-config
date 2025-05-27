@@ -24,6 +24,15 @@ return {
    -- paste behaviours
    canonicalize_pasted_newlines = 'CarriageReturn',
 
+   -- 🔔 VISUAL BELL для copy_mode с оранжевой рамкой со всех сторон
+   visual_bell = {
+      fade_in_duration_ms = 75,
+      fade_out_duration_ms = 225,
+      fade_in_function = 'EaseIn',
+      fade_out_function = 'EaseOut',
+      target = 'BackgroundColor',
+   },
+
    hyperlink_rules = {
       -- Matches: a URL in parens: (URL)
       {
@@ -65,10 +74,19 @@ return {
    window_decorations = "INTEGRATED_BUTTONS|RESIZE",
    tab_bar_at_bottom = false,
    
-   -- Настройки шрифта для tab bar и статуса
+   -- 🖼️ WINDOW FRAME с оранжевыми границами для copy_mode
    window_frame = {
      font = wezterm.font("Menlo", { weight = "Light" }),
      font_size = 11,
+     -- Оранжевые границы со всех сторон 6px для copy_mode
+     border_left_width = '6px',
+     border_right_width = '6px',
+     border_bottom_height = '6px',
+     border_top_height = '6px',
+     border_left_color = '#FF8C00',
+     border_right_color = '#FF8C00',
+     border_bottom_color = '#FF8C00',
+     border_top_color = '#FF8C00',
    },
 
    -- Интегрированные кнопки управления окном

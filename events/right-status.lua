@@ -71,7 +71,7 @@ local function setup()
       overrides.window_frame = {
         border_left_width = '0px',
         border_right_width = '0px',
-        border_bottom_width = '0px', 
+        border_bottom_height = '0px', 
         border_top_height = '0px',
       }
       window:set_config_overrides(overrides)
@@ -95,7 +95,7 @@ local function setup()
       overrides.window_frame = {
         border_left_width = '6px',       -- Увеличил с 2px до 6px
         border_right_width = '6px', 
-        border_bottom_width = '6px',
+        border_bottom_height = '6px',
         border_top_height = '6px',
         border_left_color = '#FF8C00',   -- Яркий оранжевый (DarkOrange)
         border_right_color = '#FF8C00',

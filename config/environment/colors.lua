@@ -75,7 +75,8 @@ local colorscheme = {
          italic = true,
       },
    },
-   visual_bell = mocha.surface0,
+   -- 🟠 ОРАНЖЕВЫЙ VISUAL BELL для copy_mode
+   visual_bell = "#FF8C00",
    indexed = {
       [16] = mocha.peach,
       [17] = mocha.rosewater,
