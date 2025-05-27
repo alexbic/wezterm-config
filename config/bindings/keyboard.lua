@@ -1,32 +1,27 @@
--- ОПИСАНИЕ: Настройки привязок клавиш
+-- cat > ~/.config/wezterm/config/bindings/keyboard.lua << 'EOF'
+--
+-- ОПИСАНИЕ: Настройки привязок клавиш с использованием утилит
 -- Определяет сочетания клавиш для различных действий: управление вкладками,
 -- окнами, копирование/вставка, поиск, изменение внешнего вида.
--- Активирует модальные таблицы клавиш.
+-- Использует централизованные функции из utils.bindings для модульности.
+--
+-- ЗАВИСИМОСТИ: wezterm, utils.platform, utils.bindings, config.bindings.keyboard-tables
 
 local wezterm = require('wezterm')
 local platform = require('utils.platform')()
+local bindings_utils = require('utils.bindings')
 local act = wezterm.action
 local key_tables = require('config.bindings.keyboard-tables')
 local environment = require('config.environment')
 
-local mod = {}
-
-if platform.is_mac then
-  mod.SUPER = 'SUPER'  -- Command (⌘) на macOS
-  mod.SUPER_REV = 'SUPER|CTRL'  -- Command (⌘) + Control на macOS
-elseif platform.is_win then
-   mod.SUPER = 'ALT'  -- Используем ALT вместо WIN на Windows
-   mod.SUPER_REV = 'ALT|CTRL'
-else
-   mod.SUPER = 'ALT'  -- Используем ALT на Linux
-   mod.SUPER_REV = 'ALT|CTRL'
-end
+-- Получаем модификаторы для текущей платформы
+local mod = bindings_utils.get_modifiers()
 
 -- Устанавливаем лидер-клавишу Alt+A для специальных функций
 local leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 750 }
 
--- Клавиши для основных функций
-local keys = {
+-- Базовые клавиши для основных функций
+local base_keys = {
    -- Общие функции --
    { key = 'F1',     mods = 'NONE',        action = 'ActivateCopyMode' },
    { key = 'F2',     mods = 'NONE',        action = act.ActivateCommandPalette },
@@ -35,44 +30,6 @@ local keys = {
    { key = 'F11',    mods = 'NONE',        action = act.ToggleFullScreen },
    { key = 'F12',    mods = 'NONE',        action = act.ShowDebugOverlay },
    { key = 'f',      mods = mod.SUPER,     action = act.Search({ CaseInSensitiveString = '' }) },
-
-   -- Циклическое изменение прозрачности
-   { key = '0', mods = 'CTRL', action = act.EmitEvent('cycle-opacity-forward') },
-   { key = '9', mods = 'CTRL', action = act.EmitEvent('cycle-opacity-backward') },
-
-   -- Переключение видимости панели закладок
-   { key = 'h', mods = 'SHIFT|SUPER', action = act.EmitEvent('toggle-tab-bar') },
-
-   -- Горячие клавиши для смены фона
-   { key = 'b', mods = 'SHIFT|SUPER', action = act.EmitEvent('change-background') },
-
-   -- Активаторы для key_tables (таблиц клавиш) с принудительным обновлением статуса
-   { key = 'p', mods = 'LEADER', action = act.Multiple({
-       act.ActivateKeyTable({
-         name = 'pane_control',
-         one_shot = false,
-         timeout_milliseconds = 10000,
-       }),
-       act.EmitEvent('force-update-status')
-   })},
-
-   { key = 'f', mods = 'LEADER', action = act.Multiple({
-       act.ActivateKeyTable({
-         name = 'font_control',
-         one_shot = false,
-         timeout_milliseconds = 10000,
-       }),
-       act.EmitEvent('force-update-status')
-   })},
-
-   { key = 's', mods = 'LEADER', action = act.Multiple({
-       act.ActivateKeyTable({
-         name = 'session_control',
-         one_shot = false,
-         timeout_milliseconds = 10000,
-       }),
-       act.EmitEvent('force-update-status')
-   })},
 
    -- Тестовая клавиша для проверки уведомлений
    { key = 'n', mods = 'CTRL|SHIFT', action = act.EmitEvent('resurrect.test_notification') },
@@ -100,61 +57,54 @@ local keys = {
    { key = 'q', mods = mod.SUPER, action = act.QuitApplication },
 
    -- Переименование вкладки
-   { key = 'R', mods = 'CTRL|SHIFT', action = act.PromptInputLine({
-       description = 'Enter new name for tab',
-       action = wezterm.action_callback(function(window, pane, line)
-           if line then
-               window:active_tab():set_title(line)
-           end
-       end),
-   })},
+   { key = 'R', mods = 'CTRL|SHIFT', action = bindings_utils.rename_tab() },
 
-   -- Отправка специальных символов через Alt (Option)
-   { key = "'", mods = 'ALT', action = act.SendString("\\") },
-   { key = 'ñ', mods = 'ALT', action = act.SendString("~") },
-   { key = '1', mods = 'ALT', action = act.SendString("|") },
-   { key = 'º', mods = 'ALT', action = act.SendString("\\") },
-   { key = '+', mods = 'ALT', action = act.SendString("]") },
-   { key = '`', mods = 'ALT', action = act.SendString("[") },
-   { key = 'ç', mods = 'ALT', action = act.SendString("}") },
-   { key = '*', mods = 'ALT', action = act.SendString("{") },
-   { key = '3', mods = 'ALT', action = act.SendString("#") },
-
-   -- Создание нового workspace
-   { key = "w", mods = "CTRL|SHIFT", action = act.PromptInputLine {
-       description = wezterm.format {
-         { Attribute = { Intensity = "Bold" } },
-         { Foreground = { AnsiColor = "Fuchsia" } },
-         { Text = "Введите имя для нового workspace" },
-       },
-       action = wezterm.action_callback(function(window, pane, line)
-         if line then
-           window:perform_action(
-             act.SwitchToWorkspace {
-               name = line,
-             },
-             pane
-           )
-         end
-       end),
-   }},
-   
    {
      key = "t",
      mods = "CTRL|SHIFT",
      action = wezterm.action.SpawnTab "CurrentPaneDomain",
      description = environment.locale.t("open_new_tab"),
    },
-   
-   -- Горячие клавиши для workspace управления
-   { key = "w", mods = "LEADER", action = act.EmitEvent("workspace.switch") },
-   { key = "W", mods = "LEADER", action = act.EmitEvent("workspace.restore") },
 }
+
+-- Собираем все клавиши из утилит
+local function build_keys()
+  local keys = {}
+  
+  -- Добавляем базовые клавиши
+  for _, key in ipairs(base_keys) do
+    table.insert(keys, key)
+  end
+  
+  -- Добавляем клавиши внешнего вида
+  for _, key in ipairs(bindings_utils.generate_appearance_bindings(mod)) do
+    table.insert(keys, key)
+  end
+  
+  -- Добавляем клавиши key tables
+  for _, key in ipairs(bindings_utils.generate_key_table_bindings(mod)) do
+    table.insert(keys, key)
+  end
+  
+  -- Добавляем специальные символы (только для macOS)
+  if platform.is_mac then
+    for _, key in ipairs(bindings_utils.generate_special_char_bindings()) do
+      table.insert(keys, key)
+    end
+  end
+  
+  -- Добавляем workspace клавиши
+  for _, key in ipairs(bindings_utils.generate_workspace_bindings(mod)) do
+    table.insert(keys, key)
+  end
+  
+  return keys
+end
 
 -- Экспортируем настройки клавиатуры
 return {
    disable_default_key_bindings = true,
    leader = leader,
-   keys = keys,
+   keys = build_keys(),
    key_tables = key_tables,
 }
