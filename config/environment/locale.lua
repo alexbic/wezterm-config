@@ -51,8 +51,22 @@ local available_languages = {
     copy_mode = "Режим копирования",
     search_mode = "Режим поиска",
     operation_completed = "Операция завершена",
-    error = "Ошибка",
-  },
+    -- Отладочные сообщения
+    debug_status_module_state = "СТАТУС МОДУЛЯ: current_mode=%s, saved_mode=%s",
+    debug_set_mode_called = "SESSION-STATUS set_mode вызван: %s",
+    debug_clear_mode_called = "SESSION-STATUS clear_mode вызван",
+    debug_clear_saved_mode_called = "SESSION-STATUS clear_saved_mode вызван",
+    debug_workspace_switch = "Переключение workspace: %s",
+    debug_workspace_created = "Создан новый workspace: %s",
+    debug_background_changed = "Фон изменен на: %s",
+    debug_window_centered = "Окно отцентрировано: %sx%s",
+    debug_resurrect_save_start = "Начало сохранения состояния: %s",
+    debug_resurrect_load_start = "Начало загрузки состояния: %s",
+    debug_key_binding_triggered = "Горячая клавиша сработала: %s",    error = "Ошибка",
+    debug_enabled_for_module = "Отладка включена для модуля: %s",
+    debug_disabled_for_module = "Отладка выключена для модуля: %s",
+    debug_enabled_all = "Отладка включена для всех модулей",
+    debug_disabled_all = "Отладка выключена для всех модулей",  },
   en = {
     locale = "en_US.UTF-8",
     name = "English",
@@ -94,8 +108,22 @@ local available_languages = {
     copy_mode = "Copy mode",
     search_mode = "Search mode",
     operation_completed = "Operation completed",
-    error = "Error",
-  }
+    -- Debug messages
+    debug_status_module_state = "MODULE STATUS: current_mode=%s, saved_mode=%s",
+    debug_set_mode_called = "SESSION-STATUS set_mode called: %s",
+    debug_clear_mode_called = "SESSION-STATUS clear_mode called",
+    debug_clear_saved_mode_called = "SESSION-STATUS clear_saved_mode called",
+    debug_workspace_switch = "Workspace switching: %s",
+    debug_workspace_created = "New workspace created: %s",
+    debug_background_changed = "Background changed to: %s",
+    debug_window_centered = "Window centered: %sx%s",
+    debug_resurrect_save_start = "State saving started: %s",
+    debug_resurrect_load_start = "State loading started: %s",
+    debug_key_binding_triggered = "Key binding triggered: %s",    error = "Error",
+    debug_enabled_for_module = "Debug enabled for module: %s",
+    debug_disabled_for_module = "Debug disabled for module: %s",
+    debug_enabled_all = "Debug enabled for all modules",
+    debug_disabled_all = "Debug disabled for all modules",  }
 }
 
 local default_language = os.getenv("WEZTERM_LANG") or "ru"

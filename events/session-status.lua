@@ -1,4 +1,6 @@
 local wezterm = require('wezterm')
+local debug = require("utils.debug")
+
 local M = {}
 
 -- Локальные переменные в модуле вместо глобальных
@@ -19,14 +21,14 @@ local function log_status()
 end
 
 M.set_mode = function(mode_name)
-  wezterm.log_info("🚨 SESSION-STATUS set_mode вызван: " .. tostring(mode_name))
+  debug.log("session_status", "debug_set_mode_called", tostring(mode_name))
   session_state.current_mode = mode_name
   session_state.saved_mode = mode_name
   log_status()
 end
 
 M.clear_mode = function()
-  wezterm.log_info("🚨 SESSION-STATUS clear_mode вызван")
+  debug.log("session_status", "debug_clear_mode_called")
   session_state.current_mode = nil
   -- НЕ очищаем saved_mode здесь - только при завершении операций
   log_status()
