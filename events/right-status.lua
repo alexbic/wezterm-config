@@ -84,9 +84,11 @@ local function setup()
   -- Основной обработчик обновления строки состояния
   wezterm.on('update-right-status', function(window, pane)
     -- Получаем текущую активную таблицу клавиш
-    local current_key_table = window:active_key_table()
-    
-    -- 🖼️ ОБНОВЛЕННЫЙ КОД: Проверяем copy_mode и добавляем ТОЛСТУЮ ОРАНЖЕВУЮ рамку
+    -- Проверяем валидность окна перед обращением к нему
+    -- Усиленная проверка валидности окна
+    if not window or window == nil then return end
+    local ok, current_key_table = pcall(function() return window:active_key_table() end)
+    if not ok then return end    -- 🖼️ ОБНОВЛЕННЫЙ КОД: Проверяем copy_mode и добавляем ТОЛСТУЮ ОРАНЖЕВУЮ рамку
     local copy_mode_active = (current_key_table == 'copy_mode')
     local overrides = window:get_config_overrides() or {}
     

@@ -29,7 +29,7 @@ local function register_appearance_events()
       )
       
       local overrides = window:get_config_overrides() or {}
-      overrides.window_background_image = new_background
+      if not window or not window.get_config_overrides then return end      overrides.window_background_image = new_background
       overrides.window_background_image_hsb = {
         hue = 1.0,
         saturation = 1.02,
@@ -45,7 +45,7 @@ local function register_appearance_events()
     if backgrounds.all_images and #backgrounds.all_images > 0 then
       local new_background = appearance.get_random_background(backgrounds.all_images)
       local overrides = window:get_config_overrides() or {}
-      overrides.window_background_image = new_background
+      if not window or not window.get_config_overrides then return end      overrides.window_background_image = new_background
       overrides.window_background_image_hsb = {
         hue = 1.0,
         saturation = 1.02,

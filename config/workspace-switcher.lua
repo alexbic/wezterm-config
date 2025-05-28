@@ -195,7 +195,38 @@ wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window
     else
       wezterm.log_warn("Не удалось загрузить состояние для workspace: " .. name)
     end
+  else
+    -- Обработка активных workspace
+    local current_workspace = window:active_workspace()
+    
+    if workspace == current_workspace then
+      wezterm.log_info("Уже в workspace: " .. workspace .. ", игнорируем")
+      return
+    end
+    
+    -- Ищем окно с нужным workspace
+    local mux = wezterm.mux
+    local found_window = nil
+    
+    for _, win in ipairs(mux.all_windows()) do
+      if win:get_workspace() == workspace then
+        found_window = win
+        break
+      end
+    end
+    
+    if found_window then
+      local gui_win = found_window:gui_window()
+      if gui_win then
+        gui_win:focus()
+        gui_win:raise()
+        wezterm.log_info("Активировано окно с workspace: " .. workspace)
+      end
+    else
+      window:perform_action(wezterm.action.SwitchToWorkspace({ name = workspace }), window:active_pane())
+    end
   end
 end)
 
 return M
+-- EOF

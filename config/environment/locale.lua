@@ -63,7 +63,13 @@ local available_languages = {
     debug_resurrect_save_start = "Начало сохранения состояния: %s",
     debug_resurrect_load_start = "Начало загрузки состояния: %s",
     debug_key_binding_triggered = "Горячая клавиша сработала: %s",    error = "Ошибка",
-    debug_enabled_for_module = "Отладка включена для модуля: %s",
+    -- Описания биндингов
+    enter_new_tab_name = "Введите новое имя для вкладки",
+    enter_workspace_name = "Введите имя для нового workspace",
+    enter_workspace_name_new_window = "Введите имя для нового workspace (новое окно)",    -- Описания биндингов
+    enter_new_tab_name = "Введите новое имя для вкладки",
+    enter_workspace_name = "Введите имя для нового workspace",
+    enter_workspace_name_new_window = "Введите имя для нового workspace (новое окно)",    debug_enabled_for_module = "Отладка включена для модуля: %s",
     debug_disabled_for_module = "Отладка выключена для модуля: %s",
     debug_enabled_all = "Отладка включена для всех модулей",
     debug_disabled_all = "Отладка выключена для всех модулей",  },
@@ -120,7 +126,13 @@ local available_languages = {
     debug_resurrect_save_start = "State saving started: %s",
     debug_resurrect_load_start = "State loading started: %s",
     debug_key_binding_triggered = "Key binding triggered: %s",    error = "Error",
-    debug_enabled_for_module = "Debug enabled for module: %s",
+    -- Binding descriptions
+    enter_new_tab_name = "Enter new name for tab",
+    enter_workspace_name = "Enter name for new workspace",
+    enter_workspace_name_new_window = "Enter name for new workspace (new window)",    -- Binding descriptions
+    enter_new_tab_name = "Enter new name for tab",
+    enter_workspace_name = "Enter name for new workspace",
+    enter_workspace_name_new_window = "Enter name for new workspace (new window)",    debug_enabled_for_module = "Debug enabled for module: %s",
     debug_disabled_for_module = "Debug disabled for module: %s",
     debug_enabled_all = "Debug enabled for all modules",
     debug_disabled_all = "Debug disabled for all modules",  }
