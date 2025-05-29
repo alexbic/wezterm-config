@@ -118,7 +118,7 @@ local function register_workspace_events()
           elseif action_type == "saved" then
             local state_type = parts[2]
             local state_name = parts[3]
-            wezterm.log_info("🔧 Пытаемся восстановить " .. state_type .. " с именем: " .. state_name)
+            wezterm.log_info("⚙️ Пытаемся восстановить " .. state_type .. " с именем: " .. state_name)
             
             local resurrect = require('config.resurrect').resurrect
             local state = resurrect.state_manager.load_state(state_name, state_type)
@@ -147,7 +147,7 @@ local function register_workspace_events()
                   })
                 end)
               elseif state_type == "window" then
-                wezterm.log_info("🔧 Восстанавливаем window состояние...")
+                wezterm.log_info("⚙️ Восстанавливаем window состояние...")
                 resurrect.window_state.restore_window(inner_pane:window(), state, {
                   window = inner_window:mux_window(),
                   relative = true,
@@ -155,7 +155,7 @@ local function register_workspace_events()
                   on_pane_restore = resurrect.tab_state.default_on_pane_restore,
                 })
               elseif state_type == "tab" then
-                wezterm.log_info("🔧 Восстанавливаем tab состояние...")
+                wezterm.log_info("⚙️ Восстанавливаем tab состояние...")
                 resurrect.tab_state.restore_tab(inner_pane:tab(), state, {
                   relative = true,
                   restore_text = true,
