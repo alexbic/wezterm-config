@@ -58,8 +58,8 @@ local function register_workspace_events()
     end
     
     -- 4. В конце пути из zoxide
-    local workspace_switcher = require('config.workspace-switcher')
-    local zoxide_choices = workspace_switcher.workspace_switcher.choices.get_zoxide_elements({})
+    local workspace_switcher_plugin = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+    local zoxide_choices = workspace_switcher_plugin.choices.get_zoxide_elements({})
     
     for _, choice in ipairs(zoxide_choices) do
       table.insert(choices, {

@@ -1,3 +1,4 @@
+local debug = require("utils.debug")
 -- cat > ~/.config/wezterm/events/right-status.lua << 'EOF'
 --
 -- ОПИСАНИЕ: Настройка строки состояния
@@ -46,7 +47,6 @@ local function get_localized_date()
 end
 
 -- Переменные для отслеживания инициализации и кэширования
-local locale_initialized = false
 local cached_date_lang = nil
 local last_active_key_table = nil
 
@@ -201,7 +201,7 @@ local function setup()
     
     -- Отладочная информация
     for i, element in ipairs(status_elements) do
-      wezterm.log_info("  - Элемент " .. i .. ": " .. element.type .. " = " .. (element.text or element.icon))
+      debug.log("session_status", "debug_status_element", i, element.type, (element.text or element.icon))
     end
   end)
   
@@ -211,7 +211,6 @@ local function setup()
     
     if window then
       window:set_right_status("")
-      locale_initialized = false
       cached_date_lang = nil
       last_active_key_table = nil
       session_status.clear_all_modes() -- Очищаем ВСЕ режимы
@@ -221,7 +220,6 @@ local function setup()
   
   -- Обработчик для отображения уведомлений при перезагрузке конфигурации
   wezterm.on('window-config-reloaded', function(window, pane)
-    locale_initialized = false
     cached_date_lang = nil
     last_active_key_table = nil
     session_status.clear_all_modes() -- Очищаем ВСЕ режимы при перезагрузке

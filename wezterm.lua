@@ -83,7 +83,6 @@ appearance_utils.setup_window_centering()local appearance_events = require("conf
 
 -- Тестирование системы отладки
 local debug = require("utils.debug")
-debug.enable_debug("session_status")
 debug.enable_debug("workspace")
 debug.enable_debug("appearance")
 if appearance_events and appearance_events.register then

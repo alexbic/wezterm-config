@@ -68,7 +68,7 @@ local available_languages = {
     debug_workspace_cancelled = "Выбор workspace отменён",
     debug_workspace_action_type = "Выбран тип действия: %s",
     debug_workspace_path_switch = "Переключение на путь: %s",    enter_new_tab_name = "Введите новое имя для вкладки",
-    debug_workspace_plugin_chosen = "Плагин выбрал workspace: %s, label: %s",    enter_workspace_name = "Введите имя для нового workspace",
+    debug_status_element = "Элемент #%s тип:%s значение:%s",    debug_workspace_plugin_chosen = "Плагин выбрал workspace: %s, label: %s",    enter_workspace_name = "Введите имя для нового workspace",
     debug_background_new_tab = "Фон для новой вкладки %s: %s",
     debug_background_changed = "Фон изменен на: %s",    enter_workspace_name_new_window = "Введите имя для нового workspace (новое окно)",    -- Описания биндингов
     enter_new_tab_name = "Введите новое имя для вкладки",
@@ -135,7 +135,7 @@ local available_languages = {
     debug_workspace_cancelled = "Workspace selection cancelled",
     debug_workspace_action_type = "Selected action type: %s",
     debug_workspace_path_switch = "Switching to path: %s",    enter_new_tab_name = "Enter new name for tab",
-    debug_workspace_plugin_chosen = "Plugin selected workspace: %s, label: %s",    enter_workspace_name = "Enter name for new workspace",
+    debug_status_element = "Element #%s type:%s value:%s",    debug_workspace_plugin_chosen = "Plugin selected workspace: %s, label: %s",    enter_workspace_name = "Enter name for new workspace",
     debug_background_new_tab = "Background for new tab %s: %s",
     debug_background_changed = "Background changed to: %s",    enter_workspace_name_new_window = "Enter name for new workspace (new window)",    -- Binding descriptions
     enter_new_tab_name = "Enter new name for tab",
