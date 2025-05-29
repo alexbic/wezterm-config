@@ -49,10 +49,8 @@ local function safe_get_workspace_state()
   end)
   
   if ok then
-    wezterm.log_info("🎯 Состояние workspace получено успешно")
     return state
   else
-    wezterm.log_info("❌ Ошибка получения состояния workspace: " .. tostring(state))
     return nil
   end
 end
@@ -62,27 +60,20 @@ local function safe_clear_tabs(window)
   local mux_window = window:mux_window()
   local tabs = mux_window:tabs()
   
-  wezterm.log_info("🔄 Безопасная очистка - найдено вкладок: " .. #tabs)
   
   -- Оставляем только первую вкладку, остальные закрываем
   for i = #tabs, 2, -1 do
     local tab = tabs[i]
     if tab then
-      wezterm.log_info("🔄 Закрываем вкладку " .. i)
       tab:activate()
       window:perform_action(wezterm.action.CloseCurrentTab({confirm = false}), tab:active_pane())
     end
   end
   
-  wezterm.log_info("🔄 Очистка завершена, осталась 1 вкладка")
 end
 
 -- Функция для выполнения восстановления состояния
 local function perform_restore(window, pane, id, session_name, type_info)
-  wezterm.log_info("🎯 === НАЧИНАЕМ ВОССТАНОВЛЕНИЕ ===")
-  wezterm.log_info("🎯 Состояние: " .. (session_name or "unknown"))
-  wezterm.log_info("🎯 ID: " .. (id or "unknown"))
-  wezterm.log_info("🎯 Тип: " .. (type_info or "unknown"))
   
   session_status.start_loading(window)
   
@@ -96,13 +87,10 @@ local function perform_restore(window, pane, id, session_name, type_info)
   local clean_id = string.match(id, "([^/]+)$")
   clean_id = string.match(clean_id, "(.+)%..+$")
   
-  wezterm.log_info("🎯 Обработанный тип: " .. (type or "unknown"))
-  wezterm.log_info("🎯 Обработанный ID: " .. (clean_id or "unknown"))
   
   safe_clear_tabs(window)
   
   wezterm.time.call_after(1.0, function()
-    wezterm.log_info("🎯 Выполняем восстановление...")
     
     local opts = {
       window = window:mux_window(),
@@ -114,47 +102,36 @@ local function perform_restore(window, pane, id, session_name, type_info)
     local success = false
     
     if type == "workspace" then
-      wezterm.log_info("🎯 Загружаем состояние workspace: " .. clean_id)
       local state = resurrect.state_manager.load_state(clean_id, "workspace")
       if state then
-        wezterm.log_info("🎯 Состояние workspace загружено, восстанавливаем...")
         resurrect.workspace_state.restore_workspace(state, opts)
         success = true
       else
-        wezterm.log_info("❌ Не удалось загрузить состояние workspace")
       end
     elseif type == "window" then
-      wezterm.log_info("🎯 Загружаем состояние window: " .. clean_id)
       local state = resurrect.state_manager.load_state(clean_id, "window")
       if state then
-        wezterm.log_info("🎯 Состояние window загружено, восстанавливаем...")
         resurrect.window_state.restore_window(pane:window(), state, opts)
         success = true
       else
-        wezterm.log_info("❌ Не удалось загрузить состояние window")
       end
     elseif type == "tab" then
-      wezterm.log_info("🎯 Загружаем состояние tab: " .. clean_id)
       local state = resurrect.state_manager.load_state(clean_id, "tab")
       if state then
-        wezterm.log_info("🎯 Состояние tab загружено, восстанавливаем...")
         resurrect.tab_state.restore_tab(pane:tab(), state, opts)
         success = true
       else
-        wezterm.log_info("❌ Не удалось загрузить состояние tab")
       end
     else
-      wezterm.log_info("❌ Неизвестный тип состояния: " .. (type or "nil"))
     end
     
     if not success then
-      session_status.load_session_error(window, "Не удалось загрузить состояние")
+      session_status.load_session_error(window, environment.locale.t("cannot_get_state"))
       pending_operation = nil
       current_operation = nil
       selected_session_name = nil
     else
-      wezterm.log_info("🎯 Восстановление инициировано успешно")
-      session_status.load_session_success(window, session_name or "сессия")
+      session_status.load_session_success(window, session_name or environment.locale.t("session_saved_as", ""))
     end
   end)
 end
@@ -164,13 +141,11 @@ end
 local function register_event_handlers()
   -- Обработка отмены workspace switcher
   wezterm.on("smart_workspace_switcher.workspace_switcher.canceled", function(window)
-    wezterm.log_info("❌ Workspace switcher отменен")
     session_status.clear_saved_mode()
   end)
 
   -- Обработка ошибок
   wezterm.on('resurrect.error', function(error)
-    wezterm.log_info("Событие resurrect.error: " .. tostring(error))
     
     local window = nil
     if wezterm.mux and wezterm.mux.get_active_window then
@@ -196,12 +171,10 @@ local function register_event_handlers()
   -- Установка флага при начале периодического сохранения
   wezterm.on('resurrect.state_manager.periodic_save.start', function()
     is_periodic_save = true
-    wezterm.log_info("🎯 Начало периодического сохранения")
   end)
 
   -- Обработчик завершения сохранения состояния
   wezterm.on('resurrect.state_manager.save_state.finished', function(session_path)
-    wezterm.log_info("🎯 Событие save_state.finished: " .. session_path .. " (periodic: " .. tostring(is_periodic_save) .. ", user: " .. tostring(is_user_save) .. ")")
     
     if save_timeout_timer then
       save_timeout_timer:cancel()
@@ -210,7 +183,7 @@ local function register_event_handlers()
     
     if not is_periodic_save and is_user_save then
       local path = session_path:match(".+/([^/]+)$")
-      local name = path and path:match("^(.+)%.json$") or current_save_name or "неизвестно"
+      local name = path and path:match("^(.+)%.json$") or current_save_name or environment.locale.t("unknown_type")
       
       local window = nil
       if wezterm.mux and wezterm.mux.get_active_window then
@@ -218,11 +191,9 @@ local function register_event_handlers()
       end
       
       if window then
-        wezterm.log_info("🎯 Вызываем save_session_success с именем: " .. name)
         session_status.save_session_success(window, name)
         
         if pending_restore then
-          wezterm.log_info("🎯 Выполняем отложенное восстановление после сохранения")
           wezterm.time.call_after(2, function()
             perform_restore(pending_restore.window, pending_restore.pane, pending_restore.id, pending_restore.session_name, pending_restore.type_info)
             pending_restore = nil
@@ -235,33 +206,28 @@ local function register_event_handlers()
       current_operation = nil
     elseif is_periodic_save then
       is_periodic_save = false
-      wezterm.log_info("🎯 Периодическое сохранение завершено")
     end
   end)
 
   -- Обработчик начала сохранения состояния
   wezterm.on('resurrect.state_manager.save_state.start', function(state, opt_name)
-    wezterm.log_info("🎯 Событие save_state.start с именем: " .. (opt_name or "неизвестно") .. " (periodic: " .. tostring(is_periodic_save) .. ", user: " .. tostring(is_user_save) .. ")")
     
     if not is_periodic_save and is_user_save then
-      wezterm.log_info("🎯 Начато пользовательское сохранение")
       current_operation = "save"
       
       save_timeout_timer = wezterm.time.call_after(1, function()
-        wezterm.log_info("🎯 Таймаут сохранения - очищаем иконку")
         local window = nil
         if wezterm.mux and wezterm.mux.get_active_window then
           window = wezterm.mux.get_active_window()
         end
         
         if window and is_user_save then
-          session_status.save_session_error(window, "Ошибка плагина resurrect")
+          session_status.save_session_error(window, environment.locale.t("plugin_error"))
           is_user_save = false
           current_save_name = ""
           current_operation = nil
           
           if pending_restore then
-            wezterm.log_info("🎯 Выполняем отложенное восстановление после таймаута")
             wezterm.time.call_after(2, function()
               perform_restore(pending_restore.window, pending_restore.pane, pending_restore.id, pending_restore.session_name, pending_restore.type_info)
               pending_restore = nil
@@ -275,13 +241,11 @@ local function register_event_handlers()
 
   -- Остальные обработчики...
   wezterm.on('resurrect.state_manager.load_state.finished', function(name, type)
-    wezterm.log_info("🎯 Событие load_state.finished: " .. name .. ", тип: " .. type)
     
     if pending_operation and pending_operation.type == "load" then
       local window = pending_operation.window
       local session_name = pending_operation.session_name or name
       
-      wezterm.log_info("🎯 Обрабатываем ожидающую операцию загрузки: " .. session_name)
       session_status.load_session_success(window, session_name)
       
       pending_operation = nil
@@ -291,7 +255,6 @@ local function register_event_handlers()
   end)
 
   wezterm.on('resurrect.state_manager.delete_state.finished', function(id)
-    wezterm.log_info("🎯 Событие delete_state.finished: " .. id)
     
     if pending_operation and pending_operation.type == "delete" then
       local window = pending_operation.window
@@ -302,7 +265,6 @@ local function register_event_handlers()
         session_name = path and path:match("^(.+)%.json$") or id
       end
       
-      wezterm.log_info("🎯 Обрабатываем ожидающую операцию удаления: " .. session_name)
       session_status.delete_session_success(window, session_name)
       
       pending_operation = nil
@@ -312,11 +274,9 @@ local function register_event_handlers()
   end)
 
   wezterm.on('resurrect.fuzzy_loader.fuzzy_load.start', function(window, pane)
-    wezterm.log_info("Событие fuzzy_load.start")
   end)
   
   wezterm.on('resurrect.fuzzy_loader.fuzzy_load.finished', function(window, pane)
-    wezterm.log_info("Событие fuzzy_load.finished")
     
     if list_shown_timer then
       list_shown_timer:cancel()
@@ -325,7 +285,6 @@ local function register_event_handlers()
     
     wezterm.time.call_after(0.3, function()
       if current_operation and not pending_operation then
-        wezterm.log_info("Обнаружена отмена операции: " .. current_operation)
         if current_operation == "load" then
           session_status.load_session_cancelled(window)
         elseif current_operation == "delete" then
@@ -347,7 +306,7 @@ local function register_event_handlers()
     
     window:perform_action(
       wezterm.action.PromptInputLine({
-        description = "Сохранить window как:\nПо умолчанию: " .. default_name .. "\n\nEnter = использовать по умолчанию | Esc = отмена",
+        description = environment.locale.t("save_window_as") .. "\n" .. environment.locale.t("save_window_default", default_name) .. "\n\n" .. environment.locale.t("save_window_instructions"),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
@@ -355,7 +314,6 @@ local function register_event_handlers()
             resurrect.state_manager.save_state(window_state, save_name, "window")
             local session_status = require("events.session-status")
             session_status.clear_saved_mode()
-            wezterm.log_info("Window сохранено как: " .. save_name)
           end
         end),
       }),
@@ -371,21 +329,20 @@ local function register_event_handlers()
     
     window:perform_action(
       wezterm.action.PromptInputLine({
-        description = "Сохранить tab как:\nПо умолчанию: " .. default_name .. "\n\nEnter = использовать по умолчанию | Esc = отмена",
+        description = environment.locale.t("save_tab_as") .. "\n" .. environment.locale.t("save_tab_default", default_name) .. "\n\n" .. environment.locale.t("save_tab_instructions"),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
             local tab = inner_pane:tab() or inner_win:active_tab()
             if not tab then
               wezterm.log_error("Cannot get tab from pane or window")
-              session_status.save_session_error(inner_win, "Ошибка: невозможно получить вкладку")
+              session_status.save_session_error(inner_win, environment.locale.t("cannot_get_tab_error"))
               return
             end
             local tab_state = resurrect.tab_state.get_tab_state(tab)
             resurrect.state_manager.save_state(tab_state, save_name, "tab")
             local session_status = require("events.session-status")
             session_status.clear_saved_mode()
-            wezterm.log_info("Tab сохранен как: " .. save_name)
           end
         end),
       }),
@@ -394,24 +351,20 @@ local function register_event_handlers()
   end)
 
   wezterm.on('resurrect.save_state', function(window, pane)
-    wezterm.log_info("Обработчик события resurrect.save_state")
     
     window:perform_action(
       wezterm.action.PromptInputLine({
-        description = "Введите имя для сохранения сессии\nТекущая workspace: " .. window:active_workspace() .. "\n\nEnter = сохранить как текущую | Esc = отмена | или введите новое имя",
+        description = environment.locale.t("enter_save_session_name") .. "\n" .. environment.locale.t("current_workspace", window:active_workspace()) .. "\n\n" .. environment.locale.t("enter_save_default"),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name
           
           if line == nil then
-            wezterm.log_info("🎯 Сохранение отменено пользователем")
             session_status.clear_saved_mode()
             return
           elseif line == "" then
             save_name = window:active_workspace()
-            wezterm.log_info("🎯 Сохранение с именем текущей workspace: " .. save_name)
           else
             save_name = line
-            wezterm.log_info("🎯 Сохранение с введённым именем: " .. save_name)
           end
           
           if save_name and save_name ~= "" then
@@ -419,14 +372,12 @@ local function register_event_handlers()
             current_save_name = save_name
             current_operation = "save"
             
-            wezterm.log_info("🎯 Начинаем сохранение с именем: " .. save_name)
             session_status.start_loading(window)
             
             -- ПРИНУДИТЕЛЬНЫЙ ТАЙМЕР НА 2 СЕКУНДЫ для ошибок плагина
             save_timeout_timer = wezterm.time.call_after(1, function()
-              wezterm.log_info("🔥 ПРИНУДИТЕЛЬНЫЙ ТАЙМЕР: очищаем иконку из-за ошибки плагина")
               if window then
-                session_status.save_session_error(window, "Ошибка плагина или интерактивное приложение")
+                session_status.save_session_error(window, environment.locale.t("plugin_error"))
               end
               is_user_save = false
               current_save_name = ""
@@ -437,23 +388,20 @@ local function register_event_handlers()
             wezterm.time.call_after(0.1, function()
               local state = resurrect.workspace_state.get_workspace_state()
               if state then
-                wezterm.log_info("🎯 Состояние получено, сохраняем...")
                 resurrect.state_manager.save_state(state, save_name)
               else
-                wezterm.log_info("❌ Не удалось получить состояние workspace")
                 -- Отменяем таймер и сразу очищаем иконку
                 if save_timeout_timer then
                   save_timeout_timer:cancel()
                   save_timeout_timer = nil
                 end
-                session_status.save_session_error(window, "Не удалось получить состояние")
+                session_status.save_session_error(window, environment.locale.t("cannot_get_state"))
                 is_user_save = false
                 current_save_name = ""
                 current_operation = nil
               end
             end)
           else
-            wezterm.log_info("🎯 Сохранение отменено пользователем")
             session_status.clear_saved_mode()
           end
         end),
@@ -464,7 +412,6 @@ local function register_event_handlers()
 
   -- Загрузка и удаление состояния (сокращенные версии)
   wezterm.on('resurrect.load_state', function(window, pane)
-    wezterm.log_info("Обработчик события resurrect.load_state")
     current_operation = "load"
     selected_session_name = nil
     pending_operation = nil
@@ -477,13 +424,13 @@ local function register_event_handlers()
         current_operation = nil
         
         local type = string.match(id, "^([^/]+)")
-        local type_display = "неизвестно"
+        local type_display = environment.locale.t("unknown_type")
         if type == "workspace" then
-          type_display = "рабочая область"
+          type_display = environment.locale.t("workspace_type")
         elseif type == "window" then
-          type_display = "окно"
+          type_display = environment.locale.t("window_type")
         elseif type == "tab" then
-          type_display = "вкладка"
+          type_display = environment.locale.t("tab_type")
         end
         
         if label and label ~= "" then
@@ -496,16 +443,15 @@ local function register_event_handlers()
         perform_restore(window, pane, id, selected_session_name, type_display)
       end,
       {
-        title = "Загрузка сессии",
-        description = "Выберите сессию для загрузки и нажмите Enter = загрузить, Esc = отмена, / = фильтр",
-        fuzzy_description = "Поиск сессии для загрузки: ",
+        title = environment.locale.t("loading_sessions_title"),
+        description = environment.locale.t("loading_sessions_description"),
+        fuzzy_description = environment.locale.t("loading_sessions_fuzzy"),
         is_fuzzy = true,
       }
     )
   end)
 
   wezterm.on('resurrect.delete_state', function(window, pane)
-    wezterm.log_info("Обработчик события resurrect.delete_state")
     
     current_operation = "delete"
     selected_session_name = nil
@@ -530,15 +476,15 @@ local function register_event_handlers()
         resurrect.state_manager.delete_state(id)
         
         wezterm.time.call_after(1, function()
-          session_status.delete_session_success(window, selected_session_name or "сессия")
+          session_status.delete_session_success(window, selected_session_name or environment.locale.t("session_saved_as", ""))
           pending_operation = nil
           current_operation = nil
           selected_session_name = nil
         end)
       end,
-      {title = "Удаление сессии",
-        description = "Выберите сессию для удаления и нажмите Enter = удалить, Esc = отмена, / = фильтр",
-        fuzzy_description = "Поиск сессии для удаления: ",
+      {title = environment.locale.t("deleting_sessions_title"),
+        description = environment.locale.t("deleting_sessions_description"),
+        fuzzy_description = environment.locale.t("deleting_sessions_fuzzy"),
         is_fuzzy = true,
       }
     )

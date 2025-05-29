@@ -8,6 +8,7 @@
 -- ЗАВИСИМОСТИ: events.session-status, utils.debug
 
 local debug = require("utils.debug")
+local environment = require("config.environment")
 local wezterm = require('wezterm')
 local session_status = require('events.session-status')
 
@@ -19,21 +20,18 @@ local locale_initialized = false
 
 -- Получение дней и месяцев из locale
 local function get_localized_strings(lang)
-  local environment = require('config.environment')
   local l = environment.locale.get_language_table(lang)
   return {
     days = l.days or {},
     months = l.months or {},
   }
 end
-
 -- Функция для получения локализованной даты
 local function get_localized_date()
   local lang = cached_date_lang or platform.language
 
   if not cached_date_lang or cached_date_lang ~= lang then
     cached_date_lang = lang
-    wezterm.log_info("Язык даты установлен: " .. lang .. " (" .. platform.locale .. ")")
   end
 
   local day_of_week = tonumber(wezterm.strftime("%w"))
@@ -61,16 +59,10 @@ M.setup = function()
     platform:refresh_locale()
     locale_initialized = true
     
-    wezterm.log_info("=== ИНИЦИАЛИЗАЦИЯ ЛОКАЛИ ===")
-    wezterm.log_info("Платформа: " .. (platform.is_mac and "macOS" or platform.is_win and "Windows" or platform.is_linux and "Linux" or "Unknown"))
-    wezterm.log_info("Итоговая локаль: " .. platform.locale)
-    wezterm.log_info("Итоговый язык: " .. platform.language)
-    wezterm.log_info("=== КОНЕЦ ИНИЦИАЛИЗАЦИИ ===")
   end
 
   -- 🚪 НОВЫЙ ОБРАБОТЧИК: Выход из copy_mode по Escape
   wezterm.on('exit-copy-mode', function(window, pane)
-    wezterm.log_info("🚪 Выход из copy_mode по Escape")
     if window then
       -- Убираем рамку при выходе
       local overrides = window:get_config_overrides() or {}
@@ -110,7 +102,6 @@ M.setup = function()
         border_bottom_color = '#FF8C00', 
         border_top_color = '#FF8C00',
       }
-      wezterm.log_info("🖼️ COPY MODE: толстая оранжевая рамка активирована")
     else
       -- ОБЫЧНЫЙ РЕЖИМ: убираем рамку
       overrides.window_frame = {
@@ -127,13 +118,10 @@ M.setup = function()
     if current_key_table ~= last_active_key_table then
       if current_key_table then
         session_status.set_mode(current_key_table)
-        wezterm.log_info("🎯 Активирована таблица клавиш: " .. current_key_table)
       else
         -- ВАЖНО: НЕ очищаем saved_mode при выходе из key table
         -- Очищаем только current_mode
-        wezterm.log_info("🚨 RIGHT-STATUS: выход из key table, очищаем только current_mode")
         session_status.clear_mode()
-        wezterm.log_info("🎯 Таблица клавиш деактивирована")
       end
       last_active_key_table = current_key_table
     end
@@ -213,7 +201,6 @@ M.setup = function()
   
   -- Обработчик для принудительного обновления статуса
   wezterm.on('force-update-status', function(window, pane)
-    wezterm.log_info("Событие force-update-status")
     
     if window then
       window:set_right_status("")
@@ -234,7 +221,7 @@ M.setup = function()
       {Foreground = {Color = "#00FF00"}},
       {Text = "✓ "},
       {Foreground = {Color = "#FFFFFF"}},
-      {Text = "Конфигурация перезагружена"}
+      {Text = environment.locale.t("config_reloaded")}
     })
     
     window:set_right_status(success_msg)

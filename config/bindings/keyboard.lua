@@ -76,7 +76,7 @@ local base_keys = {
      key = "w",
      mods = "CTRL|SHIFT|ALT",
      action = bindings_utils.create_workspace_new_window(wezterm, environment.locale.t),
-     description = "Создать workspace в новом окне",
+     description = environment.locale.t("create_workspace_new_window"),
    },
 }
 

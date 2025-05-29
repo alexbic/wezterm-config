@@ -118,7 +118,7 @@ local bindings = require('config.bindings.global')
 
 -- Создаём пустые workspace для сохранённых файлов
 -- Регистрируем события workspace
-require("events.workspace-events")()
+require("events.workspace-events").setup()
 
 -- Применяем конфигурацию
 return ConfigClass:init()
