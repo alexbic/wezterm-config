@@ -37,7 +37,6 @@ local function register_appearance_events()
         brightness = 0.25,
       }
       window:set_config_overrides(overrides)
-      debug.log("appearance", "debug_background_new_tab", tab_id, new_background)
     end
   end)
   
