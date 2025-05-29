@@ -63,10 +63,14 @@ local available_languages = {
     debug_resurrect_save_start = "Начало сохранения состояния: %s",
     debug_resurrect_load_start = "Начало загрузки состояния: %s",
     debug_key_binding_triggered = "Горячая клавиша сработала: %s",    error = "Ошибка",
-    -- Описания биндингов
-    enter_new_tab_name = "Введите новое имя для вкладки",
-    enter_workspace_name = "Введите имя для нового workspace",
-    enter_workspace_name_new_window = "Введите имя для нового workspace (новое окно)",    -- Описания биндингов
+    debug_workspace_event_started = "Событие workspace.switch запущено",
+    debug_workspace_switch_triggered = "🔥 СОБЫТИЕ workspace.switch СРАБОТАЛО!",    -- Описания биндингов
+    debug_workspace_cancelled = "Выбор workspace отменён",
+    debug_workspace_action_type = "Выбран тип действия: %s",
+    debug_workspace_path_switch = "Переключение на путь: %s",    enter_new_tab_name = "Введите новое имя для вкладки",
+    debug_workspace_plugin_chosen = "Плагин выбрал workspace: %s, label: %s",    enter_workspace_name = "Введите имя для нового workspace",
+    debug_background_new_tab = "Фон для новой вкладки %s: %s",
+    debug_background_changed = "Фон изменен на: %s",    enter_workspace_name_new_window = "Введите имя для нового workspace (новое окно)",    -- Описания биндингов
     enter_new_tab_name = "Введите новое имя для вкладки",
     enter_workspace_name = "Введите имя для нового workspace",
     enter_workspace_name_new_window = "Введите имя для нового workspace (новое окно)",    debug_enabled_for_module = "Отладка включена для модуля: %s",
@@ -126,10 +130,14 @@ local available_languages = {
     debug_resurrect_save_start = "State saving started: %s",
     debug_resurrect_load_start = "State loading started: %s",
     debug_key_binding_triggered = "Key binding triggered: %s",    error = "Error",
-    -- Binding descriptions
-    enter_new_tab_name = "Enter new name for tab",
-    enter_workspace_name = "Enter name for new workspace",
-    enter_workspace_name_new_window = "Enter name for new workspace (new window)",    -- Binding descriptions
+    debug_workspace_event_started = "Workspace.switch event started",
+    debug_workspace_switch_triggered = "🔥 workspace.switch EVENT TRIGGERED!",    -- Binding descriptions
+    debug_workspace_cancelled = "Workspace selection cancelled",
+    debug_workspace_action_type = "Selected action type: %s",
+    debug_workspace_path_switch = "Switching to path: %s",    enter_new_tab_name = "Enter new name for tab",
+    debug_workspace_plugin_chosen = "Plugin selected workspace: %s, label: %s",    enter_workspace_name = "Enter name for new workspace",
+    debug_background_new_tab = "Background for new tab %s: %s",
+    debug_background_changed = "Background changed to: %s",    enter_workspace_name_new_window = "Enter name for new workspace (new window)",    -- Binding descriptions
     enter_new_tab_name = "Enter new name for tab",
     enter_workspace_name = "Enter name for new workspace",
     enter_workspace_name_new_window = "Enter name for new workspace (new window)",    debug_enabled_for_module = "Debug enabled for module: %s",

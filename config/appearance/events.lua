@@ -1,3 +1,4 @@
+local debug = require("utils.debug")
 -- cat > ~/.config/wezterm/config/appearance/events.lua << 'EOF'
 -- ОПИСАНИЕ: Обработчики событий внешнего вида WezTerm (только регистрация)
 
@@ -36,7 +37,7 @@ local function register_appearance_events()
         brightness = 0.25,
       }
       window:set_config_overrides(overrides)
-      wezterm.log_info("Фон для новой вкладки " .. tab_id .. ": " .. new_background)
+      debug.log("appearance", "debug_background_new_tab", tab_id, new_background)
     end
   end)
   
@@ -52,7 +53,7 @@ local function register_appearance_events()
         brightness = 0.25,
       }
       window:set_config_overrides(overrides)
-      wezterm.log_info("Фон изменен на: " .. new_background)
+      debug.log("appearance", "debug_background_changed", new_background)
     end
   end)
 end

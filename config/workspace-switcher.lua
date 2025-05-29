@@ -1,8 +1,12 @@
+local wezterm = require("wezterm")
+
+local M = {}
+
+M.init = function(workspace_switcher)local debug = require("utils.debug")
 local wezterm = require('wezterm')
 local M = {}
 
 -- Инициализация плагина Smart Workspace Switcher
-local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 M.workspace_switcher = workspace_switcher
 
 -- Настройка пути к zoxide для macOS
@@ -122,7 +126,7 @@ wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window
     return
   end
 
-  wezterm.log_info("Выбран workspace: " .. tostring(workspace) .. ", label: " .. tostring(label or "нет"))
+  debug.log("workspace", "debug_workspace_plugin_chosen", tostring(workspace), tostring(label or "нет"))
 
   -- Проверяем, это сохранённый workspace (по префиксу 💾)
   if label and label:match("^💾 ") then
@@ -230,3 +234,6 @@ end)
 
 return M
 -- EOF
+end
+
+return M

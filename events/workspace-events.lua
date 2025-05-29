@@ -1,3 +1,4 @@
+local debug = require("utils.debug")
 local wezterm = require('wezterm')
 
 local function register_workspace_events()
@@ -81,7 +82,7 @@ local function register_workspace_events()
           wezterm.emit('clear-saved-mode', inner_window, inner_pane)
           
           if not id or id == "none" then 
-            wezterm.log_info("Выбор workspace отменён")
+            debug.log("workspace", "debug_workspace_cancelled")
             return 
           end
           
@@ -92,7 +93,7 @@ local function register_workspace_events()
           end
           
           local action_type = parts[1]
-          wezterm.log_info("Выбран тип действия: " .. action_type)
+          debug.log("workspace", "debug_workspace_action_type", action_type)
           
           if action_type == "active" then
             local workspace_name = parts[2]
@@ -100,11 +101,11 @@ local function register_workspace_events()
               wezterm.action.SwitchToWorkspace({
                 name = workspace_name,
               }),
-              inner_pane
+              inner_window:active_pane()
             )
           elseif action_type == "zoxide" then
             local path = parts[2]
-            wezterm.log_info("Переключение на путь: " .. path)
+            debug.log("workspace", "debug_workspace_path_switch", path)
             inner_window:perform_action(
               wezterm.action.SwitchToWorkspace({
                 name = path,
@@ -112,7 +113,7 @@ local function register_workspace_events()
                   cwd = path,
                 },
               }),
-              inner_pane
+              inner_window:active_pane()
             )
           elseif action_type == "saved" then
             local state_type = parts[2]
