@@ -4,9 +4,13 @@
 -- Определяет программы по умолчанию для запуска в терминале и пункты меню
 -- для выбора альтернативных программ. Выбор зависит от ОС.
 --
--- ЗАВИСИМОСТИ: utils.platform
+-- ЗАВИСИМОСТИ: wezterm
 
-local platform = require('utils.platform')()
+local wezterm = require('wezterm')
+
+-- Создаем platform_info используя utils.platform
+local create_platform_info = require('utils.platform')
+local platform = create_platform_info(wezterm.target_triple)
 
 local function get_description()
    local ok, environment = pcall(require, 'config.environment')
@@ -47,6 +51,5 @@ elseif platform.is_mac then
       { label = 'Zsh', args = { '/bin/zsh', '-l' } },
    }
 end
-
 
 return options

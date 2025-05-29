@@ -2,10 +2,10 @@
 --
 -- ОПИСАНИЕ: Улучшенная система управляемого отладочного логирования
 -- Позволяет включать/выключать отладочные сообщения, локализовать их и отлаживать таблицы
+-- ПОЛНОСТЬЮ САМОДОСТАТОЧНЫЙ МОДУЛЬ - все зависимости передаются как параметры.
 --
--- ЗАВИСИМОСТИ: config.environment.locale
+-- ЗАВИСИМОСТИ: НЕТ
 
-local wezterm = require('wezterm')
 local M = {}
 
 -- Настройки отладки (включить/выключить по модулям)
@@ -51,17 +51,16 @@ end
 M.table_to_string = table_to_string
 
 -- Функция отладочного логирования с локализацией
-M.log = function(module, message_key, ...)
+M.log = function(wezterm, t_func, module, message_key, ...)
   if M.DEBUG_CONFIG[module] then
-    local environment = require('config.environment')
-    local localized_msg = environment.locale.t(message_key) or message_key
+    local localized_msg = t_func(message_key) or message_key
     local formatted_msg = string.format(localized_msg, ...)
     wezterm.log_info("🪲 [" .. module .. "] " .. formatted_msg)
   end
 end
 
 -- Функция для отладки таблиц
-M.log_table = function(module, table_name, tbl)
+M.log_table = function(wezterm, module, table_name, tbl)
   if M.DEBUG_CONFIG[module] then
     local table_str = table_to_string(tbl)
     wezterm.log_info("🪲 [" .. module .. "] TABLE " .. table_name .. ":\n" .. table_str)
@@ -69,7 +68,7 @@ M.log_table = function(module, table_name, tbl)
 end
 
 -- Функция для отладки событий
-M.log_event = function(module, event_name, ...)
+M.log_event = function(wezterm, module, event_name, ...)
   if M.DEBUG_CONFIG[module] then
     local args = {...}
     local args_str = ""
@@ -85,46 +84,41 @@ M.log_event = function(module, event_name, ...)
 end
 
 -- Включить отладку для модуля
-M.enable_debug = function(module)
+M.enable_debug = function(wezterm, t_func, module)
   M.DEBUG_CONFIG[module] = true
-  local environment = require('config.environment')
-  local msg = environment.locale.t("debug_enabled_for_module")
+  local msg = t_func("debug_enabled_for_module")
   wezterm.log_info("⚙️ " .. string.format(msg, module))
 end
 
 -- Выключить отладку для модуля  
-M.disable_debug = function(module)
+M.disable_debug = function(wezterm, t_func, module)
   M.DEBUG_CONFIG[module] = false
-  local environment = require('config.environment')
-  local msg = environment.locale.t("debug_disabled_for_module")
+  local msg = t_func("debug_disabled_for_module")
   wezterm.log_info("⚙️ " .. string.format(msg, module))
 end
 
 -- Включить отладку для всех модулей
-M.enable_all = function()
+M.enable_all = function(wezterm, t_func)
   for module, _ in pairs(M.DEBUG_CONFIG) do
     M.DEBUG_CONFIG[module] = true
   end
-  local environment = require('config.environment')
-  local msg = environment.locale.t("debug_enabled_all")
+  local msg = t_func("debug_enabled_all")
   wezterm.log_info("⚙️ " .. msg)
 end
 
 -- Выключить отладку для всех модулей
-M.disable_all = function()
+M.disable_all = function(wezterm, t_func)
   for module, _ in pairs(M.DEBUG_CONFIG) do
     M.DEBUG_CONFIG[module] = false
   end
-  local environment = require('config.environment')
-  local msg = environment.locale.t("debug_disabled_all")
+  local msg = t_func("debug_disabled_all")
   wezterm.log_info("⚙️ " .. msg)
 end
 
 -- Функция для запуска WezTerm с детальным логированием
-M.enable_verbose_logging = function()
+M.enable_verbose_logging = function(wezterm)
   wezterm.log_info("⚙️ Для детального логирования запустите WezTerm с:")
   wezterm.log_info("⚙️ WEZTERM_LOG=info wezterm")
 end
 
 return M
--- EOF

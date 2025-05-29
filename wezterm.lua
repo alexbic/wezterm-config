@@ -6,7 +6,8 @@
 
 local wezterm = require('wezterm')
 local environment = require('config.environment')
-local platform = require('utils.platform')()
+local create_platform_info = require('utils.platform')
+local platform = create_platform_info(wezterm.target_triple)
 
 if platform.is_mac then
   wezterm.log_info("Платформа: macOS")
@@ -72,19 +73,20 @@ for key, value in pairs(set_env) do
 end
 
 -- Настраиваем все события ПОСЛЕ установки переменных окружения
-require('events.right-status')()         -- вызов функции setup
+require('events.right-status').setup()         -- вызов функции setup
 require('events.tab-title').setup()      -- если там экспортируется таблица с функцией setup
 require('events.new-tab-button').setup() -- если там экспортируется таблица с функцией setup
 
 -- Регистрируем события appearance
 -- Настраиваем центрирование окна
 local appearance_utils = require("utils.appearance")
-appearance_utils.setup_window_centering()local appearance_events = require("config.appearance.events")
+appearance_utils.setup_window_centering(wezterm)
+local appearance_events = require("config.appearance.events")
 
 -- Тестирование системы отладки
 local debug = require("utils.debug")
-debug.enable_debug("workspace")
-debug.enable_debug("appearance")
+debug.enable_debug(wezterm, environment.locale.t, "workspace")
+debug.enable_debug(wezterm, environment.locale.t, "appearance")
 if appearance_events and appearance_events.register then
    appearance_events.register()
 end

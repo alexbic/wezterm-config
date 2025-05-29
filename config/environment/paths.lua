@@ -3,14 +3,17 @@
 -- ОПИСАНИЕ: Пути и директории для окружения WezTerm
 -- Определяет основные и специфичные для платформы пути, используемые в конфигурации.
 --
--- ЗАВИСИМОСТИ: wezterm, utils.platform
+-- ЗАВИСИМОСТИ: wezterm
 
 local wezterm = require('wezterm')
-local platform = require('utils.platform')()
 
 -- === КОНСТАНТЫ КОНФИГУРАЦИИ ===
 local BACKDROPS_DIR = "backdrops"
 local RESURRECT_STATE_PATH = "plugins/resurrect.wezterm/state"
+
+-- Создаем platform_info используя utils.platform
+local create_platform_info = require('utils.platform')
+local platform = create_platform_info(wezterm.target_triple)
 
 -- === БАЗОВЫЕ ПУТИ ===
 local M = {

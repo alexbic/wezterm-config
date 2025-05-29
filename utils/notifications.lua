@@ -3,25 +3,23 @@
 -- ОПИСАНИЕ: Модуль для работы с уведомлениями
 -- Централизованная логика для отображения уведомлений в строке состояния,
 -- во всплывающих сообщениях и в панели. Избегает дублирования кода.
+-- ПОЛНОСТЬЮ САМОДОСТАТОЧНЫЙ МОДУЛЬ - все зависимости передаются как параметры.
 --
--- ЗАВИСИМОСТИ: Используется в events.resurrect-events и config.resurrect
+-- ЗАВИСИМОСТИ: НЕТ
 
-local wezterm = require('wezterm')
-local environment = require('config.environment')
 local M = {}
 
 -- Инициализируем глобальные переменные для уведомлений
-if not wezterm.GLOBAL then
-  wezterm.GLOBAL = {}
-end
-if not wezterm.GLOBAL.notification_message then
-  wezterm.GLOBAL.notification_message = nil
-  wezterm.GLOBAL.notification_time = 0
-  wezterm.GLOBAL.notification_timeout = 0
+if not _G.WEZTERM_NOTIFICATIONS then
+  _G.WEZTERM_NOTIFICATIONS = {
+    notification_message = nil,
+    notification_time = 0,
+    notification_timeout = 0
+  }
 end
 
 -- Функция для отображения уведомления в строке состояния
-M.show_status_notification = function(window, message, timeout_ms)
+M.show_status_notification = function(wezterm, window, message, timeout_ms)
   if not window then
     wezterm.log_info("Нет окна для отображения уведомления")
     return
@@ -30,9 +28,9 @@ M.show_status_notification = function(window, message, timeout_ms)
   wezterm.log_info("Создание уведомления в строке состояния: " .. message)
   
   -- Устанавливаем глобальную переменную с сообщением
-  wezterm.GLOBAL.notification_message = message
-  wezterm.GLOBAL.notification_time = os.time()
-  wezterm.GLOBAL.notification_timeout = timeout_ms or 5000
+  _G.WEZTERM_NOTIFICATIONS.notification_message = message
+  _G.WEZTERM_NOTIFICATIONS.notification_time = os.time()
+  _G.WEZTERM_NOTIFICATIONS.notification_timeout = timeout_ms or 5000
   
   -- Вызываем событие обновления статуса для отображения сообщения
   window:set_right_status(wezterm.format({
@@ -45,18 +43,18 @@ M.show_status_notification = function(window, message, timeout_ms)
   -- Запускаем таймер для очистки сообщения
   if timeout_ms and timeout_ms > 0 then
     -- Создаем таймер для очистки сообщения
-    wezterm.sleep_ms(timeout_ms)
-    if wezterm.GLOBAL.notification_message == message then
-      window:set_right_status("")
-      wezterm.GLOBAL.notification_message = nil
-    end
+    wezterm.time.call_after(timeout_ms / 1000, function()
+      if _G.WEZTERM_NOTIFICATIONS.notification_message == message then
+        window:set_right_status("")
+        _G.WEZTERM_NOTIFICATIONS.notification_message = nil
+      end
+    end)
   end
 end
 
 -- Функция для отображения уведомления в панели
 M.show_pane_notification = function(pane, message)
   if not pane then
-    wezterm.log_info("Нет панели для отображения уведомления")
     return
   end
   
@@ -67,7 +65,6 @@ end
 -- Функция для отображения всплывающего уведомления
 M.show_toast_notification = function(window, title, message, timeout_ms)
   if not window then
-    wezterm.log_info("Нет окна для отображения всплывающего уведомления")
     return
   end
   
@@ -82,18 +79,16 @@ M.show_toast_notification = function(window, title, message, timeout_ms)
         timeout_ms or 3000
       )
     end
-  else
-    wezterm.log_info("Метод gui_window недоступен для всплывающего уведомления")
   end
 end
 
 -- Комбинированная функция для отображения уведомления во всех доступных местах
-M.notify = function(window, pane, message, title, timeout_ms)
+M.notify = function(wezterm, window, pane, message, title, timeout_ms)
   title = title or "WezTerm"
   
   -- Показываем в строке состояния
   if window then
-    M.show_status_notification(window, message, timeout_ms)
+    M.show_status_notification(wezterm, window, message, timeout_ms)
   end
   
   -- Показываем всплывающее уведомление вместо вывода в панель
@@ -103,26 +98,26 @@ M.notify = function(window, pane, message, title, timeout_ms)
 end
 
 -- Установка обработчика для обновления строки состояния
-M.setup_status_updater = function()
+M.setup_status_updater = function(wezterm)
   wezterm.on('update-right-status', function(window, pane)
     -- Проверяем, есть ли активное уведомление
-    if wezterm.GLOBAL.notification_message then
+    if _G.WEZTERM_NOTIFICATIONS.notification_message then
       -- Проверяем, не истекло ли время показа
-      local elapsed = os.time() - wezterm.GLOBAL.notification_time
+      local elapsed = os.time() - _G.WEZTERM_NOTIFICATIONS.notification_time
       local elapsed_ms = elapsed * 1000
       
-      if elapsed_ms < wezterm.GLOBAL.notification_timeout then
+      if elapsed_ms < _G.WEZTERM_NOTIFICATIONS.notification_timeout then
         -- Показываем сообщение
         window:set_right_status(wezterm.format({
           { Foreground = { Color = "orange" } },
           { Text = "[УВЕДОМЛЕНИЕ] " },
           { Foreground = { Color = "white" } },
-          { Text = wezterm.GLOBAL.notification_message },
+          { Text = _G.WEZTERM_NOTIFICATIONS.notification_message },
         }))
       else
         -- Очищаем сообщение, если истекло время
         window:set_right_status("")
-        wezterm.GLOBAL.notification_message = nil
+        _G.WEZTERM_NOTIFICATIONS.notification_message = nil
       end
     end
   end)

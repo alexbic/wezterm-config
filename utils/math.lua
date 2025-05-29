@@ -3,11 +3,11 @@
 -- ОПИСАНИЕ: Математические утилиты для WezTerm
 -- Этот модуль содержит полезные математические функции,
 -- такие как ограничение значений (clamp) и округление.
+-- ПОЛНОСТЬЮ САМОДОСТАТОЧНЫЙ МОДУЛЬ - все зависимости передаются как параметры.
 --
--- ЗАВИСИМОСТИ: Используется в различных модулях для математических операций.
+-- ЗАВИСИМОСТИ: НЕТ
 
 local _math = math
-local environment = require('config.environment')
 
 _math.clamp = function(x, min, max)
    return x < min and min or (x > max and max or x)
@@ -20,12 +20,16 @@ _math.round = function(x, increment)
    return x >= 0 and math.floor(x + 0.5) or math.ceil(x - 0.5)
 end
 
-function _math.safe_divide(a, b)
+-- Функция безопасного деления (принимает функцию перевода как параметр)
+function _math.safe_divide(a, b, t_func)
    if b == 0 then
-      error(environment.locale.t("division_by_zero"))
+      local error_msg = "division_by_zero"
+      if t_func then
+         error_msg = t_func("division_by_zero")
+      end
+      error(error_msg)
    end
    return a / b
 end
-
 
 return _math

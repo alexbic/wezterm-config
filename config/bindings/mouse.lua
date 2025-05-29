@@ -1,14 +1,17 @@
--- cat > ~/.config/wezterm/config/mouse/bindings.lua << 'EOF'
+-- cat > ~/.config/wezterm/config/bindings/mouse.lua << 'EOF'
 --
 -- ОПИСАНИЕ: Настройки привязок мыши
 -- Определяет поведение мыши: клики, перетаскивание, выделение и прокрутка.
 --
--- ЗАВИСИМОСТИ: utils.platform
+-- ЗАВИСИМОСТИ: wezterm
 
 local wezterm = require('wezterm')
-local platform = require('utils.platform')()
 local act = wezterm.action
 local environment = require('config.environment')
+
+-- Создаем platform_info используя utils.platform
+local create_platform_info = require('utils.platform')
+local platform = create_platform_info(wezterm.target_triple)
 
 local mod = {}
 if platform.is_mac then
@@ -16,7 +19,6 @@ if platform.is_mac then
 else
   mod.SUPER = 'ALT'    -- Используем ALT на других платформах
 end
-
 
 return {
    -- Перетаскивание окна с помощью мыши

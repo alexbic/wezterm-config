@@ -1,4 +1,3 @@
-local debug = require("utils.debug")
 -- cat > ~/.config/wezterm/events/right-status.lua << 'EOF'
 --
 -- ОПИСАНИЕ: Настройка строки состояния
@@ -6,12 +5,17 @@ local debug = require("utils.debug")
 -- статус режима, часы, дату, календарь, индикатор загрузки и др.
 -- ДОБАВЛЕНО: Визуальная индикация copy_mode через толстую оранжевую рамку
 --
--- ЗАВИСИМОСТИ: utils.platform, events.session-status
+-- ЗАВИСИМОСТИ: events.session-status, utils.debug
 
+local debug = require("utils.debug")
 local wezterm = require('wezterm')
-local platform_module = require('utils.platform')
 local session_status = require('events.session-status')
-local platform = platform_module()
+
+-- Переменные для отслеживания инициализации и кэширования
+local platform = nil
+local cached_date_lang = nil
+local last_active_key_table = nil
+local locale_initialized = false
 
 -- Получение дней и месяцев из locale
 local function get_localized_strings(lang)
@@ -46,11 +50,13 @@ local function get_localized_date()
   end
 end
 
--- Переменные для отслеживания инициализации и кэширования
-local cached_date_lang = nil
-local last_active_key_table = nil
+local M = {}
 
-local function setup()
+M.setup = function()
+  -- Инициализируем platform внутри setup
+  local create_platform_info = require('utils.platform')
+  platform = create_platform_info(wezterm.target_triple)
+  
   if not locale_initialized then
     platform:refresh_locale()
     locale_initialized = true
@@ -83,12 +89,12 @@ local function setup()
 
   -- Основной обработчик обновления строки состояния
   wezterm.on('update-right-status', function(window, pane)
-    -- Получаем текущую активную таблицу клавиш
     -- Проверяем валидность окна перед обращением к нему
-    -- Усиленная проверка валидности окна
     if not window or window == nil then return end
     local ok, current_key_table = pcall(function() return window:active_key_table() end)
-    if not ok then return end    -- 🖼️ ОБНОВЛЕННЫЙ КОД: Проверяем copy_mode и добавляем ТОЛСТУЮ ОРАНЖЕВУЮ рамку
+    if not ok then return end
+    
+    -- 🖼️ ОБНОВЛЕННЫЙ КОД: Проверяем copy_mode и добавляем ТОЛСТУЮ ОРАНЖЕВУЮ рамку
     local copy_mode_active = (current_key_table == 'copy_mode')
     local overrides = window:get_config_overrides() or {}
     
@@ -245,5 +251,4 @@ local function setup()
   end)
 end
 
-return setup
--- EOF
+return M

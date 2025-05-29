@@ -1,23 +1,23 @@
 -- cat > ~/.config/wezterm/utils/appearance.lua << 'EOF'
+--
 -- ОПИСАНИЕ: Утилиты для работы с внешним видом (appearance) WezTerm
-
-local wezterm = require('wezterm')
-local platform = require('utils.platform')()
-local paths = require('config.environment.paths')
+-- ПОЛНОСТЬЮ САМОДОСТАТОЧНЫЙ МОДУЛЬ - все зависимости передаются как параметры.
+--
+-- ЗАВИСИМОСТИ: НЕТ
 
 local M = {}
 
 -- === Backgrounds ===
 local image_formats = { "jpg", "jpeg", "png", "webp" }
 
-function M.find_all_background_images()
+function M.find_all_background_images(platform_utils, backdrops_path)
   local all_files = {}
-  if platform.directory_exists(paths.backdrops) then
+  if platform_utils.directory_exists(backdrops_path) then
     for _, ext in ipairs(image_formats) do
       local pattern = "*." .. ext
-      local files = platform.get_files_in_directory(paths.backdrops, pattern)
+      local files = platform_utils.get_files_in_directory(backdrops_path, pattern)
       for _, file in ipairs(files) do
-        if platform.file_exists(file) then
+        if platform_utils.file_exists(file) then
           table.insert(all_files, file)
         end
       end
@@ -41,42 +41,48 @@ function M.get_background_for_tab(tab_id, background_files, tab_backgrounds)
 end
 
 -- === Events ===
-function M.register_opacity_events(transparency)
+function M.register_opacity_events(wezterm, transparency)
   -- Инициализируем глобальные переменные
-  if not wezterm.GLOBALS then wezterm.GLOBALS = {} end
-  if not wezterm.GLOBALS.current_opacity_index then
-    wezterm.GLOBALS.current_opacity_index = 6 -- начинаем с 100% (последний элемент)
+  if not _G.WEZTERM_OPACITY then 
+    _G.WEZTERM_OPACITY = {
+      current_opacity_index = 6 -- начинаем с 100% (последний элемент)
+    }
   end
+
   wezterm.on("cycle-opacity-forward", function(window, pane)
     if not window then
       window = wezterm.mux.get_active_window()
     end
     if not window then return end
     
-    wezterm.GLOBALS.current_opacity_index = (wezterm.GLOBALS.current_opacity_index + 1) % #transparency.opacity_settings
-    local settings = transparency.opacity_settings[wezterm.GLOBALS.current_opacity_index + 1]
+    _G.WEZTERM_OPACITY.current_opacity_index = 
+      (_G.WEZTERM_OPACITY.current_opacity_index + 1) % #transparency.opacity_settings
+    local settings = transparency.opacity_settings[_G.WEZTERM_OPACITY.current_opacity_index + 1]
     local overrides = window:get_config_overrides() or {}
     overrides.window_background_opacity = settings.opacity
     window:set_config_overrides(overrides)
   end)
+
   wezterm.on("cycle-opacity-backward", function(window, pane)
     if not window then
       window = wezterm.mux.get_active_window()
     end
     if not window then return end
     
-    wezterm.GLOBALS.current_opacity_index = (wezterm.GLOBALS.current_opacity_index - 1)
-    if wezterm.GLOBALS.current_opacity_index < 0 then
-      wezterm.GLOBALS.current_opacity_index = #transparency.opacity_settings - 1
+    _G.WEZTERM_OPACITY.current_opacity_index = 
+      (_G.WEZTERM_OPACITY.current_opacity_index - 1)
+    if _G.WEZTERM_OPACITY.current_opacity_index < 0 then
+      _G.WEZTERM_OPACITY.current_opacity_index = #transparency.opacity_settings - 1
     end
-    local settings = transparency.opacity_settings[wezterm.GLOBALS.current_opacity_index + 1]
+    local settings = transparency.opacity_settings[_G.WEZTERM_OPACITY.current_opacity_index + 1]
     local overrides = window:get_config_overrides() or {}
     overrides.window_background_opacity = settings.opacity
     window:set_config_overrides(overrides)
-  end)end
+  end)
+end
 
 -- === Window Positioning ===
-function M.setup_window_centering()
+function M.setup_window_centering(wezterm)
   wezterm.on("gui-startup", function(cmd)
     local screen = wezterm.gui.screens().active
     local ratio = 0.6  -- 60% от размера экрана
@@ -93,9 +99,5 @@ function M.setup_window_centering()
     window:gui_window():set_inner_size(width, height)
   end)
 end
--- === Transparency (заглушка для будущих функций) ===
--- function M.set_opacity(window, value)
---   -- ...
--- end
 
 return M

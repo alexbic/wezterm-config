@@ -10,7 +10,7 @@ local function register_appearance_events()
   local backgrounds = require('config.appearance.backgrounds')
   
   -- Регистрируем события прозрачности
-  appearance.register_opacity_events(transparency)
+  appearance.register_opacity_events(wezterm, transparency)
   
   -- Инициализируем глобальную таблицу для фонов вкладок
   if not wezterm.GLOBALS then wezterm.GLOBALS = {} end

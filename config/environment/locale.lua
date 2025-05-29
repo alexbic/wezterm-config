@@ -4,13 +4,12 @@
 -- Централизованное управление языковыми настройками интерфейса и переменными окружения.
 -- Позволяет переопределить системную локаль для отображения даты/времени и предоставляет переводы интерфейса.
 --
--- ЗАВИСИМОСТИ: wezterm, используется в utils.platform, events.right-status, config.environment
+-- ЗАВИСИМОСТИ: wezterm, utils.environment
 
 local wezterm = require('wezterm')
--- Кэш для предотвращения повторного логирования
-local _locale_init_logged = false
+local env_utils = require('utils.environment')
 
--- Таблица переводов и языковых настроек (см. предыдущий полный пример)
+-- Таблица переводов и языковых настроек
 local available_languages = {
   ru = {
     locale = "ru_RU.UTF-8",
@@ -64,21 +63,49 @@ local available_languages = {
     debug_window_centered = "Окно отцентрировано: %sx%s",
     debug_resurrect_save_start = "Начало сохранения состояния: %s",
     debug_resurrect_load_start = "Начало загрузки состояния: %s",
-    debug_key_binding_triggered = "Горячая клавиша сработала: %s",    error = "Ошибка",
+    debug_key_binding_triggered = "Горячая клавиша сработала: %s",
+    error = "Ошибка",
     debug_workspace_event_started = "Событие workspace.switch запущено",
-    debug_workspace_switch_triggered = "🔥 СОБЫТИЕ workspace.switch СРАБОТАЛО!",    -- Описания биндингов
+    debug_workspace_switch_triggered = "🔥 СОБЫТИЕ workspace.switch СРАБОТАЛО!",
     debug_workspace_cancelled = "Выбор workspace отменён",
     debug_workspace_action_type = "Выбран тип действия: %s",
-    debug_workspace_path_switch = "Переключение на путь: %s",    enter_new_tab_name = "Введите новое имя для вкладки",
-    debug_status_element = "Элемент #%s тип:%s значение:%s",    debug_workspace_plugin_chosen = "Плагин выбрал workspace: %s, label: %s",    enter_workspace_name = "Введите имя для нового workspace",
-    debug_background_new_tab = "Фон для новой вкладки %s: %s",
-    debug_background_changed = "Фон изменен на: %s",    enter_workspace_name_new_window = "Введите имя для нового workspace (новое окно)",    -- Описания биндингов
+    debug_workspace_path_switch = "Переключение на путь: %s",
+    debug_status_element = "Элемент #%s тип:%s значение:%s",
+    debug_workspace_plugin_chosen = "Плагин выбрал workspace: %s, label: %s",
     enter_new_tab_name = "Введите новое имя для вкладки",
     enter_workspace_name = "Введите имя для нового workspace",
-    enter_workspace_name_new_window = "Введите имя для нового workspace (новое окно)",    debug_enabled_for_module = "Отладка включена для модуля: %s",
+    enter_workspace_name_new_window = "Введите имя для нового workspace (новое окно)",
+    debug_background_new_tab = "Фон для новой вкладки %s: %s",
+    debug_background_changed = "Фон изменен на: %s",
+    debug_enabled_for_module = "Отладка включена для модуля: %s",
     debug_disabled_for_module = "Отладка выключена для модуля: %s",
     debug_enabled_all = "Отладка включена для всех модулей",
-    debug_disabled_all = "Отладка выключена для всех модулей",  },
+    debug_disabled_all = "Отладка выключена для всех модулей",
+    -- Workspace switcher messages
+    debug_workspace_directory_not_found = "Директория workspace не найдена: %s",
+    debug_workspace_found_saved = "Найдено сохранённых workspace: %s",
+    debug_workspace_restoring_saved = "Восстанавливаем сохранённый workspace: %s",
+    debug_workspace_restored_successfully = "Workspace восстановлен успешно: %s",
+    debug_workspace_already_active = "Уже в workspace: %s, игнорируем",
+    debug_workspace_window_activated = "Активировано окно с workspace: %s",
+    error_config_environment_paths = "Не удалось загрузить config.environment.paths: %s",
+    error_utils_platform = "Не удалось загрузить utils.platform: %s",
+    error_platform_initialization = "Не удалось инициализировать platform",
+    error_get_files_in_directory = "Ошибка при получении файлов из директории: %s",
+    error_get_workspace_elements = "Ошибка при получении workspace elements: %s",
+    error_get_zoxide_elements = "Ошибка при получении zoxide elements: %s",
+    error_window_parameter_nil = "Window parameter is nil",
+    error_workspace_parameter_nil = "Workspace parameter is nil",
+    error_extract_workspace_name = "Не удалось извлечь имя workspace из label: %s",
+    error_config_resurrect = "Не удалось загрузить config.resurrect: %s",
+    error_resurrect_not_found = "resurrect.resurrect не найден в модуле",
+    error_load_state = "Ошибка при загрузке состояния: %s",
+    error_active_pane_nil = "Не удалось получить active_pane",
+    error_workspace_switch_failed = "Ошибка при переключении workspace",
+    error_mux_window_nil = "Не удалось получить mux_window",
+    error_workspace_restore_failed = "Ошибка при восстановлении workspace",
+    error_load_state_failed = "Не удалось загрузить состояние для workspace: %s",
+  },
   en = {
     locale = "en_US.UTF-8",
     name = "English",
@@ -131,51 +158,60 @@ local available_languages = {
     debug_window_centered = "Window centered: %sx%s",
     debug_resurrect_save_start = "State saving started: %s",
     debug_resurrect_load_start = "State loading started: %s",
-    debug_key_binding_triggered = "Key binding triggered: %s",    error = "Error",
+    debug_key_binding_triggered = "Key binding triggered: %s",
+    error = "Error",
     debug_workspace_event_started = "Workspace.switch event started",
-    debug_workspace_switch_triggered = "🔥 workspace.switch EVENT TRIGGERED!",    -- Binding descriptions
+    debug_workspace_switch_triggered = "🔥 workspace.switch EVENT TRIGGERED!",
     debug_workspace_cancelled = "Workspace selection cancelled",
     debug_workspace_action_type = "Selected action type: %s",
-    debug_workspace_path_switch = "Switching to path: %s",    enter_new_tab_name = "Enter new name for tab",
-    debug_status_element = "Element #%s type:%s value:%s",    debug_workspace_plugin_chosen = "Plugin selected workspace: %s, label: %s",    enter_workspace_name = "Enter name for new workspace",
-    debug_background_new_tab = "Background for new tab %s: %s",
-    debug_background_changed = "Background changed to: %s",    enter_workspace_name_new_window = "Enter name for new workspace (new window)",    -- Binding descriptions
+    debug_workspace_path_switch = "Switching to path: %s",
+    debug_status_element = "Element #%s type:%s value:%s",
+    debug_workspace_plugin_chosen = "Plugin selected workspace: %s, label: %s",
     enter_new_tab_name = "Enter new name for tab",
     enter_workspace_name = "Enter name for new workspace",
-    enter_workspace_name_new_window = "Enter name for new workspace (new window)",    debug_enabled_for_module = "Debug enabled for module: %s",
+    enter_workspace_name_new_window = "Enter name for new workspace (new window)",
+    debug_background_new_tab = "Background for new tab %s: %s",
+    debug_background_changed = "Background changed to: %s",
+    debug_enabled_for_module = "Debug enabled for module: %s",
     debug_disabled_for_module = "Debug disabled for module: %s",
     debug_enabled_all = "Debug enabled for all modules",
-    debug_disabled_all = "Debug disabled for all modules",  }
-}
-
-local default_language = os.getenv("WEZTERM_LANG") or "ru"
-local lang_table = available_languages[default_language] or available_languages["ru"]
-
-local function t(key)
-  return lang_table[key] or key
-end
-
-local locale_config = {
-  force_language = default_language,
-  force_locale = lang_table.locale or "ru_RU.UTF-8"
-}
-
--- Логируем только при первой инициализации
-if not _locale_init_logged then
-  _locale_init_logged = true
-  wezterm.log_info(t("set_locale") .. ": " .. locale_config.force_locale)
-end
-
-local M = {
-  t = t,
-  get_language_table = function() return lang_table end,
-  settings = {
-    LANG = locale_config.force_locale,
-    LC_ALL = locale_config.force_locale,
-    LC_TIME = locale_config.force_locale,
-    LC_NUMERIC = locale_config.force_locale,
-    LC_MONETARY = locale_config.force_locale,
+    debug_disabled_all = "Debug disabled for all modules",
+    -- Workspace switcher messages
+    debug_workspace_directory_not_found = "Workspace directory not found: %s",
+    debug_workspace_found_saved = "Found saved workspaces: %s",
+    debug_workspace_restoring_saved = "Restoring saved workspace: %s",
+    debug_workspace_restored_successfully = "Workspace restored successfully: %s",
+    debug_workspace_already_active = "Already in workspace: %s, ignoring",
+    debug_workspace_window_activated = "Window activated with workspace: %s",
+    error_config_environment_paths = "Failed to load config.environment.paths: %s",
+    error_utils_platform = "Failed to load utils.platform: %s",
+    error_platform_initialization = "Failed to initialize platform",
+    error_get_files_in_directory = "Error getting files from directory: %s",
+    error_get_workspace_elements = "Error getting workspace elements: %s",
+    error_get_zoxide_elements = "Error getting zoxide elements: %s",
+    error_window_parameter_nil = "Window parameter is nil",
+    error_workspace_parameter_nil = "Workspace parameter is nil",
+    error_extract_workspace_name = "Failed to extract workspace name from label: %s",
+    error_config_resurrect = "Failed to load config.resurrect: %s",
+    error_resurrect_not_found = "resurrect.resurrect not found in module",
+    error_load_state = "Error loading state: %s",
+    error_active_pane_nil = "Failed to get active_pane",
+    error_workspace_switch_failed = "Workspace switch failed",
+    error_mux_window_nil = "Failed to get mux_window",
+    error_workspace_restore_failed = "Workspace restore failed",
+    error_load_state_failed = "Failed to load state for workspace: %s",
   }
+}
+
+-- Используем функции из utils/environment.lua
+local M = {
+  t = function(key, ...)
+    return env_utils.translate(available_languages, key, ...)
+  end,
+  get_language_table = function()
+    return env_utils.get_language_table(available_languages)
+  end,
+  settings = env_utils.create_locale_settings(available_languages, wezterm)
 }
 
 return M
