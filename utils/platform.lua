@@ -1,4 +1,8 @@
 -- cat > ~/.config/wezterm/utils/platform.lua << 'EOF'
+-- Кэш для предотвращения повторного логирования
+local _locale_logged = false
+local _env_vars_logged = false
+local _config_not_found_logged = false
 --
 -- ОПИСАНИЕ: Определение операционной системы и локали
 -- Этот модуль определяет операционную систему и локаль, на которой запущен WezTerm.
@@ -32,7 +36,11 @@ local function load_locale_config()
     locale_config = config
     wezterm.log_info("Загружена конфигурация локали: язык = " .. (locale_config.force_language or "auto") .. ", локаль = " .. (locale_config.force_locale or "auto"))
   else
+    -- Логируем только при первой загрузке
+  if not _config_not_found_logged then
+    _config_not_found_logged = true
     wezterm.log_info("Конфигурация локали не найдена, используем системные настройки")
+  end
   end
   
   locale_config_loaded = true
@@ -65,7 +73,11 @@ local function get_system_locale()
   local wezterm_lc_all = os.getenv("LC_ALL") or ""
   local wezterm_lc_time = os.getenv("LC_TIME") or ""
   
-  wezterm.log_info("Переменные окружения - LANG: " .. wezterm_lang .. ", LC_ALL: " .. wezterm_lc_all .. ", LC_TIME: " .. wezterm_lc_time)
+  -- Логируем переменные окружения только один раз
+  if not _env_vars_logged then
+    _env_vars_logged = true
+    wezterm.log_info("Переменные окружения - LANG: " .. wezterm_lang .. ", LC_ALL: " .. wezterm_lc_all .. ", LC_TIME: " .. wezterm_lc_time)
+  end
   
   -- Приоритет: LC_ALL > LC_TIME > LANG
   local locale = wezterm_lc_all
@@ -81,7 +93,11 @@ local function get_system_locale()
   
   -- Кэшируем результат
   cached_locale = locale:lower()
-  wezterm.log_info("Определенная локаль в platform.lua: " .. cached_locale)
+  -- Логируем только при первой инициализации
+  if not _locale_logged then
+    _locale_logged = true
+    wezterm.log_info("Определенная локаль в platform.lua: " .. cached_locale)
+  end
   return cached_locale
 end
 

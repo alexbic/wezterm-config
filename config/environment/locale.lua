@@ -7,6 +7,8 @@
 -- ЗАВИСИМОСТИ: wezterm, используется в utils.platform, events.right-status, config.environment
 
 local wezterm = require('wezterm')
+-- Кэш для предотвращения повторного логирования
+local _locale_init_logged = false
 
 -- Таблица переводов и языковых настроек (см. предыдущий полный пример)
 local available_languages = {
@@ -158,7 +160,11 @@ local locale_config = {
   force_locale = lang_table.locale or "ru_RU.UTF-8"
 }
 
-wezterm.log_info(t("set_locale") .. ": " .. locale_config.force_locale)
+-- Логируем только при первой инициализации
+if not _locale_init_logged then
+  _locale_init_logged = true
+  wezterm.log_info(t("set_locale") .. ": " .. locale_config.force_locale)
+end
 
 local M = {
   t = t,
