@@ -11,6 +11,48 @@ local act = wezterm.action
 local environment = require('config.environment')
 
 return {
+    debug_control = {
+        { key = "l", action = wezterm.action_callback(function(window, pane)
+            local debug_manager = require("utils.debug-manager")
+            local environment = require("config.environment")
+            local debug = require("utils.debug")
+            debug.enable_debug(wezterm, environment.locale.t, "global")
+            local modules = debug_manager.get_available_modules()
+            debug.log(wezterm, environment.locale.t, "global", "debug_status_title")
+            -- Добавляем отладку количества модулей
+            wezterm.log_info("🪲 [TEST] Total modules found: " .. #modules)
+            for i, module in ipairs(modules) do
+                local state = debug.DEBUG_CONFIG[module] and environment.locale.t("debug_status_on") or environment.locale.t("debug_status_off")
+                wezterm.log_info("🪲 [TEST] Module " .. i .. ": " .. module .. " = " .. tostring(debug.DEBUG_CONFIG[module]))
+                debug.log(wezterm, environment.locale.t, "global", "debug_status_log", module .. ": " .. state)
+            end
+        end) },
+        { key = "a", action = wezterm.action_callback(function(window, pane)
+            local debug = require("utils.debug")
+            local environment = require("config.environment")
+            debug.enable_all(wezterm, environment.locale.t)
+            debug.log(wezterm, environment.locale.t, "global", "debug_all_enabled")
+            wezterm.emit("update-right-status", window, pane)
+        end) },
+        { key = "o", action = wezterm.action_callback(function(window, pane)
+            local debug = require("utils.debug")
+            local environment = require("config.environment")
+            local debug_manager = require("utils.debug-manager")
+            debug.disable_all(wezterm, environment.locale.t)
+            -- Включаем global обратно для вывода
+            debug.enable_debug(wezterm, environment.locale.t, "global")
+            debug.log(wezterm, environment.locale.t, "global", "debug_all_disabled")
+            -- Показываем обновленный статус всех модулей
+            local modules = debug_manager.get_available_modules()
+            for _, module in ipairs(modules) do
+                local state = debug.DEBUG_CONFIG[module] and environment.locale.t("debug_status_on") or environment.locale.t("debug_status_off")
+                debug.log(wezterm, environment.locale.t, "global", "debug_status_log", module .. ": " .. state)
+            end
+            wezterm.emit("update-right-status", window, pane)
+        end) },
+        { key = "Escape", action = act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }) },
+        { key = "Enter", action = act.Multiple({ act.PopKeyTable, act.EmitEvent("force-update-status") }) }
+    },
     session_control = {
         { key = "s", action = act.Multiple({
             act.EmitEvent("resurrect.save_state"),

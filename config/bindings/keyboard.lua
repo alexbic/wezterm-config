@@ -42,6 +42,7 @@ local base_keys = {
    { key = 'F4',     mods = 'NONE',        action = act.ShowTabNavigator },
    { key = 'F11',    mods = 'NONE',        action = act.ToggleFullScreen },
    { key = 'F12',    mods = 'NONE',        action = act.ShowDebugOverlay },
+   { key = "F12", mods = "SHIFT", action = act.ActivateKeyTable({ name = "debug_control", one_shot = false, timeout_milliseconds = 10000 }) },
    { key = 'f',      mods = mod.SUPER,     action = act.Search({ CaseInSensitiveString = '' }) },
 
    -- Копирование/Вставка

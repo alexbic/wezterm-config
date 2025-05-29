@@ -85,8 +85,8 @@ local appearance_events = require("config.appearance.events")
 
 -- Тестирование системы отладки
 local debug = require("utils.debug")
-debug.enable_debug(wezterm, environment.locale.t, "workspace")
-debug.enable_debug(wezterm, environment.locale.t, "appearance")
+local debug_manager = require("utils.debug-manager")
+debug_manager.setup()
 if appearance_events and appearance_events.register then
    appearance_events.register()
 end

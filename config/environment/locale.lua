@@ -146,6 +146,18 @@ local available_languages = {
     restoring_tab_state = "⚙️ Восстанавливаем tab состояние...",
     failed_to_load_state = "❌ Не удалось загрузить состояние: %s",
     create_workspace_new_window = "Создать workspace в новом окне",
+    -- Ключи для debug manager
+    debug_invalid_module = "❌ Неверный модуль. Доступные: ",
+    debug_status_on = "ВКЛ",
+    debug_status_off = "ВЫКЛ",
+    debug_status_title = "🪲 Статус отладки:",
+    debug_help_text = "🪲 Команды менеджера отладки:\n:debug-enable <модуль>  - Включить отладку модуля\n:debug-disable <модуль> - Выключить отладку модуля\n:debug-all-on          - Включить отладку всех модулей\n:debug-all-off         - Выключить отладку всех модулей\n:debug-list           - Показать текущий статус отладки\n:debug-help           - Показать эту справку\n\nДоступные модули: %s",
+    debug_manager_initialized = "🪲 Менеджер отладки инициализирован с модулями: %s",
+    debug_manager_help_hint = "🪲 Используйте F12 и введите :debug-help для команд",
+    debug_status_log = "Статус модулей отладки: %s",
+    debug_status_header = "🪲 Статус отладки:",
+    debug_all_enabled = "🪲 Все модули отладки включены",
+    debug_all_disabled = "🪲 Все модули отладки выключены",
     config_reloaded = "Конфигурация перезагружена",
   },
   en = {
@@ -283,6 +295,19 @@ local available_languages = {
     restoring_tab_state = "⚙️ Restoring tab state...",
     failed_to_load_state = "❌ Failed to load state: %s",
     create_workspace_new_window = "Create workspace in new window",
+    -- Debug manager keys
+    debug_invalid_module = "❌ Invalid module. Available: ",
+    debug_status_on = "ON",
+    debug_status_off = "OFF",
+    debug_status_title = "🪲 Debug status:",
+    debug_help_text = "🪲 Debug Manager Commands:\n:debug-enable <module>  - Enable debug for module\n:debug-disable <module> - Disable debug for module\n:debug-all-on          - Enable debug for all modules\n:debug-all-off         - Disable debug for all modules\n:debug-list           - Show current debug status\n:debug-help           - Show this help\n\nAvailable modules: %s",
+    debug_manager_initialized = "🪲 Debug Manager initialized with modules: %s",
+    debug_manager_help_hint = "🪲 Use F12 and type :debug-help for commands",
+    debug_status_log = "Debug modules status: %s",
+    debug_status_header = "🪲 Debug Status:",
+    debug_all_enabled = "🪲 All debug modules enabled",
+    debug_all_disabled = "🪲 All debug modules disabled",
+    -- Debug manager keys
     config_reloaded = "Configuration reloaded",
   }
 }

@@ -14,6 +14,7 @@ local mode_icons = {
   session_control = { icon = "◎", name = "", color = "#4ECDC4" },
   pane_control = { icon = "◫", name = "", color = "#4ECDC4" },
   font_control = { icon = "ƒ", name = "", color = "#4ECDC4" },
+  debug_control = { icon = "🪲", name = "", color = "#FF6B6B" },
   workspace_search = { icon = "🔍", name = "", color = "#F1FA8C" },}
 
 local function log_status()
