@@ -12,44 +12,67 @@ local environment = require('config.environment')
 
 return {
     debug_control = {
-        { key = "l", action = wezterm.action_callback(function(window, pane)
-            local debug_manager = require("utils.debug-manager")
-            local environment = require("config.environment")
-            local debug = require("utils.debug")
-            debug.enable_debug(wezterm, environment.locale.t, "global")
-            local modules = debug_manager.get_available_modules()
-            debug.log_system(wezterm, environment.locale.t, "debug_status_title")
-            local status_parts = {}
-            for _, module in ipairs(modules) do
-                local state = debug.DEBUG_CONFIG[module] and environment.locale.t("debug_status_on") or environment.locale.t("debug_status_off")
-                table.insert(status_parts, module .. ": " .. state)
-            end
-            debug.log_system(wezterm, environment.locale.t, "debug_modules_status", "  " .. table.concat(status_parts, "\n  "))
+        -- Навигация по панели
+        { key = "UpArrow", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.move_up()
         end) },
+        { key = "k", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.move_up()
+        end) },
+        { key = "DownArrow", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.move_down()
+        end) },
+        { key = "j", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.move_down()
+        end) },
+        
+        -- Переключение модулей
+        { key = "Space", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.toggle_current()
+        end) },
+        { key = "Enter", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.toggle_current()
+        end) },
+        
+        -- Управление всеми модулями
         { key = "a", action = wezterm.action_callback(function(window, pane)
-            local debug = require("utils.debug")
-            local environment = require("config.environment")
-            debug.enable_all(wezterm, environment.locale.t)
-            debug.log(wezterm, environment.locale.t, "global", "debug_all_enabled")
-            wezterm.emit("update-right-status", window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.enable_all()
+        end) },
+        { key = "A", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.enable_all()
         end) },
         { key = "o", action = wezterm.action_callback(function(window, pane)
-            local debug = require("utils.debug")
-            local environment = require("config.environment")
-            local debug_manager = require("utils.debug-manager")
-            debug.disable_all(wezterm, environment.locale.t)
-            debug.enable_debug(wezterm, environment.locale.t, "global")
-            debug.log(wezterm, environment.locale.t, "global", "debug_all_disabled")
-            local modules = debug_manager.get_available_modules()
-            local status_parts = {}
-            for _, module in ipairs(modules) do
-                local state = debug.DEBUG_CONFIG[module] and environment.locale.t("debug_status_on") or environment.locale.t("debug_status_off")
-                table.insert(status_parts, module .. ": " .. state)
-            end
-            debug.log_system(wezterm, environment.locale.t, "debug_modules_status", "  " .. table.concat(status_parts, "\n  "))
-            wezterm.emit("update-right-status", window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.disable_all()
         end) },
-        { key = "Escape", action = act.Multiple({ act.EmitEvent("close-debug-panel"), act.PopKeyTable, act.EmitEvent("force-update-status") }) }
+        { key = "O", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.disable_all()
+        end) },
+        
+        -- Сохранение и выход
+        { key = "s", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.save_and_close(window)
+        end) },
+        { key = "S", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.save_and_close(window)
+        end) },
+        
+        -- Отмена и выход
+        { key = "Escape", action = wezterm.action_callback(function(window, pane)
+            local debug_panel = require("utils.debug-panel")
+            debug_panel.cancel_and_close(window)
+        end) }
     },
     session_control = {
         { key = "s", action = act.Multiple({

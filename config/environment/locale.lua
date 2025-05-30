@@ -159,7 +159,22 @@ local available_languages = {
     debug_all_enabled = "🪲 Все модули отладки включены",
     debug_all_disabled = "🪲 Все модули отладки выключены",
     config_reloaded = "Конфигурация перезагружена",
-  },
+    -- Справка по системе отладки
+    debug_help_title = "СИСТЕМА ОТЛАДКИ WEZTERM",
+    debug_help_what = "Система отладки позволяет включать детальное логирование\nразличных модулей WezTerm для диагностики проблем.",
+    debug_help_how = "КАК ИСПОЛЬЗОВАТЬ:",
+    debug_help_step1 = "• Включите нужные модули отладки в панели управления",
+    debug_help_step2 = "• Нажмите F12 для открытия Debug Overlay",
+    debug_help_step3 = "• Выполните действия, которые хотите отладить",
+    debug_help_step4 = "• Анализируйте сообщения отладки в консоли",
+    debug_help_modules = "ОПИСАНИЕ МОДУЛЕЙ:",
+    debug_help_appearance = "• appearance - отладка фонов, прозрачности, тем",
+    debug_help_bindings = "• bindings - отладка горячих клавиш и биндингов",
+    debug_help_global = "• global - общесистемная отладка WezTerm",
+    debug_help_resurrect = "• resurrect - отладка сохранения/восстановления сессий",
+    debug_help_session = "• session_status - отладка статуса сессий и режимов",
+    debug_help_workspace = "• workspace - отладка рабочих пространств",
+    debug_help_footer = "Нажмите Esc для возврата к панели отладки.",  },
   en = {
     locale = "en_US.UTF-8",
     name = "English",
@@ -308,7 +323,22 @@ local available_languages = {
     debug_all_enabled = "🪲 All debug modules enabled",
     debug_all_disabled = "🪲 All debug modules disabled",
     -- Debug manager keys
-    config_reloaded = "Configuration reloaded",
+    -- Debug system help
+    debug_help_title = "WEZTERM DEBUG SYSTEM",
+    debug_help_what = "Debug system allows enabling detailed logging\nof various WezTerm modules for problem diagnostics.",
+    debug_help_how = "HOW TO USE:",
+    debug_help_step1 = "• Enable needed debug modules in the control panel",
+    debug_help_step2 = "• Press F12 to open Debug Overlay",
+    debug_help_step3 = "• Perform actions you want to debug",
+    debug_help_step4 = "• Analyze debug messages in console",
+    debug_help_modules = "MODULE DESCRIPTIONS:",
+    debug_help_appearance = "• appearance - debugging backgrounds, transparency, themes",
+    debug_help_bindings = "• bindings - debugging hotkeys and bindings",
+    debug_help_global = "• global - general WezTerm system debugging",
+    debug_help_resurrect = "• resurrect - debugging session save/restore",
+    debug_help_session = "• session_status - debugging session status and modes",
+    debug_help_workspace = "• workspace - debugging workspaces",
+    debug_help_footer = "Press Esc to return to debug panel.",    config_reloaded = "Configuration reloaded",
   }
 }
 

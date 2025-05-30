@@ -159,17 +159,11 @@ end
 
 -- Функция для активации режима отладки с разделением панели
 M.activate_debug_mode_with_panel = function(wezterm)
-  return wezterm.action.Multiple({
-    wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }),
-    wezterm.action.ActivateKeyTable({
-      name = "debug_control",
-      one_shot = false,
-      timeout_milliseconds = 10000
-    }),
-    wezterm.action.EmitEvent("force-update-status")
-  })
+  return wezterm.action_callback(function(window, pane)
+    local debug_panel = require("utils.debug-panel")
+    debug_panel.create_panel(window, pane)
+  end)
 end
-
 -- Функция для закрытия отладочной панели
 M.close_debug_panel = function(wezterm)
   return wezterm.action_callback(function(window, pane)
