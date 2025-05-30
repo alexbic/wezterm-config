@@ -174,6 +174,11 @@ local available_languages = {
     debug_help_resurrect = "• resurrect - отладка сохранения/восстановления сессий",
     debug_help_session = "• session_status - отладка статуса сессий и режимов",
     debug_help_workspace = "• workspace - отладка рабочих пространств",
+    -- Ключи для панели отладки
+    debug_enable_all_modules = "Включить все модули",
+    debug_disable_all_modules = "Выключить все модули",
+    debug_save_and_exit = "Сохранить и выйти",
+    debug_panel_title = "Панель управления отладкой",
     debug_help_footer = "Нажмите Esc для возврата к панели отладки.",  },
   en = {
     locale = "en_US.UTF-8",
@@ -338,7 +343,13 @@ local available_languages = {
     debug_help_resurrect = "• resurrect - debugging session save/restore",
     debug_help_session = "• session_status - debugging session status and modes",
     debug_help_workspace = "• workspace - debugging workspaces",
-    debug_help_footer = "Press Esc to return to debug panel.",    config_reloaded = "Configuration reloaded",
+    -- Debug panel keys
+    debug_enable_all_modules = "Enable all modules",
+    debug_disable_all_modules = "Disable all modules",
+    debug_save_and_exit = "Save and exit",
+    debug_panel_title = "Debug Control Panel",
+    debug_help_footer = "Press Esc to return to debug panel.",
+    config_reloaded = "Configuration reloaded",
   }
 }
 

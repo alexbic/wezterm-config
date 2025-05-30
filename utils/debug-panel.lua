@@ -29,30 +29,25 @@ end
 local function show_help(window, pane)
   local t = environment.locale.t
   
-  -- Собираем текст справки из локализованных ключей
-  local help_parts = {
-    "📖 " .. t("debug_help_title"),
-    "",
-    t("debug_help_what"),
-    "",
-    "🔧 " .. t("debug_help_how"),
-    t("debug_help_step1"),
-    t("debug_help_step2"), 
-    t("debug_help_step3"),
-    t("debug_help_step4"),
-    "",
-    "📋 " .. t("debug_help_modules"),
-    t("debug_help_appearance"),
-    t("debug_help_bindings"),
-    t("debug_help_global"),
-    t("debug_help_resurrect"),
-    t("debug_help_session"),
-    t("debug_help_workspace"),
-    "",
-    t("debug_help_footer")
+  local help_choices = {
+    { id = "title", label = "📖 " .. t("debug_help_title") },
+    { id = "empty1", label = "" },
+    { id = "what", label = t("debug_help_what") },
+    { id = "empty2", label = "" },
+    { id = "how", label = "🔧 " .. t("debug_help_how") },
+    { id = "step1", label = t("debug_help_step1") },
+    { id = "step2", label = t("debug_help_step2") },
+    { id = "step3", label = t("debug_help_step3") },
+    { id = "step4", label = t("debug_help_step4") },
+    { id = "empty3", label = "" },
+    { id = "modules", label = "📋 " .. t("debug_help_modules") },
+    { id = "appearance", label = t("debug_help_appearance") },
+    { id = "bindings", label = t("debug_help_bindings") },
+    { id = "global", label = t("debug_help_global") },
+    { id = "resurrect", label = t("debug_help_resurrect") },
+    { id = "session", label = t("debug_help_session") },
+    { id = "workspace", label = t("debug_help_workspace") }
   }
-  
-  local help_text = table.concat(help_parts, "\n")
   
   window:perform_action(
     wezterm.action.InputSelector({
@@ -60,19 +55,13 @@ local function show_help(window, pane)
         M.show_panel(inner_window, inner_pane)
       end),
       title = "🪲 " .. t("debug_help_title"),
-      description = help_text,
+      description = "Нажмите Enter для возврата к панели отладки",
       fuzzy = false,
-      choices = {
-        {
-          id = "back",
-          label = "← " .. (environment.locale.get_language_table().name == "English" and "Return to debug panel" or "Вернуться к панели отладки")
-        }
-      },
+      choices = help_choices,
     }),
     pane
   )
 end
-
 -- Создание выборов для селектора
 local function create_choices()
   local modules = debug_manager.get_available_modules()
