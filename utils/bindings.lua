@@ -156,4 +156,35 @@ M.generate_workspace_bindings = function(wezterm, mod, t_func)
   }
 end
 
+
+-- Функция для активации режима отладки с разделением панели
+M.activate_debug_mode_with_panel = function(wezterm)
+  return wezterm.action.Multiple({
+    wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }),
+    wezterm.action.ActivateKeyTable({
+      name = "debug_control",
+      one_shot = false,
+      timeout_milliseconds = 10000
+    }),
+    wezterm.action.EmitEvent("force-update-status")
+  })
+end
+
+-- Функция для закрытия отладочной панели
+M.close_debug_panel = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local current_tab = window:active_tab()
+    local panes = current_tab:panes()
+    
+    -- Ищем панель с названием DEBUG_PANEL
+    for _, p in ipairs(panes) do
+      if p:get_title() == "DEBUG_PANEL" then
+        -- Активируем отладочную панель и закрываем её
+        p:activate()
+        window:perform_action(wezterm.action.CloseCurrentPane({ confirm = false }), p)
+        break
+      end
+    end
+  end)
+end
 return M

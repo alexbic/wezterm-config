@@ -92,7 +92,18 @@ if appearance_events and appearance_events.register then
 end
 
 -- Обработчик для выхода из режимов
-wezterm.on("clear-saved-mode", function(window, pane)
+
+-- Обработчик для закрытия отладочной панели
+wezterm.on("close-debug-panel", function(window, pane)
+  local current_tab = window:active_tab()
+  local panes = current_tab:panes()
+  
+  -- Если есть больше одной панели, закрываем нижнюю
+  if #panes > 1 then
+    window:perform_action(wezterm.action.ActivatePaneDirection("Down"), window:active_pane())
+    window:perform_action(wezterm.action.CloseCurrentPane({ confirm = false }), window:active_pane())
+  end
+end)wezterm.on("clear-saved-mode", function(window, pane)
 
 -- Обработчик для выхода из других режимов
 wezterm.on("update-status-on-key-table-exit", function(window, pane)
