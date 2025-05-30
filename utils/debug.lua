@@ -51,6 +51,13 @@ end
 M.table_to_string = table_to_string
 
 -- Функция отладочного логирования с локализацией
+-- Функция для системных сообщений без указания модуля
+M.log_system = function(wezterm, t_func, message_key, ...)
+  local localized_msg = t_func(message_key) or message_key
+  local formatted_msg = string.format(localized_msg, ...)
+  wezterm.log_info("🪲 " .. formatted_msg)
+end
+
 M.log = function(wezterm, t_func, module, message_key, ...)
   if M.DEBUG_CONFIG[module] then
     local localized_msg = t_func(message_key) or message_key

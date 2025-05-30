@@ -155,7 +155,7 @@ local available_languages = {
     debug_manager_initialized = "🪲 Менеджер отладки инициализирован с модулями: %s",
     debug_manager_help_hint = "🪲 Используйте F12 и введите :debug-help для команд",
     debug_status_log = "Статус модулей отладки: %s",
-    debug_status_header = "🪲 Статус отладки:",
+    debug_modules_status = "📊 Модули отладки:\n%s",    debug_status_header = "🪲 Статус отладки:",
     debug_all_enabled = "🪲 Все модули отладки включены",
     debug_all_disabled = "🪲 Все модули отладки выключены",
     config_reloaded = "Конфигурация перезагружена",
@@ -304,7 +304,7 @@ local available_languages = {
     debug_manager_initialized = "🪲 Debug Manager initialized with modules: %s",
     debug_manager_help_hint = "🪲 Use F12 and type :debug-help for commands",
     debug_status_log = "Debug modules status: %s",
-    debug_status_header = "🪲 Debug Status:",
+    debug_modules_status = "📊 Debug Modules:\n%s",    debug_status_header = "🪲 Debug Status:",
     debug_all_enabled = "🪲 All debug modules enabled",
     debug_all_disabled = "🪲 All debug modules disabled",
     -- Debug manager keys
