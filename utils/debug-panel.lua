@@ -57,6 +57,7 @@ local function show_help(window, pane)
       title = "🪲 " .. t("debug_help_title"),
       description = "Нажмите Enter для возврата к панели отладки",
       fuzzy = false,
+      alphabet = "",
       choices = help_choices,
     }),
     pane
