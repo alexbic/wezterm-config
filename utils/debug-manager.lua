@@ -85,8 +85,8 @@ end
 -- Регистрация обработчика команд в Debug Overlay
 M.setup = function()
   local available_modules = M.get_available_modules()
-  debug.log(wezterm, environment.locale.t, "global", "debug_manager_initialized", table.concat(available_modules, ", "))
-  debug.log(wezterm, environment.locale.t, "global", "debug_manager_help_hint")
+  debug.log(wezterm, environment.locale.t, wezterm, environment.locale.t, "global", "debug_manager_initialized", table.concat(available_modules, ", "))
+  debug.log(wezterm, environment.locale.t, wezterm, environment.locale.t, "global", "debug_manager_help_hint")
 end
 
 return M

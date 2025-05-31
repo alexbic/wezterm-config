@@ -3,6 +3,7 @@ local debug = require("utils.debug")
 -- ОПИСАНИЕ: Обработчики событий внешнего вида WezTerm (только регистрация)
 
 local wezterm = require('wezterm')
+local environment = require('config.environment')
 
 local function register_appearance_events()
   local transparency = require('config.appearance.transparency')
@@ -52,7 +53,7 @@ local function register_appearance_events()
         brightness = 0.25,
       }
       window:set_config_overrides(overrides)
-      debug.log("appearance", "debug_background_changed", new_background)
+      debug.log(wezterm, environment.locale.t, "appearance", "debug_background_changed", new_background)
     end
   end)
 end

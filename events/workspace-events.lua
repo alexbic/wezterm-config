@@ -92,7 +92,7 @@ M.setup = function()
           wezterm.emit('clear-saved-mode', inner_window, inner_pane)
 
           if not id or id == "none" then
-            debug.log("workspace", "debug_workspace_cancelled")
+            debug.log(wezterm, environment.locale.t, "workspace", "debug_workspace_cancelled")
             return
           end
 
@@ -103,7 +103,7 @@ M.setup = function()
           end
 
           local action_type = parts[1]
-          debug.log("workspace", "debug_workspace_action_type", action_type)
+          debug.log(wezterm, environment.locale.t, "workspace", "debug_workspace_action_type", action_type)
 
           if action_type == "active" then
             local workspace_name = parts[2]
@@ -115,7 +115,7 @@ M.setup = function()
             )
           elseif action_type == "zoxide" then
             local path = parts[2]
-            debug.log("workspace", "debug_workspace_path_switch", path)
+            debug.log(wezterm, environment.locale.t, "workspace", "debug_workspace_path_switch", path)
             inner_window:perform_action(
               wezterm.action.SwitchToWorkspace({
                 name = path,
