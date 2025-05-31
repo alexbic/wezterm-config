@@ -33,12 +33,6 @@ end
 -- ЛОКАЛИЗАЦИЯ И ПЕРЕВОДЫ
 -- ========================================
 
--- Переменная уровня модуля для кэширования между вызовами
--- Глобальная переменная для предотвращения повторного логирования между контекстами
-if not _G.WEZTERM_LOCALE_INIT_LOGGED then
-  _G.WEZTERM_LOCALE_INIT_LOGGED = false
-end
-
 -- Функция перевода ключей
 M.translate = function(available_languages, key, ...)
   local default_language = os.getenv("WEZTERM_LANG") or "ru"
@@ -58,8 +52,7 @@ M.get_language_table = function(available_languages)
   return available_languages[default_language] or available_languages["ru"]
 end
 
--- Функция создания настроек локали с логированием
--- Принимает wezterm как параметр, чтобы не создавать зависимость
+-- Функция создания настроек локали (БЕЗ логирования)
 M.create_locale_settings = function(available_languages, wezterm)
   local default_language = os.getenv("WEZTERM_LANG") or "ru"
   local lang_table = available_languages[default_language] or available_languages["ru"]
@@ -67,12 +60,6 @@ M.create_locale_settings = function(available_languages, wezterm)
     force_language = default_language,
     force_locale = lang_table.locale or "ru_RU.UTF-8"
   }
-  
-  -- Логируем только при первой инициализации
-  if wezterm and not _G.WEZTERM_LOCALE_INIT_LOGGED then
-    _G.WEZTERM_LOCALE_INIT_LOGGED = true
-    wezterm.log_info(M.translate(available_languages, "set_locale") .. ": " .. locale_config.force_locale)
-  end
   
   return {
     LANG = locale_config.force_locale,

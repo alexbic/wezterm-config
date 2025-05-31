@@ -128,4 +128,42 @@ M.enable_verbose_logging = function(wezterm)
   wezterm.log_info("⚙️ WEZTERM_LOG=info wezterm")
 end
 
+-- Функция сохранения настроек отладки
+-- Функция загрузки настроек отладки
+M.load_debug_settings = function()
+  local paths = require("config.environment.paths")
+  local settings_file = paths.resurrect_state_dir .. "debug_settings.json"
+  local file = io.open(settings_file, "r")
+  if file then
+    local content = file:read("*a")
+    file:close()
+    -- Простой парсинг JSON для булевых значений
+    M.DEBUG_CONFIG.appearance = string.find(content, "\"appearance\":true") ~= nil
+    M.DEBUG_CONFIG.global = string.find(content, "\"global\":true") ~= nil
+    M.DEBUG_CONFIG.session_status = string.find(content, "\"session_status\":true") ~= nil
+    M.DEBUG_CONFIG.workspace = string.find(content, "\"workspace\":true") ~= nil
+    M.DEBUG_CONFIG.bindings = string.find(content, "\"bindings\":true") ~= nil
+    M.DEBUG_CONFIG.resurrect = string.find(content, "\"resurrect\":true") ~= nil
+  end
+end
+
+M.save_debug_settings = function()
+  local paths = require("config.environment.paths")
+  local settings_file = paths.resurrect_state_dir .. "debug_settings.json"
+  local json_content = string.format(
+    "{\"debug_modules\":{\"appearance\":%s,\"global\":%s,\"session_status\":%s,\"workspace\":%s,\"bindings\":%s,\"resurrect\":%s},\"last_updated\":\"%s\"}",
+    M.DEBUG_CONFIG.appearance and "true" or "false",
+    M.DEBUG_CONFIG.global and "true" or "false",
+    M.DEBUG_CONFIG.session_status and "true" or "false",
+    M.DEBUG_CONFIG.workspace and "true" or "false",
+    M.DEBUG_CONFIG.bindings and "true" or "false",
+    M.DEBUG_CONFIG.resurrect and "true" or "false",
+    os.date("%Y-%m-%dT%H:%M:%SZ")
+  )
+  local file = io.open(settings_file, "w")
+  if file then
+    file:write(json_content)
+    file:close()
+  end
+end
 return M

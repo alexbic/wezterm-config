@@ -5,18 +5,19 @@
 -- Он импортирует и инициализирует все остальные модули конфигурации.
 
 local wezterm = require('wezterm')
-local environment = require('config.environment')
+local debug = require("utils.debug")
+debug.load_debug_settings()local environment = require('config.environment')
 local create_platform_info = require('utils.platform')
 local platform = create_platform_info(wezterm.target_triple)
 
 if platform.is_mac then
-  wezterm.log_info("Платформа: macOS")
+  debug.log(wezterm, environment.locale.t, "global", "platform", "macOS")
 elseif platform.is_win then
-  wezterm.log_info("Платформа: Windows")
+  debug.log(wezterm, environment.locale.t, "global", "platform_info", "Windows")
 elseif platform.is_linux then
-  wezterm.log_info("Платформа: Linux")
+  debug.log(wezterm, environment.locale.t, "global", "platform_info", "Linux")
 else
-  wezterm.log_error("Неизвестная платформа")
+  debug.log(wezterm, environment.locale.t, "global", "platform_info", "Unknown")
 end
 
 ---@class Config
@@ -44,7 +45,7 @@ function ConfigClass:append(new_options)
    return self
 end
 
-print("Конфигурация загружена")
+debug.log(wezterm, environment.locale.t, "global", "config_loaded_info", "")
 
 -- Собираем все переменные окружения из подмодулей
 local set_env = {}
@@ -66,9 +67,10 @@ for _, mod in pairs({
 end
 
 -- Принудительно устанавливаем переменные окружения в процессе
+debug.log(wezterm, environment.locale.t, "global", "debug_enabled_all", "Начинаем установку переменных окружения")
 for key, value in pairs(set_env) do
   if key ~= "PATH" then -- PATH обрабатывается отдельно
-    wezterm.log_info("Установка переменной окружения: " .. key .. " = " .. tostring(value))
+    debug.log(wezterm, environment.locale.t, "global", "set_env_var", key, tostring(value))
   end
 end
 
@@ -84,7 +86,6 @@ appearance_utils.setup_window_centering(wezterm)
 local appearance_events = require("config.appearance.events")
 
 -- Тестирование системы отладки
-local debug = require("utils.debug")
 local debug_manager = require("utils.debug-manager")
 debug_manager.setup()
 if appearance_events and appearance_events.register then

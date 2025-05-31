@@ -154,20 +154,20 @@ M.show_panel = function(window, pane)
         
         if id == "enable_all" then
           for module_name, _ in pairs(debug.DEBUG_CONFIG) do
-            debug.DEBUG_CONFIG[module_name] = true
+          debug.save_debug_settings()            debug.DEBUG_CONFIG[module_name] = true
           end
           M.show_panel(inner_window, inner_pane)
           
         elseif id == "disable_all" then
           for module_name, _ in pairs(debug.DEBUG_CONFIG) do
-            debug.DEBUG_CONFIG[module_name] = false
+          debug.save_debug_settings()            debug.DEBUG_CONFIG[module_name] = false
           end
           M.show_panel(inner_window, inner_pane)
           
         else
           -- Переключаем конкретный модуль
           debug.DEBUG_CONFIG[id] = not debug.DEBUG_CONFIG[id]
-          M.show_panel(inner_window, inner_pane)
+          debug.save_debug_settings()          M.show_panel(inner_window, inner_pane)
         end
       end),
       title = "🪲 " .. environment.locale.t("debug_panel_title"),
