@@ -67,7 +67,7 @@ for _, mod in pairs({
 end
 
 -- Принудительно устанавливаем переменные окружения в процессе
-debug.log(wezterm, environment.locale.t, "global", "debug_enabled_all", "Начинаем установку переменных окружения")
+debug.log(wezterm, environment.locale.t, "global", "config_loaded_info")
 for key, value in pairs(set_env) do
   if key ~= "PATH" then -- PATH обрабатывается отдельно
     debug.log(wezterm, environment.locale.t, "global", "set_env_var", key, tostring(value))

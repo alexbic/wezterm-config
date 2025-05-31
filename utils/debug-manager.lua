@@ -51,7 +51,7 @@ M.handle_debug_command = function(command, args)
     
   elseif cmd == "debug-all-on" then
     debug.enable_all(wezterm, environment.locale.t)
-    return environment.locale.t("debug_enabled_all")
+    return environment.locale.t("debug_all_enabled")
     
   elseif cmd == "debug-all-off" then
     debug.disable_all(wezterm, environment.locale.t)

@@ -109,7 +109,7 @@ M.enable_all = function(wezterm, t_func)
   for module, _ in pairs(M.DEBUG_CONFIG) do
     M.DEBUG_CONFIG[module] = true
   end
-  local msg = t_func("debug_enabled_all")
+  local msg = t_func("debug_all_enabled")
   wezterm.log_info("⚙️ " .. msg)
 end
 

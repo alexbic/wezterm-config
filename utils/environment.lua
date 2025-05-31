@@ -1,7 +1,7 @@
 -- cat > ~/.config/wezterm/utils/environment.lua << 'EOF'
 --
 -- ОПИСАНИЕ: Утилиты для работы с окружением WezTerm
--- Централизованные функции для работы с путями, локалью, переменными окружения и локализацией.
+-- Централизованные функции для работы с путями, локалью, переменными окружения, локализацией и иконками.
 -- САМОДОСТАТОЧНЫЙ МОДУЛЬ - НЕ ТРЕБУЕТ ДРУГИХ МОДУЛЕЙ
 --
 -- ЗАВИСИМОСТИ: НЕТ
@@ -68,6 +68,146 @@ M.create_locale_settings = function(available_languages, wezterm)
     LC_NUMERIC = locale_config.force_locale,
     LC_MONETARY = locale_config.force_locale,
   }
+end
+
+-- ========================================
+-- РАБОТА С ИКОНКАМИ И ФОРМАТИРОВАНИЕМ
+-- ========================================
+
+-- === БАЗОВЫЕ ФУНКЦИИ ПОЛУЧЕНИЯ ДАННЫХ ===
+
+-- Получить иконку для категории
+M.get_icon = function(icons_data, category)
+  return icons_data.ICONS[category] or "?"
+end
+
+-- Получить HEX цвет для категории
+M.get_color = function(icons_data, category)
+  return icons_data.COLORS[category] or "#FFFFFF"
+end
+
+-- Получить ANSI код цвета для категории
+M.get_ansi_color = function(icons_data, category)
+  return icons_data.ANSI_COLORS[category] or "15"
+end
+
+-- === ФУНКЦИИ ФОРМАТИРОВАНИЯ СООБЩЕНИЙ ===
+
+-- Создать простое сообщение с иконкой
+M.format_message = function(icons_data, category, message)
+  local icon = M.get_icon(icons_data, category)
+  return icon .. " " .. message
+end
+
+-- Создать ANSI форматированное сообщение для терминала
+M.format_ansi_message = function(icons_data, category, message)
+  local icon = M.get_icon(icons_data, category)
+  local color = M.get_ansi_color(icons_data, category)
+  return string.format("\033[38;5;%sm%s\033[0m %s", color, icon, message)
+end
+
+-- Создать HTML форматированное сообщение
+M.format_html_message = function(icons_data, category, message)
+  local icon = M.get_icon(icons_data, category)
+  local color = M.get_color(icons_data, category)
+  return string.format('<span style="color: %s">%s</span> %s', color, icon, message)
+end
+
+-- Создать сообщение для WezTerm логирования
+M.format_wezterm_log = function(wezterm, icons_data, category, message)
+  local formatted = M.format_message(icons_data, category, message)
+  wezterm.log_info(formatted)
+end
+
+-- === СОВМЕСТИМОСТЬ СО СТАРОЙ СИСТЕМОЙ РЕЖИМОВ ===
+
+-- Функция для получения данных режима в старом формате (для events/session-status.lua)
+M.get_mode_data = function(icons_data, mode_name)
+  return {
+    icon = M.get_icon(icons_data, mode_name) or "?",
+    name = "",
+    color = M.get_color(icons_data, mode_name) or "#FFFFFF"
+  }
+end
+
+-- === ФУНКЦИИ ВАЛИДАЦИИ ИКОНОК ===
+
+-- Проверить, существует ли категория
+M.is_valid_category = function(icons_data, category)
+  return icons_data.ICONS[category] ~= nil
+end
+
+-- Получить список всех доступных категорий
+M.get_categories = function(icons_data)
+  local categories = {}
+  for category, _ in pairs(icons_data.ICONS) do
+    table.insert(categories, category)
+  end
+  table.sort(categories)
+  return categories
+end
+
+-- Получить список категорий сообщений (без режимов управления)
+M.get_message_categories = function()
+  return {"system", "platform", "ui", "tip", "mode", "time", "appearance", "input", "session", "workspace", "debug", "error"}
+end
+
+-- Получить список режимов управления
+M.get_control_modes = function()
+  return {"session_control", "pane_control", "font_control", "debug_control", "workspace_search"}
+end
+
+-- === ДЕМОНСТРАЦИЯ И ТЕСТИРОВАНИЕ ИКОНОК ===
+
+-- Функция для демонстрации всех иконок и цветов
+M.demo_icons = function(icons_data)
+  print("=== ДЕМОНСТРАЦИЯ ИКОНОК И ЦВЕТОВ ===")
+  
+  print("\n--- КАТЕГОРИИ СООБЩЕНИЙ ---")
+  local message_categories = M.get_message_categories()
+  
+  for _, category in ipairs(message_categories) do
+    if M.is_valid_category(icons_data, category) then
+      local message = M.format_ansi_message(icons_data, category, category .. "_* - " .. category .. " сообщения")
+      print(message)
+    end
+  end
+  
+  print("\n--- РЕЖИМЫ УПРАВЛЕНИЯ ---")
+  local control_modes = M.get_control_modes()
+  
+  for _, mode in ipairs(control_modes) do
+    if M.is_valid_category(icons_data, mode) then
+      local message = M.format_ansi_message(icons_data, mode, mode .. " - режим управления")
+      print(message)
+    end
+  end
+  
+  print("\n=== ВСЕ ИКОНКИ ВМЕСТЕ ===")
+  local all_categories = M.get_categories(icons_data)
+  local all_icons = ""
+  for _, category in ipairs(all_categories) do
+    local color = M.get_ansi_color(icons_data, category)
+    local icon = M.get_icon(icons_data, category)
+    all_icons = all_icons .. string.format("\033[38;5;%sm%s\033[0m", color, icon)
+  end
+  print(all_icons)
+end
+
+-- Функция для тестирования конкретной категории
+M.test_category = function(icons_data, category, test_message)
+  test_message = test_message or "Тестовое сообщение"
+  
+  if not M.is_valid_category(icons_data, category) then
+    print("❌ Категория '" .. category .. "' не найдена!")
+    return false
+  end
+  
+  print("=== ТЕСТ КАТЕГОРИИ: " .. category .. " ===")
+  print("Простое: " .. M.format_message(icons_data, category, test_message))
+  print("ANSI:    " .. M.format_ansi_message(icons_data, category, test_message))
+  print("HTML:    " .. M.format_html_message(icons_data, category, test_message))
+  return true
 end
 
 return M
