@@ -1,14 +1,17 @@
 -- cat > ~/.config/wezterm/utils/debug-panel.lua << 'EOF'
 --
--- ОПИСАНИЕ: Локализованная панель отладки с правильной справкой
--- Использует ключи локализации для отображения справки
+-- ОПИСАНИЕ: Локализованная панель отладки с централизованными иконками
+-- Использует ключи локализации и централизованную систему иконок
+-- ОБНОВЛЕНО: Интеграция с config.environment.icons
 --
--- ЗАВИСИМОСТИ: utils.debug, utils.debug-manager, config.environment
+-- ЗАВИСИМОСТИ: utils.debug, utils.debug-manager, config.environment, config.environment.icons, utils.environment
 
 local wezterm = require('wezterm')
 local debug = require('utils.debug')
 local debug_manager = require('utils.debug-manager')
 local environment = require('config.environment')
+local icons = require('config.environment.icons')
+local env_utils = require('utils.environment')
 
 local M = {}
 
@@ -25,22 +28,22 @@ local function get_module_description(module_name)
   return descriptions[module_name] or "Модуль отладки"
 end
 
--- Функция показа справки с правильной локализацией
+-- Функция показа справки с централизованными иконками
 local function show_help(window, pane)
   local t = environment.locale.t
   
   local help_choices = {
-    { id = "title", label = "📖 " .. t("debug_help_title") },
+    { id = "title", label = env_utils.get_icon(icons, "exit") .. " " .. t("debug_help_title") },
     { id = "empty1", label = "" },
     { id = "what", label = t("debug_help_what") },
     { id = "empty2", label = "" },
-    { id = "how", label = "🔧 " .. t("debug_help_how") },
+    { id = "how", label = env_utils.get_icon(icons, "system") .. " " .. t("debug_help_how") },
     { id = "step1", label = t("debug_help_step1") },
     { id = "step2", label = t("debug_help_step2") },
     { id = "step3", label = t("debug_help_step3") },
     { id = "step4", label = t("debug_help_step4") },
     { id = "empty3", label = "" },
-    { id = "modules", label = "📋 " .. t("debug_help_modules") },
+    { id = "modules", label = env_utils.get_icon(icons, "mode") .. " " .. t("debug_help_modules") },
     { id = "appearance", label = t("debug_help_appearance") },
     { id = "bindings", label = t("debug_help_bindings") },
     { id = "global", label = t("debug_help_global") },
@@ -54,7 +57,7 @@ local function show_help(window, pane)
       action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
         M.show_panel(inner_window, inner_pane)
       end),
-      title = "🪲 " .. t("debug_help_title"),
+      title = env_utils.get_icon(icons, "debug") .. " " .. t("debug_help_title"),
       description = "Нажмите Enter для возврата к панели отладки",
       fuzzy = false,
       alphabet = "",
@@ -63,7 +66,8 @@ local function show_help(window, pane)
     pane
   )
 end
--- Создание выборов для селектора
+
+-- Создание выборов для селектора с централизованными иконками
 local function create_choices()
   local modules = debug_manager.get_available_modules()
   local choices = {}
@@ -71,7 +75,7 @@ local function create_choices()
   -- Добавляем каждый модуль с цветовым выделением
   for i, module_name in ipairs(modules) do
     local enabled = debug.DEBUG_CONFIG[module_name] or false
-    local status_icon = enabled and "✓" or "✗"
+    local status_icon = enabled and env_utils.get_icon(icons, "system") or env_utils.get_icon(icons, "error")
     local description = get_module_description(module_name)
     
     if enabled then
@@ -79,7 +83,7 @@ local function create_choices()
       table.insert(choices, {
         id = module_name,
         label = wezterm.format({
-          { Foreground = { Color = "#4ECDC4" } },
+          { Foreground = { Color = env_utils.get_color(icons, "debug_control") } },
           { Text = string.format(" %d    %s  %-15s - %s", i, status_icon, module_name, description) }
         })
       })
@@ -98,25 +102,25 @@ local function create_choices()
     label = "─────────────────────────────────────────────────────────"
   })
   
-  -- Команды управления с локализацией
+  -- Команды управления с локализацией и иконками
   table.insert(choices, {
     id = "enable_all",
-    label = "      ✓  " .. environment.locale.t("debug_enable_all_modules")
+    label = "      " .. env_utils.get_icon(icons, "system") .. "  " .. environment.locale.t("debug_enable_all_modules")
   })
   
   table.insert(choices, {
     id = "disable_all", 
-    label = "      ✗  " .. environment.locale.t("debug_disable_all_modules")
+    label = "      " .. env_utils.get_icon(icons, "error") .. "  " .. environment.locale.t("debug_disable_all_modules")
   })
   
   table.insert(choices, {
     id = "help",
-    label = "      ⓘ  " .. (environment.locale.get_language_table().name == "English" and "Help and Info" or "Справка и помощь")
+    label = "      " .. env_utils.get_icon(icons, "tip") .. "  " .. (environment.locale.get_language_table().name == "English" and "Help and Info" or "Справка и помощь")
   })
   
   table.insert(choices, {
     id = "exit",
-    label = "      ⏏  " .. environment.locale.t("debug_save_and_exit")
+    label = "      " .. env_utils.get_icon(icons, "exit") .. "  " .. environment.locale.t("debug_save_and_exit")
   })
   
   return choices
@@ -154,23 +158,26 @@ M.show_panel = function(window, pane)
         
         if id == "enable_all" then
           for module_name, _ in pairs(debug.DEBUG_CONFIG) do
-          debug.save_debug_settings()            debug.DEBUG_CONFIG[module_name] = true
+            debug.DEBUG_CONFIG[module_name] = true
           end
+          debug.save_debug_settings()
           M.show_panel(inner_window, inner_pane)
           
         elseif id == "disable_all" then
           for module_name, _ in pairs(debug.DEBUG_CONFIG) do
-          debug.save_debug_settings()            debug.DEBUG_CONFIG[module_name] = false
+            debug.DEBUG_CONFIG[module_name] = false
           end
+          debug.save_debug_settings()
           M.show_panel(inner_window, inner_pane)
           
         else
           -- Переключаем конкретный модуль
           debug.DEBUG_CONFIG[id] = not debug.DEBUG_CONFIG[id]
-          debug.save_debug_settings()          M.show_panel(inner_window, inner_pane)
+          debug.save_debug_settings()
+          M.show_panel(inner_window, inner_pane)
         end
       end),
-      title = "🪲 " .. environment.locale.t("debug_panel_title"),
+      title = env_utils.get_icon(icons, "debug") .. " " .. environment.locale.t("debug_panel_title"),
       description = string.format("Активно: %d/%d модулей", enabled_count, #modules),
       fuzzy_description = "Найти модуль:",
       fuzzy = true,

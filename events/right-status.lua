@@ -5,10 +5,12 @@
 -- статус режима, часы, дату, календарь, индикатор загрузки и др.
 -- ДОБАВЛЕНО: Визуальная индикация copy_mode через толстую оранжевую рамку
 --
--- ЗАВИСИМОСТИ: events.session-status, utils.debug
+-- ЗАВИСИМОСТИ: events.session-status, utils.debug, config.environment.icons
 
 local debug = require("utils.debug")
 local environment = require("config.environment")
+local icons = require("config.environment.icons")
+local env_utils = require("utils.environment")
 local wezterm = require('wezterm')
 local session_status = require('events.session-status')
 
@@ -26,6 +28,7 @@ local function get_localized_strings(lang)
     months = l.months or {},
   }
 end
+
 -- Функция для получения локализованной даты
 local function get_localized_date()
   local lang = cached_date_lang or platform.language
@@ -58,7 +61,6 @@ M.setup = function()
   if not locale_initialized then
     platform:refresh_locale()
     locale_initialized = true
-    
   end
 
   -- 🚪 НОВЫЙ ОБРАБОТЧИК: Выход из copy_mode по Escape
@@ -132,7 +134,8 @@ M.setup = function()
     -- Получаем текущую дату и время
     local time = wezterm.strftime("%H:%M:%S")
     local date = get_localized_date()
-    local calendar_icon = "📅"
+    -- Используем централизованную систему иконок
+    local calendar_icon = env_utils.get_icon(icons, "time")
     
     -- Формируем элементы для отображения
     local display_elements = {}
@@ -182,9 +185,10 @@ M.setup = function()
       table.insert(display_elements, { Text = "| " })
     end
     
-    -- 5. Добавляем дату (без иконки)
+    -- 5. Добавляем дату с иконкой из централизованной системы
     table.insert(display_elements, { Background = { Color = "#313244" } })
-    table.insert(display_elements, { Foreground = { Color = '#BD93F9' } })
+    table.insert(display_elements, { Foreground = { Color = env_utils.get_color(icons, "time") } })
+    table.insert(display_elements, { Text = calendar_icon .. " " })
     table.insert(display_elements, { Foreground = { Color = '#BD93F9' } })
     table.insert(display_elements, { Text = date .. " " })
     table.insert(display_elements, { Foreground = { Color = '#F8F8F2' } })
@@ -201,7 +205,6 @@ M.setup = function()
   
   -- Обработчик для принудительного обновления статуса
   wezterm.on('force-update-status', function(window, pane)
-    
     if window then
       window:set_right_status("")
       cached_date_lang = nil
@@ -218,8 +221,8 @@ M.setup = function()
     session_status.clear_all_modes() -- Очищаем ВСЕ режимы при перезагрузке
     
     local success_msg = wezterm.format({
-      {Foreground = {Color = "#00FF00"}},
-      {Text = "✓ "},
+      {Foreground = {Color = env_utils.get_color(icons, "system")}},
+      {Text = env_utils.get_icon(icons, "system") .. " "},
       {Foreground = {Color = "#FFFFFF"}},
       {Text = environment.locale.t("config_reloaded")}
     })

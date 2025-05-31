@@ -1,5 +1,15 @@
+-- cat > ~/.config/wezterm/events/session-status.lua << 'EOF'
+--
+-- ОПИСАНИЕ: Управление статусом сессий и режимов
+-- Отслеживает текущий режим терминала и предоставляет элементы для строки состояния
+-- ОБНОВЛЕНО: Использует централизованную систему иконок
+--
+-- ЗАВИСИМОСТИ: utils.debug, config.environment.icons, utils.environment
+
 local wezterm = require('wezterm')
 local debug = require("utils.debug")
+local icons = require("config.environment.icons")
+local env_utils = require("utils.environment")
 
 local M = {}
 
@@ -9,13 +19,23 @@ local session_state = {
   saved_mode = nil,
 }
 
--- Иконки режимов
-local mode_icons = {
-  session_control = { icon = "◎", name = "", color = "#4ECDC4" },
-  pane_control = { icon = "◫", name = "", color = "#4ECDC4" },
-  font_control = { icon = "ƒ", name = "", color = "#4ECDC4" },
-  debug_control = { icon = "🪲", name = "", color = "#FF6B6B" },
-  workspace_search = { icon = "🔍", name = "", color = "#F1FA8C" },}
+-- Получение данных режима из централизованной системы иконок
+local function get_mode_data(mode_name)
+  if env_utils.is_valid_category(icons, mode_name) then
+    return {
+      icon = env_utils.get_icon(icons, mode_name),
+      name = "",
+      color = env_utils.get_color(icons, mode_name)
+    }
+  end
+  
+  -- Fallback для неизвестных режимов
+  return {
+    icon = "?",
+    name = "",
+    color = "#FFFFFF"
+  }
+end
 
 local function log_status()
 end
@@ -51,18 +71,16 @@ end
 M.get_status_elements = function()
   local elements = {}
   
-  
   -- Показываем saved_mode если он есть
   local mode_to_show = session_state.saved_mode
-  if mode_to_show and mode_icons[mode_to_show] then
-    local mode = mode_icons[mode_to_show]
+  if mode_to_show then
+    local mode = get_mode_data(mode_to_show)
     table.insert(elements, {
       type = "mode",
       icon = mode.icon,
       text = mode.name,
       color = mode.color
     })
-  else
   end
   
   return elements
