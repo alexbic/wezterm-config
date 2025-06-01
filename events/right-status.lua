@@ -196,10 +196,6 @@ M.setup = function()
     -- Устанавливаем статус
     window:set_right_status(wezterm.format(display_elements))
     
-    -- Отладочная информация
-    for i, element in ipairs(status_elements) do
-      debug.log(wezterm, environment.locale.t, "session_status", "debug_status_element", i, element.type, (element.text or element.icon))
-    end
   end)
   
   -- Обработчик для принудительного обновления статуса
