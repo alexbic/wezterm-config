@@ -1,11 +1,11 @@
 {
   debug_modules = {
-    appearance = true,
-    global = true,
+    appearance = false,
+    global = false,
     session_status = true,
-    workspace = true,
-    bindings = true,
-    resurrect = true
+    workspace = false,
+    bindings = false,
+    resurrect = false
   },
-  last_updated = "2025-05-31 18:09:34"
+  last_updated = "2025-05-31 21:23:43"
 }

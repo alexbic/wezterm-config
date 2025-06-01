@@ -451,8 +451,8 @@ local function register_event_handlers()
     )
   end)
 
+  -- ИСПРАВЛЕНО: Удаление состояния - скопирована логика из load_state
   wezterm.on('resurrect.delete_state', function(window, pane)
-    
     current_operation = "delete"
     selected_session_name = nil
     pending_operation = nil
@@ -461,7 +461,7 @@ local function register_event_handlers()
     resurrect.fuzzy_loader.fuzzy_load(
       window, 
       pane, 
-      function(id)
+      function(id, label)
         current_operation = nil
         
         local clean_id = string.match(id, "([^/]+)$")
@@ -482,7 +482,8 @@ local function register_event_handlers()
           selected_session_name = nil
         end)
       end,
-      {title = environment.locale.t("deleting_sessions_title"),
+      {
+        title = environment.locale.t("deleting_sessions_title"),
         description = environment.locale.t("deleting_sessions_description"),
         fuzzy_description = environment.locale.t("deleting_sessions_fuzzy"),
         is_fuzzy = true,
@@ -495,4 +496,3 @@ end
 register_event_handlers()
 
 return M
--- EOF

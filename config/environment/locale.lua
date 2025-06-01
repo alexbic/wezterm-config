@@ -9,6 +9,14 @@
 local wezterm = require('wezterm')
 local env_utils = require('utils.environment')
 
+-- Функция для создания сообщений с иконками
+local function create_icon_message(category, message)
+  return function()
+    local icons = require('config.environment.icons')
+    return env_utils.format_message(icons, category, message)
+  end
+end
+
 -- Таблица переводов и языковых настроек
 local available_languages = {
   ru = {
@@ -128,6 +136,23 @@ local available_languages = {
     failed_to_load_state = "❌ Не удалось загрузить состояние: %s",
     create_workspace_new_window = "Создать workspace в новом окне",
     
+    -- === ОТЛАДОЧНЫЕ СООБЩЕНИЯ РЕЖИМОВ ===
+    -- Сообщения с автоматическими иконками из централизованной системы
+    mode_activated = create_icon_message("mode_activated", "Активирован режим: %s"),
+    mode_deactivated = create_icon_message("mode_deactivated", "Деактивирован режим"),
+    mode_timeout_exit = create_icon_message("timeout_exit", "Режим завершён по таймауту"),
+    mode_manual_exit = create_icon_message("manual_exit", "Режим завершён вручную"),
+    
+    -- Названия режимов
+    mode_session_control = "Управление сессиями",
+    mode_pane_control = "Управление панелями",
+    mode_font_control = "Управление шрифтами",
+    mode_debug_control = "Панель отладки",
+    mode_copy_mode = "Режим копирования",
+    mode_search_mode = "Режим поиска",
+    mode_workspace_search = "Поиск workspace",
+    mode_unknown = "неизвестный режим",
+    
     -- === СИСТЕМА ОТЛАДКИ ===
     -- Отладочные сообщения модулей
     debug_enabled_for_module = "Отладка включена для модуля: %s",
@@ -227,7 +252,21 @@ local available_languages = {
     error_mux_window_nil = "Не удалось получить mux_window",
     error_workspace_restore_failed = "Ошибка при восстановлении workspace",
     error_load_state_failed = "Не удалось загрузить состояние для workspace: %s",
-  },
+    
+    -- === ОТЛАДОЧНЫЕ СООБЩЕНИЯ РЕЖИМОВ ===
+    -- Сообщения для отладки режимов (иконки добавляются отдельно)
+    mode_activated = "Активирован режим: %s",
+    mode_deactivated = "Деактивирован режим",
+    mode_timeout_exit = "Режим завершён по таймауту",
+    mode_manual_exit = "Режим завершён вручную",
+    mode_session_control = "Управление сессиями",
+    mode_pane_control = "Управление панелями",
+    mode_font_control = "Управление шрифтами",
+    mode_debug_control = "Панель отладки",
+    mode_copy_mode = "Режим копирования",
+    mode_search_mode = "Режим поиска",
+    mode_workspace_search = "Поиск workspace",
+    mode_unknown = "неизвестный режим",  },
   
   en = {
     -- === BASIC LOCALE SETTINGS ===
@@ -346,6 +385,23 @@ local available_languages = {
     failed_to_load_state = "❌ Failed to load state: %s",
     create_workspace_new_window = "Create workspace in new window",
     
+    -- === DEBUG MODE MESSAGES ===
+    -- Messages with automatic icons from centralized system
+    mode_activated = create_icon_message("mode_activated", "Mode activated: %s"),
+    mode_deactivated = create_icon_message("mode_deactivated", "Mode deactivated"),
+    mode_timeout_exit = create_icon_message("timeout_exit", "Mode timed out"),
+    mode_manual_exit = create_icon_message("manual_exit", "Mode exited manually"),
+    
+    -- Mode names
+    mode_session_control = "Session Management",
+    mode_pane_control = "Pane Management",
+    mode_font_control = "Font Management",
+    mode_debug_control = "Debug Panel",
+    mode_copy_mode = "Copy Mode",
+    mode_search_mode = "Search Mode",
+    mode_workspace_search = "Workspace Search",
+    mode_unknown = "unknown mode",
+    
     -- === DEBUG SYSTEM ===
     -- Debug module messages
     debug_enabled_for_module = "Debug enabled for module: %s",
@@ -439,24 +495,43 @@ local available_languages = {
     error_extract_workspace_name = "Failed to extract workspace name from label: %s",
     error_config_resurrect = "Failed to load config.resurrect: %s",
     error_resurrect_not_found = "resurrect.resurrect not found in module",
-    error_load_state = "Error loading state: %s",
-    error_active_pane_nil = "Failed to get active_pane",
-    error_workspace_switch_failed = "Workspace switch failed",
-    error_mux_window_nil = "Failed to get mux_window",
-    error_workspace_restore_failed = "Workspace restore failed",
-    error_load_state_failed = "Failed to load state for workspace: %s",
-  }
+   error_load_state = "Error loading state: %s",
+   error_active_pane_nil = "Failed to get active_pane",
+   error_workspace_switch_failed = "Workspace switch failed",
+   error_mux_window_nil = "Failed to get mux_window",
+   error_workspace_restore_failed = "Workspace restore failed",
+   error_load_state_failed = "Failed to load state for workspace: %s",
+    
+    -- === ОТЛАДОЧНЫЕ СООБЩЕНИЯ РЕЖИМОВ ===
+    -- Сообщения для отладки режимов (иконки добавляются отдельно)
+    mode_activated = "Активирован режим: %s",
+    mode_deactivated = "Деактивирован режим",
+    mode_timeout_exit = "Режим завершён по таймауту",
+    mode_manual_exit = "Режим завершён вручную",
+    mode_session_control = "Управление сессиями",
+    mode_pane_control = "Управление панелями",
+    mode_font_control = "Управление шрифтами",
+    mode_debug_control = "Панель отладки",
+    mode_copy_mode = "Режим копирования",
+    mode_search_mode = "Режим поиска",
+    mode_workspace_search = "Поиск workspace",
+    mode_unknown = "неизвестный режим", }
 }
 
 -- Используем функции из utils/environment.lua
 local M = {
-  t = function(key, ...)
-    return env_utils.translate(available_languages, key, ...)
-  end,
-  get_language_table = function()
-    return env_utils.get_language_table(available_languages)
-  end,
-  settings = env_utils.create_locale_settings(available_languages, wezterm)
+ t = function(key, ...)
+   -- Если ключ возвращает функцию (для иконок), вызываем её
+   local result = env_utils.translate(available_languages, key, ...)
+   if type(result) == "function" then
+     return result()
+   end
+   return result
+ end,
+ get_language_table = function()
+   return env_utils.get_language_table(available_languages)
+ end,
+ settings = env_utils.create_locale_settings(available_languages, wezterm)
 }
 
 return M
