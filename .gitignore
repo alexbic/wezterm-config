@@ -10,3 +10,14 @@ debug.log
 *.cache
 *.lock
 *.backup_*
+# Файлы состояния сессий
+session-state/
+*.lua-env
+.config-env-*.lua
+debug-settings.lua
+
+# Тестовые файлы
+test_*.sh
+
+# Плагины (скачиваются автоматически)
+plugins/
