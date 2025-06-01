@@ -80,7 +80,7 @@ function ConfigClass:append(new_options)
 end
 
 -- Настраиваем все события ПОСЛЕ установки переменных окружения
-require('events.right-status').setup()
+require('events.session-status').setup()
 require('events.tab-title').setup()
 require('events.new-tab-button').setup()
 
