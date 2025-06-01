@@ -81,7 +81,7 @@ end
 
 -- Настраиваем все события ПОСЛЕ установки переменных окружения
 require('events.session-status').setup()
-require('events.tab-title').setup()
+require("events.delete-states").setup()require('events.tab-title').setup()
 require('events.new-tab-button').setup()
 
 -- Регистрируем события appearance
@@ -115,7 +115,6 @@ end)
 
 -- Обработчик для выхода из других режимов
 wezterm.on("update-status-on-key-table-exit", function(window, pane)
-  local session_status = require("events.session-status")
   session_status.clear_saved_mode()
 end)
 

@@ -60,7 +60,6 @@ local function safe_clear_tabs(window)
   local mux_window = window:mux_window()
   local tabs = mux_window:tabs()
   
-  
   -- Оставляем только первую вкладку, остальные закрываем
   for i = #tabs, 2, -1 do
     local tab = tabs[i]
@@ -69,12 +68,10 @@ local function safe_clear_tabs(window)
       window:perform_action(wezterm.action.CloseCurrentTab({confirm = false}), tab:active_pane())
     end
   end
-  
 end
 
 -- Функция для выполнения восстановления состояния
 local function perform_restore(window, pane, id, session_name, type_info)
-  
   session_status.start_loading(window)
   
   pending_operation = {
@@ -87,11 +84,9 @@ local function perform_restore(window, pane, id, session_name, type_info)
   local clean_id = string.match(id, "([^/]+)$")
   clean_id = string.match(clean_id, "(.+)%..+$")
   
-  
   safe_clear_tabs(window)
   
   wezterm.time.call_after(1.0, function()
-    
     local opts = {
       window = window:mux_window(),
       relative = false,
@@ -106,23 +101,19 @@ local function perform_restore(window, pane, id, session_name, type_info)
       if state then
         resurrect.workspace_state.restore_workspace(state, opts)
         success = true
-      else
       end
     elseif type == "window" then
       local state = resurrect.state_manager.load_state(clean_id, "window")
       if state then
         resurrect.window_state.restore_window(pane:window(), state, opts)
         success = true
-      else
       end
     elseif type == "tab" then
       local state = resurrect.state_manager.load_state(clean_id, "tab")
       if state then
         resurrect.tab_state.restore_tab(pane:tab(), state, opts)
         success = true
-      else
       end
-    else
     end
     
     if not success then
@@ -146,7 +137,6 @@ local function register_event_handlers()
 
   -- Обработка ошибок
   wezterm.on('resurrect.error', function(error)
-    
     local window = nil
     if wezterm.mux and wezterm.mux.get_active_window then
       window = wezterm.mux.get_active_window()
@@ -175,7 +165,6 @@ local function register_event_handlers()
 
   -- Обработчик завершения сохранения состояния
   wezterm.on('resurrect.state_manager.save_state.finished', function(session_path)
-    
     if save_timeout_timer then
       save_timeout_timer:cancel()
       save_timeout_timer = nil
@@ -211,7 +200,6 @@ local function register_event_handlers()
 
   -- Обработчик начала сохранения состояния
   wezterm.on('resurrect.state_manager.save_state.start', function(state, opt_name)
-    
     if not is_periodic_save and is_user_save then
       current_operation = "save"
       
@@ -241,7 +229,6 @@ local function register_event_handlers()
 
   -- Остальные обработчики...
   wezterm.on('resurrect.state_manager.load_state.finished', function(name, type)
-    
     if pending_operation and pending_operation.type == "load" then
       local window = pending_operation.window
       local session_name = pending_operation.session_name or name
@@ -255,7 +242,6 @@ local function register_event_handlers()
   end)
 
   wezterm.on('resurrect.state_manager.delete_state.finished', function(id)
-    
     if pending_operation and pending_operation.type == "delete" then
       local window = pending_operation.window
       local session_name = pending_operation.session_name
@@ -277,7 +263,6 @@ local function register_event_handlers()
   end)
   
   wezterm.on('resurrect.fuzzy_loader.fuzzy_load.finished', function(window, pane)
-    
     if list_shown_timer then
       list_shown_timer:cancel()
       list_shown_timer = nil
@@ -306,7 +291,7 @@ local function register_event_handlers()
     
     window:perform_action(
       wezterm.action.PromptInputLine({
-        description = environment.locale.t("save_window_as") .. "\n" .. environment.locale.t("save_window_default", default_name) .. "\n\n" .. environment.locale.t("save_window_instructions"),
+        description = env_utils.get_icon(icons, "save_window_tab") .. " " .. environment.locale.t("save_window_as") .. "\n" .. environment.locale.t("save_window_default", default_name) .. "\n\n" .. environment.locale.t("save_window_instructions"),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
@@ -329,7 +314,7 @@ local function register_event_handlers()
     
     window:perform_action(
       wezterm.action.PromptInputLine({
-        description = environment.locale.t("save_tab_as") .. "\n" .. environment.locale.t("save_tab_default", default_name) .. "\n\n" .. environment.locale.t("save_tab_instructions"),
+        description = env_utils.get_icon(icons, "save_tab_tab") .. " " .. environment.locale.t("save_tab_as") .. "\n" .. environment.locale.t("save_tab_default", default_name) .. "\n\n" .. environment.locale.t("save_tab_instructions"),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
@@ -351,10 +336,9 @@ local function register_event_handlers()
   end)
 
   wezterm.on('resurrect.save_state', function(window, pane)
-    
     window:perform_action(
       wezterm.action.PromptInputLine({
-        description = environment.locale.t("enter_save_session_name") .. "\n" .. environment.locale.t("current_workspace", window:active_workspace()) .. "\n\n" .. environment.locale.t("enter_save_default"),
+        description = env_utils.get_icon(icons, "save_workspace_tab") .. " " .. environment.locale.t("enter_save_session_name") .. "\n" .. environment.locale.t("current_workspace", window:active_workspace()) .. "\n\n" .. environment.locale.t("enter_save_default"),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name
           
@@ -410,7 +394,7 @@ local function register_event_handlers()
     )
   end)
 
-  -- Загрузка и удаление состояния (сокращенные версии)
+  -- Загрузка состояния
   wezterm.on('resurrect.load_state', function(window, pane)
     current_operation = "load"
     selected_session_name = nil
@@ -451,45 +435,10 @@ local function register_event_handlers()
     )
   end)
 
-  -- ИСПРАВЛЕНО: Удаление состояния - скопирована логика из load_state
-  wezterm.on('resurrect.delete_state', function(window, pane)
-    current_operation = "delete"
-    selected_session_name = nil
-    pending_operation = nil
-    session_status.delete_session_start(window)
-    
-    resurrect.fuzzy_loader.fuzzy_load(
-      window, 
-      pane, 
-      function(id, label)
-        current_operation = nil
-        
-        local clean_id = string.match(id, "([^/]+)$")
-        selected_session_name = clean_id and string.match(clean_id, "(.+)%..+$") or clean_id
-        
-        pending_operation = {
-          type = "delete",
-          window = window,
-          session_name = selected_session_name
-        }
-        
-        resurrect.state_manager.delete_state(id)
-        
-        wezterm.time.call_after(1, function()
-          session_status.delete_session_success(window, selected_session_name or environment.locale.t("session_saved_as", ""))
-          pending_operation = nil
-          current_operation = nil
-          selected_session_name = nil
-        end)
-      end,
-      {
-        title = environment.locale.t("deleting_sessions_title"),
-        description = environment.locale.t("deleting_sessions_description"),
-        fuzzy_description = environment.locale.t("deleting_sessions_fuzzy"),
-        is_fuzzy = true,
-      }
-    )
-  end)
+  -- УДАЛЕНИЕ СОСТОЯНИЯ - ОТКЛЮЧЕНО, используем events.delete-states.lua
+  -- wezterm.on('resurrect.delete_state', function(window, pane)
+  --   -- Этот обработчик отключен в пользу локализованного модуля
+  -- end)
 end
 
 -- Инициализация

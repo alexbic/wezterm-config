@@ -1,12 +1,14 @@
 -- cat > ~/.config/wezterm/events/workspace-events.lua << 'EOF'
 --
 -- ОПИСАНИЕ: Обработчики событий для workspace переключения
--- Регистрирует события для умного переключения workspace с поддержкой resurrect и zoxide
+-- Использует централизованную систему иконок и цветов
 --
 -- ЗАВИСИМОСТИ: config.environment, utils.debug
 
 local debug = require("utils.debug")
 local environment = require("config.environment")
+local icons = require("config.environment.icons")
+local env_utils = require("utils.environment")
 local wezterm = require('wezterm')
 
 local M = {}
@@ -15,18 +17,21 @@ M.setup = function()
   wezterm.on('workspace.switch', function(window, pane)
     local choices = {}
 
-    -- 1. Сначала активные workspace
+    -- 1. Активные workspace с централизованными иконками и цветами
     local mux = wezterm.mux
     local active_workspaces = mux.get_workspace_names()
 
     for _, workspace_name in ipairs(active_workspaces) do
       table.insert(choices, {
         id = "active|" .. workspace_name,
-        label = environment.locale.t("workspace_active_label", workspace_name)
+        label = wezterm.format({
+          { Foreground = { Color = env_utils.get_color(icons, "workspace") } },
+          { Text = env_utils.get_icon(icons, "workspace") .. " : " .. workspace_name .. " (" .. environment.locale.t("workspace_type") .. ")" }
+        })
       })
     end
 
-    -- 2. Потом сохранённые workspace
+    -- 2. Сохранённые workspace
     local paths = require('config.environment.paths')
     local workspace_dir = paths.resurrect_state_dir .. "workspace"
     local cmd = "ls " .. workspace_dir .. "/*.json 2>/dev/null || true"
@@ -37,14 +42,17 @@ M.setup = function()
         if name then
           table.insert(choices, {
             id = "saved|workspace|" .. name,
-            label = environment.locale.t("workspace_saved_label", name)
+            label = wezterm.format({
+              { Foreground = { Color = env_utils.get_color(icons, "workspace") } },
+              { Text = env_utils.get_icon(icons, "workspace") .. " : " .. name .. " (" .. environment.locale.t("workspace_type") .. ")" }
+            })
           })
         end
       end
       handle:close()
     end
 
-    -- 3. Потом сохранённые window и tab
+    -- 3. Сохранённые window и tab
     local other_types = {"window", "tab"}
     for _, state_type in ipairs(other_types) do
       local state_dir = paths.resurrect_state_dir .. state_type
@@ -54,12 +62,14 @@ M.setup = function()
         for line in handle:lines() do
           local name = line:match("([^/]+)%.json$")
           if name then
-            local window_label = environment.locale.t("window_saved_label", name)
-            local tab_label = environment.locale.t("tab_saved_label", name)
-            local final_label = state_type == "window" and window_label or tab_label
+            local type_label = environment.locale.t(state_type .. "_type")
+            
             table.insert(choices, {
               id = "saved|" .. state_type .. "|" .. name,
-              label = final_label
+              label = wezterm.format({
+                { Foreground = { Color = env_utils.get_color(icons, state_type) } },
+                { Text = env_utils.get_icon(icons, state_type) .. " : " .. name .. " (" .. type_label .. ")" }
+              })
             })
           end
         end
@@ -67,28 +77,31 @@ M.setup = function()
       end
     end
 
-    -- 4. В конце пути из zoxide
+    -- 4. Пути из zoxide
     local workspace_switcher_plugin = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
     local zoxide_choices = workspace_switcher_plugin.choices.get_zoxide_elements({})
 
     for _, choice in ipairs(zoxide_choices) do
       table.insert(choices, {
         id = "zoxide|" .. choice.id,
-        label = environment.locale.t("path_label", choice.label)
+        label = wezterm.format({
+          { Foreground = { Color = env_utils.get_color(icons, "input") } },
+          { Text = "󰉋 : " .. choice.label .. " (путь)" }
+        })
       })
     end
 
     if #choices == 0 then
       table.insert(choices, {
         id = "none",
-        label = environment.locale.t("no_workspaces_available")
+        label = "❌ " .. environment.locale.t("no_workspaces_available")
       })
     end
 
+    -- InputSelector с цветным форматированием
     window:perform_action(
       wezterm.action.InputSelector({
         action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
-          -- Очищаем режим при любом выборе или отмене
           wezterm.emit('clear-saved-mode', inner_window, inner_pane)
 
           if not id or id == "none" then
@@ -96,7 +109,6 @@ M.setup = function()
             return
           end
 
-          -- Используем | как разделитель вместо :
           local parts = {}
           for part in string.gmatch(id, "[^|]+") do
             table.insert(parts, part)
@@ -108,9 +120,7 @@ M.setup = function()
           if action_type == "active" then
             local workspace_name = parts[2]
             inner_window:perform_action(
-              wezterm.action.SwitchToWorkspace({
-                name = workspace_name,
-              }),
+              wezterm.action.SwitchToWorkspace({ name = workspace_name }),
               inner_window:active_pane()
             )
           elseif action_type == "zoxide" then
@@ -119,9 +129,7 @@ M.setup = function()
             inner_window:perform_action(
               wezterm.action.SwitchToWorkspace({
                 name = path,
-                spawn = {
-                  cwd = path,
-                },
+                spawn = { cwd = path },
               }),
               inner_window:active_pane()
             )
@@ -172,8 +180,9 @@ M.setup = function()
             end
           end
         end),
-        title = environment.locale.t("workspace_switch_title"),
+        title = env_utils.get_icon(icons, "list_picker_tab") .. " " .. environment.locale.t("workspace_switch_title"),
         description = environment.locale.t("workspace_switch_description"),
+        fuzzy_description = "Поиск workspace/состояния: ",
         fuzzy = true,
         choices = choices,
       }),
