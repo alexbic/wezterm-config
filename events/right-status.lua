@@ -188,7 +188,6 @@ M.setup = function()
     -- 5. Добавляем дату с иконкой из централизованной системы
     table.insert(display_elements, { Background = { Color = "#313244" } })
     table.insert(display_elements, { Foreground = { Color = env_utils.get_color(icons, "time") } })
-    table.insert(display_elements, { Text = calendar_icon .. " " })
     table.insert(display_elements, { Foreground = { Color = '#BD93F9' } })
     table.insert(display_elements, { Text = date .. " " })
     table.insert(display_elements, { Foreground = { Color = '#F8F8F2' } })
