@@ -24,7 +24,6 @@ if not env_utils.config_env_loaded(wezterm) then
     debug.log(wezterm, environment.locale.t, "global", "platform_info", "Unknown")
   end
 
-  debug.log(wezterm, environment.locale.t, "global", "config_loaded_info", "")
 
   -- Собираем все переменные окружения из подмодулей
   local set_env = {}
@@ -45,7 +44,14 @@ if not env_utils.config_env_loaded(wezterm) then
     end
   end
 
-  debug.log(wezterm, environment.locale.t, "global", "config_loaded")
+  
+  -- Выводим собранные переменные окружения
+  for key, value in pairs(set_env) do
+    if key ~= "PATH" then -- PATH обрабатываем отдельно
+      debug.log(wezterm, environment.locale.t, "global", "set_env_var", key, tostring(value))
+    end
+  end
+  debug.log(wezterm, environment.locale.t, "global", "config_loaded_info", "")
 end
 
 ---@class Config
