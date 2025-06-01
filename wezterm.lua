@@ -11,12 +11,11 @@ local environment = require('config.environment')
 local create_platform_info = require('utils.platform')
 local platform = create_platform_info(wezterm.target_triple)
 
--- Защита от повторного логирования при перезагрузке
-if not _G.WEZTERM_LOADED then
-  _G.WEZTERM_LOADED = true
-
+-- Защита от повторного логирования через файл состояния
+local env_utils = require("utils.environment")
+if not env_utils.config_env_loaded(wezterm) then
   if platform.is_mac then
-    debug.log(wezterm, environment.locale.t, "global", "platform", "macOS")
+    debug.log(wezterm, environment.locale.t, "global", "platform_info", "macOS")
   elseif platform.is_win then
     debug.log(wezterm, environment.locale.t, "global", "platform_info", "Windows")
   elseif platform.is_linux then
@@ -46,13 +45,8 @@ if not _G.WEZTERM_LOADED then
     end
   end
 
-  -- Принудительно устанавливаем переменные окружения в процессе
   debug.log(wezterm, environment.locale.t, "global", "config_loaded")
-  --   for key, value in pairs(set_env) do
-  --     if key ~= "PATH" then -- PATH обрабатывается отдельно
-  --     --       debug.log(wezterm, environment.locale.t, "global", "set_env_var", key, tostring(value))
-  --     end
-  end
+end
 
 ---@class Config
 ---@field options table

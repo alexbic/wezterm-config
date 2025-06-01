@@ -76,24 +76,10 @@ M.log = function(wezterm, t_func, module, message_key, ...)
     local localized_msg = t_func(message_key) or message_key
     local formatted_msg = string.format(localized_msg, ...)
     
-    -- Получаем иконку и цвет из централизованной системы
-    local ok_icons, icons = pcall(require, "config.environment.icons")
-    local ok_env, env_utils = pcall(require, "utils.environment")
-    
-    if ok_icons and ok_env then
-      local category = (module == "global") and "system" or (module or "debug")
-      local icon = env_utils.get_icon(icons, category)
-      local color = env_utils.get_color(icons, category)
-      wezterm.log_info(wezterm.format({
-        { Foreground = { Color = color } },
-        { Text = icon .. " [" .. module .. "] " .. formatted_msg }
-      }))
-    else
-      wezterm.log_info("⊠ [" .. module .. "] " .. formatted_msg)
-    end
+    -- Простой вывод без иконок для обычных отладочных сообщений
+    wezterm.log_info("[" .. module .. "] " .. formatted_msg)
   end
 end
-
 -- Функция для отладки таблиц
 M.log_table = function(wezterm, module, table_name, tbl)
   if M.DEBUG_CONFIG[module] then
@@ -104,8 +90,8 @@ M.log_table = function(wezterm, module, table_name, tbl)
     local ok_env, env_utils = pcall(require, "utils.environment")
     
     if ok_icons and ok_env then
-      local category = (module == "global") and "system" or (module or "debug")
-      local icon = env_utils.get_icon(icons, category)
+      -- Для обычных отладочных сообщений НЕ используем иконки
+      wezterm.log_info("[" .. module .. "] " .. formatted_msg)      local icon = env_utils.get_icon(icons, category)
       local color = env_utils.get_color(icons, category)
       wezterm.log_info(wezterm.format({
         { Foreground = { Color = color } },
@@ -135,8 +121,8 @@ M.log_event = function(wezterm, module, event_name, ...)
     local ok_env, env_utils = pcall(require, "utils.environment")
     
     if ok_icons and ok_env then
-      local category = (module == "global") and "system" or (module or "debug")
-      local icon = env_utils.get_icon(icons, category)
+      -- Для обычных отладочных сообщений НЕ используем иконки
+      wezterm.log_info("[" .. module .. "] " .. formatted_msg)      local icon = env_utils.get_icon(icons, category)
       local color = env_utils.get_color(icons, category)
       wezterm.log_info(wezterm.format({
         { Foreground = { Color = color } },
@@ -242,40 +228,55 @@ M.enable_verbose_logging = function(wezterm)
   wezterm.log_info("⚙ WEZTERM_LOG=info wezterm")
 end
 
--- Функция загрузки настроек отладки
+-- Функция загрузки настроек отладки из Lua файла
 M.load_debug_settings = function()
-  local paths = require("config.environment.paths")
-  local settings_file = paths.resurrect_state_dir .. "debug_settings.json"
+  local wezterm = require("wezterm")
+  local settings_file = wezterm.config_dir .. "/session-state/debug-settings.lua"
   local file = io.open(settings_file, "r")
   if file then
     local content = file:read("*a")
     file:close()
-    -- Простой парсинг JSON для булевых значений
-    M.DEBUG_CONFIG.appearance = string.find(content, "\"appearance\":true") ~= nil
-    M.DEBUG_CONFIG.global = string.find(content, "\"global\":true") ~= nil
-    M.DEBUG_CONFIG.session_status = string.find(content, "\"session_status\":true") ~= nil
-    M.DEBUG_CONFIG.workspace = string.find(content, "\"workspace\":true") ~= nil
-    M.DEBUG_CONFIG.bindings = string.find(content, "\"bindings\":true") ~= nil
-    M.DEBUG_CONFIG.resurrect = string.find(content, "\"resurrect\":true") ~= nil
+    local chunk = load("return " .. content)
+    if chunk then
+      local ok, data = pcall(chunk)
+      if ok and data and data.debug_modules then
+        M.DEBUG_CONFIG.appearance = data.debug_modules.appearance or false
+        M.DEBUG_CONFIG.global = data.debug_modules.global or false
+        M.DEBUG_CONFIG.session_status = data.debug_modules.session_status or false
+        M.DEBUG_CONFIG.workspace = data.debug_modules.workspace or false
+        M.DEBUG_CONFIG.bindings = data.debug_modules.bindings or false
+        M.DEBUG_CONFIG.resurrect = data.debug_modules.resurrect or false
+      end
+    end
   end
 end
 
+-- Функция сохранения настроек отладки в Lua файл
 M.save_debug_settings = function()
-  local paths = require("config.environment.paths")
-  local settings_file = paths.resurrect_state_dir .. "debug_settings.json"
-  local json_content = string.format(
-    "{\"debug_modules\":{\"appearance\":%s,\"global\":%s,\"session_status\":%s,\"workspace\":%s,\"bindings\":%s,\"resurrect\":%s},\"last_updated\":\"%s\"}",
+  local wezterm = require("wezterm")
+  local settings_file = wezterm.config_dir .. "/session-state/debug-settings.lua"
+  local lua_content = string.format([[{
+  debug_modules = {
+    appearance = %s,
+    global = %s,
+    session_status = %s,
+    workspace = %s,
+    bindings = %s,
+    resurrect = %s
+  },
+  last_updated = "%s"
+}]], 
     M.DEBUG_CONFIG.appearance and "true" or "false",
     M.DEBUG_CONFIG.global and "true" or "false",
     M.DEBUG_CONFIG.session_status and "true" or "false",
     M.DEBUG_CONFIG.workspace and "true" or "false",
     M.DEBUG_CONFIG.bindings and "true" or "false",
     M.DEBUG_CONFIG.resurrect and "true" or "false",
-    os.date("%Y-%m-%dT%H:%M:%SZ")
-  )
+    os.date("%Y-%m-%d %H:%M:%S"))
+  
   local file = io.open(settings_file, "w")
   if file then
-    file:write(json_content)
+    file:write(lua_content)
     file:close()
   end
 end

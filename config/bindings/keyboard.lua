@@ -45,6 +45,12 @@ local base_keys = {
    { key = "F12", mods = "SHIFT", action = bindings_utils.activate_debug_mode_with_panel(wezterm) },
    { key = 'f',      mods = mod.SUPER,     action = act.Search({ CaseInSensitiveString = '' }) },
 
+   -- Принудительная перезагрузка конфигурации
+   { key = 'r', mods = 'SHIFT|' .. mod.SUPER, action = wezterm.action_callback(function(window, pane)
+     local env_utils = require("utils.environment")
+     env_utils.force_config_reload(wezterm)
+   end) },
+
    -- Копирование/Вставка
    { key = 'c', mods = mod.SUPER, action = act.CopyTo('Clipboard') },
    { key = 'v', mods = mod.SUPER, action = act.PasteFrom('Clipboard') },

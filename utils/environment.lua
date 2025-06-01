@@ -210,4 +210,49 @@ M.test_category = function(icons_data, category, test_message)
   return true
 end
 
+-- ========================================
+-- УПРАВЛЕНИЕ СОСТОЯНИЕМ КОНФИГУРАЦИИ
+-- ========================================
+
+-- Проверка, загружена ли конфигурация окружения
+M.config_env_loaded = function(wezterm)
+  local session_dir = wezterm.config_dir .. "/session-state"
+  
+  -- Проверяем существование любого файла сессии (свежее 5 секунд)
+  local current_time = os.time()
+  local cmd = 'find "' .. session_dir .. '" -name ".config-env-*.lua" -newermt "$(date -v-5S)" 2>/dev/null | head -1'
+  local handle = io.popen(cmd)
+  if handle then
+    local result = handle:read("*line")
+    handle:close()
+    if result and result ~= "" then
+      return true -- Найден свежий файл - блокируем повторное логирование
+    end
+  end
+  
+  -- Создаем новый файл маркер загрузки
+  local session_file = session_dir .. "/.config-env-" .. tostring(os.time()) .. ".lua"
+  local file = io.open(session_file, "w")
+  if file then
+    file:write(string.format([[{
+  config_loaded = %d,
+  created = "%s",
+  environment_initialized = true
+}]], current_time, os.date("%Y-%m-%d %H:%M:%S")))
+    file:close()
+  end
+  
+  return false -- Первая загрузка - разрешаем логирование
+end
+
+-- Принудительная перезагрузка конфигурации (очистка файлов состояния)
+M.force_config_reload = function(wezterm)
+  local session_dir = wezterm.config_dir .. "/session-state"
+  -- Удаляем все файлы состояния конфигурации
+  local cmd = 'rm -f "' .. session_dir .. '"/.config-env-*.lua 2>/dev/null'
+  os.execute(cmd)
+  -- Перезагружаем конфигурацию
+  wezterm.reload_configuration()
+end
+
 return M
