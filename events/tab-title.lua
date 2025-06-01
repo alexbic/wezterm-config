@@ -3,13 +3,15 @@
 -- ОПИСАНИЕ: Настройка заголовков вкладок
 -- Определяет внешний вид заголовков вкладок, включая форматирование, 
 -- отображение иконки администратора, и индикатор непрочитанного вывода.
+-- ОБНОВЛЕНО: Интеграция с централизованной системой иконок для служебных окон
 --
 -- ЗАВИСИМОСТИ: Загружается в основном wezterm.lua
 
 local wezterm = require("wezterm")
 local environment = require('config.environment')
-
--- Inspired by https://github.com/wez/wezterm/discussions/628\#discussioncomment-1874614
+local icons = require('config.environment.icons')
+local colors = require('config.environment.colors')
+local env_utils = require('utils.environment')
 
 -- Используем UTF-8 символы вместо строковых литералов
 local GLYPH_SEMI_CIRCLE_LEFT = utf8.char(0xe0b6) -- ""
@@ -22,22 +24,6 @@ local M = {}
 
 M.cells = {}
 
-M.colors = {
-   default = {
-      bg = "#589220",
-      fg = "#1c1b19",
-   },
-   is_active = {
-      bg = "#dac835",
-      fg = "#11111b",
-   },
-
-   hover = {
-      bg = "#79c92e",
-      fg = "#1c1b19",
-   },
-}
-
 M.set_process_name = function(s)
    local a = string.gsub(s, "(.*[/\\])(.*)", "%2")
    return a:gsub("%.exe$", "")
@@ -46,13 +32,23 @@ end
 M.set_title = function(process_name, static_title, active_title, max_width, inset)
    local title
    inset = inset or 6
-
-   if process_name:len() > 0 and static_title:len() == 0 then
-      title = process_name .. " " .. GLYPH_TILDE .. " " -- Используем явный UTF-8 символ для тильды
-   elseif static_title:len() > 0 then
-      title = static_title .. " " .. GLYPH_TILDE .. " " -- Используем явный UTF-8 символ для тильды
+   
+   -- Сначала проверяем, это служебное окно?
+   local service_type = env_utils.detect_service_window_type(static_title, active_title, process_name)
+   if service_type then
+      -- Для служебных окон показываем иконку + сокращенное название
+      local icon = env_utils.get_icon(icons, service_type)
+      local short_title = env_utils.get_service_window_display_name(service_type)
+      title = icon .. " " .. short_title
    else
-      title = active_title .. " ㉿ " -- Используем явный Unicode символ
+      -- Для обычных окон используем старую логику
+      if process_name:len() > 0 and static_title:len() == 0 then
+         title = process_name .. " " .. GLYPH_TILDE .. " "
+      elseif static_title:len() > 0 then
+         title = static_title .. " " .. GLYPH_TILDE .. " "
+      else
+         title = active_title .. " ㉿ "
+      end
    end
 
    if title:len() > max_width - inset then
@@ -91,15 +87,24 @@ M.setup = function()
       local is_admin = M.check_if_admin(tab.active_pane.title)
       local title = M.set_title(process_name, tab.tab_title, tab.active_pane.title, max_width, (is_admin and 8))
 
+      -- Определяем тип служебного окна для цвета
+      local service_type = env_utils.detect_service_window_type(tab.tab_title, tab.active_pane.title, process_name)
+      
       if tab.is_active then
-         bg = M.colors.is_active.bg
-         fg = M.colors.is_active.fg
+         if service_type then
+            -- Для служебных окон используем специальные цвета из centralized system
+            bg = env_utils.get_color(colors, service_type)
+            fg = env_utils.get_color(colors, "tab_service_fg")
+         else
+            bg = env_utils.get_color(colors, "tab_active_bg")
+            fg = env_utils.get_color(colors, "tab_active_fg")
+         end
       elseif hover then
-         bg = M.colors.hover.bg
-         fg = M.colors.hover.fg
+         bg = env_utils.get_color(colors, "tab_hover_bg")
+         fg = env_utils.get_color(colors, "tab_hover_fg")
       else
-         bg = M.colors.default.bg
-         fg = M.colors.default.fg
+         bg = env_utils.get_color(colors, "tab_default_bg")
+         fg = env_utils.get_color(colors, "tab_default_fg")
       end
 
       local has_unseen_output = false
@@ -123,7 +128,8 @@ M.setup = function()
 
       -- Unseen output alert
       if has_unseen_output then
-         M.push(bg, "#FFA066", { Intensity = "Bold" }, " " .. GLYPH_CIRCLE)
+         local unseen_color = env_utils.get_color(colors, "tab_unseen_output")
+         M.push(bg, unseen_color, { Intensity = "Bold" }, " " .. GLYPH_CIRCLE)
       end
 
       -- Right padding

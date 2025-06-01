@@ -10,6 +10,8 @@
 local wezterm = require('wezterm')
 local session_status = require('events.session-status')
 local environment = require('config.environment')
+local env_utils = require("utils.environment")
+local icons = require("config.environment.icons")
 local M = {}
 
 -- Инициализация плагина resurrect.wezterm

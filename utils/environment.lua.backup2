@@ -255,28 +255,4 @@ M.force_config_reload = function(wezterm)
   wezterm.reload_configuration()
 end
 
-
--- ========================================
--- РАБОТА С ЗАГОЛОВКАМИ ВКЛАДОК
--- ========================================
-
--- Функция для определения типа служебного окна
-M.detect_service_window_type = function(static_title, active_title, process_name)
-  local title = static_title or active_title or ""
-  if title:find("Debug Control Panel") or title:find("Панель управления отладкой") then
-    return "debug_panel_tab"
-  elseif title:find("Load session") or title:find("Загрузка сессии") then
-    return "list_picker_tab"
-  elseif title:find("Delete session") or title:find("Удаление сессии") then
-    return "list_delete_tab"
-  end
-  return nil
-end
-
--- Функция для получения названия служебного окна
-M.get_service_window_display_name = function(service_type)
-  local names = { debug_panel_tab = "Debug", list_picker_tab = "Select", list_delete_tab = "Delete" }
-  return names[service_type] or "Service"
-end
-
 return M
