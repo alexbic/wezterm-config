@@ -97,7 +97,7 @@ M.create_save_workspace_handler = function(wezterm, resurrect, session_status, e
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
     
-    window:perform_action(
+    tab:set_title(environment.locale.t("save_workspace_tab_title"))    window:perform_action(
       wezterm.action.PromptInputLine({
         description = env_utils.get_icon(icons, "save_workspace_tab") .. " " .. environment.locale.t("enter_save_session_name") .. "\n" .. environment.locale.t("current_workspace", window:active_workspace()) .. "\n\n" .. environment.locale.t("enter_save_default"),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
@@ -168,7 +168,7 @@ M.create_save_window_handler = function(wezterm, resurrect, session_status, envi
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
     
-    window:perform_action(
+    tab:set_title(environment.locale.t("save_window_tab_title"))    window:perform_action(
       wezterm.action.PromptInputLine({
         description = env_utils.get_icon(icons, "save_window_tab") .. " " .. environment.locale.t("save_window_as") .. "\n" .. environment.locale.t("save_window_default", default_name) .. "\n\n" .. environment.locale.t("save_window_instructions"),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
