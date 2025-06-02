@@ -308,13 +308,7 @@ M.setup = function()
         M.set_mode(current_key_table)
       elseif last_active_key_table then
         -- Деактивируем предыдущий режим
-        -- Если диалог активен, не считаем это таймаутом
-        if session_state.dialog_active then
-          -- Диалог активен, оставляем режим как есть
-        else
-          -- Обычный таймаут
-          M.clear_mode()
-        end
+        -- Всегда завершаем режим при выходе из key_table
       end
       last_active_key_table = current_key_table
     end

@@ -180,6 +180,7 @@ wezterm.on('resurrect.state_manager.delete_state.finished', function(id)
 end)
 
 wezterm.on('resurrect.fuzzy_loader.fuzzy_load.start', function(window, pane)
+  session_status.start_dialog()
 end)
 
 wezterm.on('resurrect.fuzzy_loader.fuzzy_load.finished', function(window, pane)
@@ -191,7 +192,7 @@ wezterm.on('resurrect.fuzzy_loader.fuzzy_load.finished', function(window, pane)
   wezterm.time.call_after(0.3, function()
     if state_refs.current_operation and not pending_operation_ref.current then
       if state_refs.current_operation == "load" then
-        session_status.load_session_cancelled(window)
+        session_status.end_dialog()        session_status.load_session_cancelled(window)
       elseif state_refs.current_operation == "delete" then
         session_status.delete_session_cancelled(window)
       end

@@ -96,7 +96,6 @@ M.create_save_workspace_handler = function(wezterm, resurrect, session_status, e
   return function(window, pane)
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
-    tab:set_title(environment.locale.t("save_workspace_tab_title"))
     
     window:perform_action(
       wezterm.action.PromptInputLine({
@@ -105,7 +104,7 @@ M.create_save_workspace_handler = function(wezterm, resurrect, session_status, e
           local save_name
           
           if line == nil then
-            session_status.clear_saved_mode()
+            session_status.end_dialog()            session_status.clear_saved_mode()
             inner_win:active_tab():set_title("")
             return
           elseif line == "" then
@@ -150,7 +149,7 @@ M.create_save_workspace_handler = function(wezterm, resurrect, session_status, e
             end)
           else
             session_status.clear_saved_mode()
-          end
+            session_status.end_dialog()          end
           -- Возвращаем обычное название вкладки
           inner_win:active_tab():set_title("")
         end),
@@ -168,7 +167,6 @@ M.create_save_window_handler = function(wezterm, resurrect, session_status, envi
     
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
-    tab:set_title(environment.locale.t("save_window_tab_title"))
     
     window:perform_action(
       wezterm.action.PromptInputLine({
@@ -179,7 +177,7 @@ M.create_save_window_handler = function(wezterm, resurrect, session_status, envi
             local window_state = resurrect.window_state.get_window_state(inner_win:mux_window())
             resurrect.state_manager.save_state(window_state, save_name, "window")
             session_status.clear_saved_mode()
-          end
+            session_status.end_dialog()          end
           -- Возвращаем обычное название вкладки
           inner_win:active_tab():set_title("")
         end),
@@ -198,7 +196,6 @@ M.create_save_tab_handler = function(wezterm, resurrect, session_status, environ
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
     tab:set_title(environment.locale.t("save_tab_tab_title"))
-    
     window:perform_action(
       wezterm.action.PromptInputLine({
         description = env_utils.get_icon(icons, "save_tab_tab") .. " " .. environment.locale.t("save_tab_as") .. "\n" .. environment.locale.t("save_tab_default", default_name) .. "\n\n" .. environment.locale.t("save_tab_instructions"),
@@ -214,7 +211,7 @@ M.create_save_tab_handler = function(wezterm, resurrect, session_status, environ
             local tab_state = resurrect.tab_state.get_tab_state(tab)
             resurrect.state_manager.save_state(tab_state, save_name, "tab")
             session_status.clear_saved_mode()
-          end
+            session_status.end_dialog()          end
           -- Возвращаем обычное название вкладки
           inner_win:active_tab():set_title("")
         end),
@@ -231,8 +228,6 @@ M.create_load_state_handler = function(wezterm, resurrect, session_status, envir
     state_refs.selected_session_name = nil
     pending_operation_ref.current = nil
     session_status.load_session_start(window)
-    
-    -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
     tab:set_title(environment.locale.t("load_session_tab_title"))
     
@@ -241,7 +236,6 @@ M.create_load_state_handler = function(wezterm, resurrect, session_status, envir
       pane, 
       function(id, label)
         state_refs.current_operation = nil
-        
         local type = string.match(id, "^([^/]+)")
         local type_display = environment.locale.t("unknown_type")
         if type == "workspace" then
@@ -259,7 +253,7 @@ M.create_load_state_handler = function(wezterm, resurrect, session_status, envir
           state_refs.selected_session_name = clean_id and string.match(clean_id, "(.+)%..+$") or clean_id
         end
         
-        M.perform_restore(wezterm, resurrect, session_status, environment, window, pane, id, state_refs.selected_session_name, type_display, pending_operation_ref)
+        session_status.end_dialog()        M.perform_restore(wezterm, resurrect, session_status, environment, window, pane, id, state_refs.selected_session_name, type_display, pending_operation_ref)
         -- Возвращаем обычное название вкладки
         window:active_tab():set_title("")
       end,
