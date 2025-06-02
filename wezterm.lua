@@ -115,7 +115,7 @@ end)
 
 -- Обработчик для выхода из других режимов
 wezterm.on("update-status-on-key-table-exit", function(window, pane)
-  session_status.clear_saved_mode()
+  require("events.session-status").clear_saved_mode()
 end)
 
 -- Подключаем smart workspace switcher

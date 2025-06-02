@@ -4,6 +4,7 @@
 -- Использует централизованную систему иконок, цветов и локализации
 --
 -- ЗАВИСИМОСТИ: config.environment, utils.debug
+local colors = require("config.environment.colors")
 
 local debug = require("utils.debug")
 local environment = require("config.environment")
@@ -41,7 +42,7 @@ M.setup = function()
             table.insert(choices, {
               id = state_info.type .. "/" .. name .. ".json",
               label = wezterm.format({
-                { Foreground = { Color = env_utils.get_color(icons, state_info.color) } },
+                { Foreground = { Color = env_utils.get_color(colors, state_info.color) } },
                 { Text = (state_info.icon or env_utils.get_icon(icons, state_info.type)) .. " : " .. name .. " (" .. type_label .. ")" }
               })
             })
@@ -55,7 +56,7 @@ M.setup = function()
       table.insert(choices, {
         id = "none",
         label = wezterm.format({
-          { Foreground = { Color = env_utils.get_color(icons, "error") } },
+          { Foreground = { Color = env_utils.get_color(colors, "error") } },
           { Text = "❌ " .. environment.locale.t("no_workspaces_available") }
         })
       })

@@ -21,7 +21,7 @@ local ICONS = {
   input = "⌜",        -- пользовательский ввод
   session = "ⓢ",      -- система сессий
   workspace = "󱂬",    -- управление workspace (Nerd Font)
-  window = "",        -- окна (Nerd Font)
+  window = "",        -- окна (Nerd Font)
   tab = "󰓩",           -- вкладки (Nerd Font)
   debug = "⊠",        -- отладка
   error = "✗",        -- ошибки
@@ -40,7 +40,7 @@ local ICONS = {
   list_picker_tab = "☰",          -- список для выбора (зеленый)
   list_delete_tab = "☰",          -- список для удаления (красный)
   save_workspace_tab = "󱂬",      -- диалог сохранения workspace
-  save_window_tab = "",        -- диалог сохранения window
+  save_window_tab = "",        -- диалог сохранения window
   save_tab_tab = "󰓩",           -- диалог сохранения tab
   
   -- === ИКОНКИ ДЛЯ РЕЖИМОВ УПРАВЛЕНИЯ ===

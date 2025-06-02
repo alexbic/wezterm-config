@@ -4,6 +4,7 @@
 -- Позволяет включать/выключать отладочные сообщения, локализовать их и отлаживать таблицы
 -- ПОЛНОСТЬЮ САМОДОСТАТОЧНЫЙ МОДУЛЬ - все зависимости передаются как параметры.
 --
+local colors = require("config.environment.colors")
 -- ЗАВИСИМОСТИ: НЕТ
 
 local M = {}
@@ -61,7 +62,7 @@ M.log_system = function(wezterm, t_func, message_key, ...)
   
   if ok_icons and ok_env then
     local icon = env_utils.get_icon(icons, "system")
-    local color = env_utils.get_color(icons, "system")
+    local color = env_utils.get_color(colors, "system")
     wezterm.log_info(wezterm.format({
       { Foreground = { Color = color } },
       { Text = icon .. " " .. formatted_msg }
@@ -92,7 +93,7 @@ M.log_table = function(wezterm, module, table_name, tbl)
     if ok_icons and ok_env then
       -- Для обычных отладочных сообщений НЕ используем иконки
       wezterm.log_info("[" .. module .. "] " .. formatted_msg)      local icon = env_utils.get_icon(icons, category)
-      local color = env_utils.get_color(icons, category)
+      local color = env_utils.get_color(colors, category)
       wezterm.log_info(wezterm.format({
         { Foreground = { Color = color } },
         { Text = icon .. " [" .. module .. "] TABLE " .. table_name .. ":\n" .. table_str }
@@ -123,7 +124,7 @@ M.log_event = function(wezterm, module, event_name, ...)
     if ok_icons and ok_env then
       -- Для обычных отладочных сообщений НЕ используем иконки
       wezterm.log_info("[" .. module .. "] " .. formatted_msg)      local icon = env_utils.get_icon(icons, category)
-      local color = env_utils.get_color(icons, category)
+      local color = env_utils.get_color(colors, category)
       wezterm.log_info(wezterm.format({
         { Foreground = { Color = color } },
         { Text = icon .. " [" .. module .. "] EVENT " .. event_name .. " " .. args_str }
@@ -145,7 +146,7 @@ M.enable_debug = function(wezterm, t_func, module)
   
   if ok_icons and ok_env then
     local icon = env_utils.get_icon(icons, "system")
-    local color = env_utils.get_color(icons, "system")
+    local color = env_utils.get_color(colors, "system")
     wezterm.log_info(wezterm.format({
       { Foreground = { Color = color } },
       { Text = icon .. " " .. string.format(msg, module) }
@@ -166,7 +167,7 @@ M.disable_debug = function(wezterm, t_func, module)
   
   if ok_icons and ok_env then
     local icon = env_utils.get_icon(icons, "system")
-    local color = env_utils.get_color(icons, "system")
+    local color = env_utils.get_color(colors, "system")
     wezterm.log_info(wezterm.format({
       { Foreground = { Color = color } },
       { Text = icon .. " " .. string.format(msg, module) }
@@ -189,7 +190,7 @@ M.enable_all = function(wezterm, t_func)
   
   if ok_icons and ok_env then
     local icon = env_utils.get_icon(icons, "system")
-    local color = env_utils.get_color(icons, "system")
+    local color = env_utils.get_color(colors, "system")
     wezterm.log_info(wezterm.format({
       { Foreground = { Color = color } },
       { Text = icon .. " " .. msg }
@@ -212,7 +213,7 @@ M.disable_all = function(wezterm, t_func)
   
   if ok_icons and ok_env then
     local icon = env_utils.get_icon(icons, "system")
-    local color = env_utils.get_color(icons, "system")
+    local color = env_utils.get_color(colors, "system")
     wezterm.log_info(wezterm.format({
       { Foreground = { Color = color } },
       { Text = icon .. " " .. msg }

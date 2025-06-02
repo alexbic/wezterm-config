@@ -4,6 +4,7 @@
 -- Использует централизованную систему иконок и цветов
 --
 -- ЗАВИСИМОСТИ: config.environment, utils.debug
+local colors = require("config.environment.colors")
 
 local debug = require("utils.debug")
 local environment = require("config.environment")
@@ -25,7 +26,7 @@ M.setup = function()
       table.insert(choices, {
         id = "active|" .. workspace_name,
         label = wezterm.format({
-          { Foreground = { Color = env_utils.get_color(icons, "workspace") } },
+          { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
           { Text = env_utils.get_icon(icons, "workspace") .. " : " .. workspace_name .. " (" .. environment.locale.t("workspace_type") .. ")" }
         })
       })
@@ -43,7 +44,7 @@ M.setup = function()
           table.insert(choices, {
             id = "saved|workspace|" .. name,
             label = wezterm.format({
-              { Foreground = { Color = env_utils.get_color(icons, "workspace") } },
+              { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
               { Text = env_utils.get_icon(icons, "workspace") .. " : " .. name .. " (" .. environment.locale.t("workspace_type") .. ")" }
             })
           })
@@ -67,7 +68,7 @@ M.setup = function()
             table.insert(choices, {
               id = "saved|" .. state_type .. "|" .. name,
               label = wezterm.format({
-                { Foreground = { Color = env_utils.get_color(icons, state_type) } },
+                { Foreground = { Color = env_utils.get_color(colors, state_type) } },
                 { Text = env_utils.get_icon(icons, state_type) .. " : " .. name .. " (" .. type_label .. ")" }
               })
             })
@@ -85,7 +86,7 @@ M.setup = function()
       table.insert(choices, {
         id = "zoxide|" .. choice.id,
         label = wezterm.format({
-          { Foreground = { Color = env_utils.get_color(icons, "input") } },
+          { Foreground = { Color = env_utils.get_color(colors, "input") } },
           { Text = "󰉋 : " .. choice.label .. " (путь)" }
         })
       })

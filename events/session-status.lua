@@ -4,11 +4,12 @@
 -- Объединенный модуль для управления режимами терминала и отображения строки состояния.
 -- Отслеживает current_key_table, управляет состоянием режимов и обновляет правую строку статуса.
 --
--- ЗАВИСИМОСТИ: utils.debug, config.environment.icons, utils.environment
+-- ЗАВИСИМОСТИ: utils.debug, config.environment.icons, config.environment.colors, utils.environment
 
 local wezterm = require('wezterm')
 local debug = require("utils.debug")
 local icons = require("config.environment.icons")
+local colors = require("config.environment.colors")
 local env_utils = require("utils.environment")
 local environment = require('config.environment')
 
@@ -59,11 +60,11 @@ end
 
 -- Получение данных режима из централизованной системы иконок
 local function get_mode_data(mode_name)
-  if env_utils.is_valid_category(icons, mode_name) then
+  if env_utils.is_valid_category(icons, colors, mode_name) then
     return {
       icon = env_utils.get_icon(icons, mode_name),
       name = "",
-      color = env_utils.get_color(icons, mode_name)
+      color = env_utils.get_color(colors, mode_name)
     }
   end
   
@@ -151,7 +152,7 @@ local function update_status_display(window)
   
   -- 5. Добавляем дату с иконкой из централизованной системы
   table.insert(display_elements, { Background = { Color = "#313244" } })
-  table.insert(display_elements, { Foreground = { Color = env_utils.get_color(icons, "time") } })
+  table.insert(display_elements, { Foreground = { Color = env_utils.get_color(colors, "time") } })
   table.insert(display_elements, { Foreground = { Color = '#BD93F9' } })
   table.insert(display_elements, { Text = date .. " " })
   table.insert(display_elements, { Foreground = { Color = '#F8F8F2' } })
@@ -178,7 +179,7 @@ M.set_mode = function(mode_name)
 end
 
 M.clear_mode = function()
-  -- ИСПРАВЛЕНО: Очищаем ВСЕ при таймауте
+  -- ИСПРАВЛЕНО: Очищаем ВСЁ при таймауте
   local deactivation_icon = env_utils.get_icon(icons, "mode_deactivated")
   local timeout_icon = env_utils.get_icon(icons, "timeout_exit")
   local main_message = deactivation_icon .. " Деактивирован режим"
@@ -319,7 +320,7 @@ M.setup = function()
     M.clear_all_modes()
     
     local success_msg = wezterm.format({
-      {Foreground = {Color = env_utils.get_color(icons, "system")}},
+      {Foreground = {Color = env_utils.get_color(colors, "system")}},
       {Text = env_utils.get_icon(icons, "system") .. " "},
       {Foreground = {Color = "#FFFFFF"}},
       {Text = environment.locale.t("config_reloaded")}

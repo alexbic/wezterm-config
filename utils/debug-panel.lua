@@ -4,6 +4,7 @@
 -- Использует ключи локализации и централизованную систему иконок
 -- ОБНОВЛЕНО: Интеграция с config.environment.icons
 --
+local colors = require("config.environment.colors")
 -- ЗАВИСИМОСТИ: utils.debug, utils.debug-manager, config.environment, config.environment.icons, utils.environment
 
 local wezterm = require('wezterm')
@@ -83,7 +84,7 @@ local function create_choices()
       table.insert(choices, {
         id = module_name,
         label = wezterm.format({
-          { Foreground = { Color = env_utils.get_color(icons, "debug_control") } },
+          { Foreground = { Color = env_utils.get_color(colors, "debug_control") } },
           { Text = string.format(" %d    %s  %-15s - %s", i, status_icon, module_name, description) }
         })
       })
