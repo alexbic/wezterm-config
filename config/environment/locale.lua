@@ -179,8 +179,17 @@ local available_languages = {
     debug_disable_all_modules = "Выключить все модули",
     debug_save_and_exit = "Выйти",
     debug_panel_title = "Панель управления отладкой",
-    debug_help_footer = "Нажмите Esc для возврата к панели отладки.",
     
+    -- === НАЗВАНИЯ СЛУЖЕБНЫХ ВКЛАДОК ===
+    -- Заголовки вкладок для различных служебных диалогов
+    save_window_tab_title = "Сохранить окно",
+    save_tab_tab_title = "Сохранить вкладку",
+    save_workspace_tab_title = "Сохранить сессию",
+    delete_session_tab_title = "Удалить сессию",
+    load_session_tab_title = "Загрузить сессию",    debug_help_footer = "Нажмите Esc для возврата к панели отладки.",
+    debug_panel_short = "Отладка",
+    list_picker_short = "Выбор",
+    list_delete_short = "Удаление",    
     -- === СПРАВКА ПО ОТЛАДКЕ ===
     debug_help_title = "СИСТЕМА ОТЛАДКИ WEZTERM",
     debug_help_what = "Система отладки позволяет включать детальное логирование\nразличных модулей WezTerm для диагностики проблем.",
@@ -428,8 +437,17 @@ local available_languages = {
     debug_disable_all_modules = "Disable all modules",
     debug_save_and_exit = "Save and exit",
     debug_panel_title = "Debug Control Panel",
-    debug_help_footer = "Press Esc to return to debug panel.",
     
+    -- === SERVICE TAB TITLES ===
+    -- Tab titles for various service dialogs
+    save_window_tab_title = "Save Window",
+    save_tab_tab_title = "Save Tab",
+    save_workspace_tab_title = "Save Session",
+    delete_session_tab_title = "Delete Session",
+    load_session_tab_title = "Load Session",    debug_help_footer = "Press Esc to return to debug panel.",
+   debug_panel_short = "Debug",
+   list_picker_short = "Select",
+   list_delete_short = "Delete",    
     -- === DEBUG HELP ===
     debug_help_title = "WEZTERM DEBUG SYSTEM",
     debug_help_what = "Debug system allows enabling detailed logging\nof various WezTerm modules for problem diagnostics.",

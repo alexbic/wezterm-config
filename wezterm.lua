@@ -81,7 +81,7 @@ end
 
 -- Настраиваем все события ПОСЛЕ установки переменных окружения
 require('events.session-status').setup()
-require("events.delete-states").setup()require('events.tab-title').setup()
+require('events.tab-title').setup()
 require('events.new-tab-button').setup()
 
 -- Регистрируем события appearance

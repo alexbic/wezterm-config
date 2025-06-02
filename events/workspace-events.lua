@@ -99,12 +99,16 @@ M.setup = function()
       })
     end
 
-    -- InputSelector с цветным форматированием
+    -- Устанавливаем название вкладки для правильного определения
+    local tab = window:active_tab()
+    tab:set_title(environment.locale.t("load_session_tab_title"))
+        -- InputSelector с цветным форматированием
     window:perform_action(
       wezterm.action.InputSelector({
         action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
           wezterm.emit('clear-saved-mode', inner_window, inner_pane)
-
+          -- Возвращаем обычное название вкладки
+          inner_window:active_tab():set_title("")
           if not id or id == "none" then
             debug.log(wezterm, environment.locale.t, "workspace", "debug_workspace_cancelled")
             return

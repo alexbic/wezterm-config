@@ -25,20 +25,38 @@ local M = {}
 M.cells = {}
 
 M.set_process_name = function(s)
+   if not s then return "" end
    local a = string.gsub(s, "(.*[/\\])(.*)", "%2")
    return a:gsub("%.exe$", "")
 end
 
 M.set_title = function(process_name, static_title, active_title, max_width, inset)
-   local title
+   local title = ""
    inset = inset or 6
+   
+   -- Обеспечиваем, что все параметры не nil
+   process_name = process_name or ""
+   static_title = static_title or ""
+   active_title = active_title or ""
    
    -- Сначала проверяем, это служебное окно?
    local service_type = env_utils.detect_service_window_type(static_title, active_title, process_name)
    if service_type then
       -- Для служебных окон показываем иконку + сокращенное название
       local icon = env_utils.get_icon(icons, service_type)
-      local short_title = env_utils.get_service_window_display_name(service_type)
+      
+      local environment = require('config.environment')
+      local t = environment.locale.t
+      local short_titles = {
+        debug_panel_tab = t("debug_panel_short"),
+        list_picker_tab = t("list_picker_short"),
+        list_delete_tab = t("list_delete_short"),
+        save_workspace_tab = t("save_workspace_tab_title"),
+        save_window_tab = t("save_window_tab_title"),
+        save_tab_tab = t("save_tab_tab_title")
+      }
+      local short_title = short_titles[service_type] or "Service"
+      
       title = icon .. " " .. short_title
    else
       -- Для обычных окон используем старую логику
@@ -51,7 +69,13 @@ M.set_title = function(process_name, static_title, active_title, max_width, inse
       end
    end
 
-   if title:len() > max_width - inset then
+   -- Проверяем, что title не nil перед использованием
+   if not title then
+      title = "Unknown"
+   end
+
+   -- Для служебных окон не обрезаем название, для обычных - обрезаем
+   if not service_type and title:len() > max_width - inset then
       local diff = title:len() - max_width + inset
       title = wezterm.truncate_right(title, title:len() - diff)
    end
@@ -60,6 +84,7 @@ M.set_title = function(process_name, static_title, active_title, max_width, inse
 end
 
 M.check_if_admin = function(p)
+   if not p then return false end
    if p:match("^Administrator: ") then
       return true
    end
@@ -91,8 +116,16 @@ M.setup = function()
       local service_type = env_utils.detect_service_window_type(tab.tab_title, tab.active_pane.title, process_name)
       
       if tab.is_active then
-         if service_type then
-            -- Для служебных окон используем специальные цвета из centralized system
+         if service_type == "list_picker_tab" then
+            -- Для списка выбора - зеленый фон
+            bg = env_utils.get_color(colors, "list_picker_tab")
+            fg = env_utils.get_color(colors, "tab_service_fg")
+         elseif service_type == "list_delete_tab" then
+            -- Для списка удаления - красный фон
+            bg = env_utils.get_color(colors, "list_delete_tab")
+            fg = env_utils.get_color(colors, "tab_service_fg")
+         elseif service_type then
+            -- Для других служебных окон используем специальные цвета
             bg = env_utils.get_color(colors, service_type)
             fg = env_utils.get_color(colors, "tab_service_fg")
          else
@@ -108,10 +141,12 @@ M.setup = function()
       end
 
       local has_unseen_output = false
-      for _, pane in ipairs(tab.panes) do
-         if pane.has_unseen_output then
-            has_unseen_output = true
-            break
+      if tab.panes then
+         for _, pane in ipairs(tab.panes) do
+            if pane.has_unseen_output then
+               has_unseen_output = true
+               break
+            end
          end
       end
 

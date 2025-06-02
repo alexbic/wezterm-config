@@ -293,33 +293,26 @@ end
 -- Функция для определения типа служебного окна
 M.detect_service_window_type = function(static_title, active_title, process_name)
   local title = static_title or active_title or ""
-  if title:find("Debug Control Panel") or title:find("Панель управления отладкой") then
+  
+  -- Получаем локализованные строки
+  local environment = require('config.environment')
+  local t = environment.locale.t
+  
+  -- Ищем точные совпадения с локализованными заголовками
+  if title == t("debug_panel_title") then
     return "debug_panel_tab"
-  elseif title:find("Load session") or title:find("Загрузка сессии") then
+  elseif title == t("load_session_tab_title") then
     return "list_picker_tab"
-  elseif title:find("Delete session") or title:find("Удаление сессии") then
+  elseif title == t("delete_session_tab_title") then
     return "list_delete_tab"
-  elseif title:find("Сохранить window как") or title:find("Save window as") then
+  elseif title == t("save_window_tab_title") then
     return "save_window_tab"
-  elseif title:find("Сохранить tab как") or title:find("Save tab as") then
+  elseif title == t("save_tab_tab_title") then
     return "save_tab_tab"
-  elseif title:find("сохранения сессии") or title:find("save session") then
+  elseif title == t("save_workspace_tab_title") then
     return "save_workspace_tab"
   end
   return nil
-end
-
--- Функция для получения названия служебного окна
-M.get_service_window_display_name = function(service_type)
-  local names = { 
-    debug_panel_tab = "Debug", 
-    list_picker_tab = "Select", 
-    list_delete_tab = "Delete",
-    save_workspace_tab = "Save WS",
-    save_window_tab = "Save Win",
-    save_tab_tab = "Save Tab"
-  }
-  return names[service_type] or "Service"
 end
 
 return M
