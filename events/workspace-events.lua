@@ -142,7 +142,7 @@ M.setup = function()
             local state_type = parts[2]
             local state_name = parts[3]
 
-            local resurrect = require('config.resurrect').resurrect
+            local resurrect = require('wezterm').plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
             local state = resurrect.state_manager.load_state(state_name, state_type)
 
             if state then

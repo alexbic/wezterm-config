@@ -25,6 +25,7 @@ local locale_initialized = false
 local session_state = {
   current_mode = nil,
   saved_mode = nil,
+  dialog_active = false,  -- Флаг активного диалога
 }
 
 -- Получение дней и месяцев из locale
@@ -204,6 +205,7 @@ M.clear_saved_mode = function()
   
   session_state.current_mode = nil
   session_state.saved_mode = nil
+  session_state.dialog_active = false  -- Сбрасываем флаг диалога
   log_status()
 end
 
@@ -211,6 +213,17 @@ M.clear_all_modes = function()
   -- Тихая очистка БЕЗ логирования (для перезагрузки конфигурации)
   session_state.current_mode = nil
   session_state.saved_mode = nil
+  session_state.dialog_active = false
+  log_status()
+end
+
+M.start_dialog = function()
+  session_state.dialog_active = true
+  log_status()
+end
+
+M.end_dialog = function()
+  session_state.dialog_active = false
   log_status()
 end
 
@@ -236,7 +249,8 @@ end
 M.get_debug_state = function()
   return {
     current_mode = session_state.current_mode,
-    saved_mode = session_state.saved_mode
+    saved_mode = session_state.saved_mode,
+    dialog_active = session_state.dialog_active
   }
 end
 
@@ -293,8 +307,14 @@ M.setup = function()
         -- Активируем новый режим
         M.set_mode(current_key_table)
       elseif last_active_key_table then
-        -- Деактивируем предыдущий режим при таймауте
-        M.clear_mode()
+        -- Деактивируем предыдущий режим
+        -- Если диалог активен, не считаем это таймаутом
+        if session_state.dialog_active then
+          -- Диалог активен, оставляем режим как есть
+        else
+          -- Обычный таймаут
+          M.clear_mode()
+        end
       end
       last_active_key_table = current_key_table
     end
@@ -338,20 +358,60 @@ M.setup = function()
 end
 
 -- Минимальные заглушки для совместимости с resurrect
-M.load_session_start = function(window) log_status() end
-M.delete_session_start = function(window) log_status() end
+M.load_session_start = function(window) 
+  M.start_dialog()
+  log_status() 
+end
+
+M.delete_session_start = function(window) 
+  M.start_dialog()
+  log_status() 
+end
+
 M.start_loading = function(window) end
 M.stop_loading = function(window) end
 M.show_notification = function(window, message, icon, color, duration, hide_mode) end
 M.load_session_list_shown = function(window, count) log_status() end
 M.delete_session_list_shown = function(window, count) log_status() end
-M.load_session_success = function(window, name) M.clear_saved_mode() end
-M.delete_session_success = function(window, name) M.clear_saved_mode() end
-M.save_session_success = function(window, name) M.clear_saved_mode() end
-M.load_session_cancelled = function(window) M.clear_saved_mode() end
-M.delete_session_cancelled = function(window) M.clear_saved_mode() end
-M.load_session_error = function(window, error_msg) M.clear_saved_mode() end
-M.save_session_error = function(window, error_msg) M.clear_saved_mode() end
-M.delete_session_error = function(window, error_msg) M.clear_saved_mode() end
+
+M.load_session_success = function(window, name) 
+  M.end_dialog()
+  M.clear_saved_mode() 
+end
+
+M.delete_session_success = function(window, name) 
+  M.end_dialog()
+  M.clear_saved_mode() 
+end
+
+M.save_session_success = function(window, name) 
+  M.end_dialog()
+  M.clear_saved_mode() 
+end
+
+M.load_session_cancelled = function(window) 
+  M.end_dialog()
+  M.clear_saved_mode() 
+end
+
+M.delete_session_cancelled = function(window) 
+  M.end_dialog()
+  M.clear_saved_mode() 
+end
+
+M.load_session_error = function(window, error_msg) 
+  M.end_dialog()
+  M.clear_saved_mode() 
+end
+
+M.save_session_error = function(window, error_msg) 
+  M.end_dialog()
+  M.clear_saved_mode() 
+end
+
+M.delete_session_error = function(window, error_msg) 
+  M.end_dialog()
+  M.clear_saved_mode() 
+end
 
 return M

@@ -107,7 +107,7 @@ end
 M.create_delete_state_handler = function(wezterm, session_status, environment, icons, colors, env_utils)
   return function(window, pane)
     session_status.delete_session_start(window)
-    
+    session_status.start_dialog()    
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
     tab:set_title(environment.locale.t("delete_session_tab_title"))
@@ -159,8 +159,8 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
     window:perform_action(
       wezterm.action.InputSelector({
         action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
-          session_status.clear_saved_mode()
-          -- Возвращаем обычное название вкладки
+          session_status.end_dialog()
+          session_status.clear_saved_mode()          -- Возвращаем обычное название вкладки
           inner_window:active_tab():set_title("")
 
           if not id or id == "none" then
@@ -173,7 +173,7 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
           clean_id = string.match(clean_id, "(.+)%..+$")
 
           -- Удаляем состояние
-          local resurrect = require('config.resurrect').resurrect
+          local resurrect = require('wezterm').plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
           resurrect.state_manager.delete_state(id)
           
           -- Уведомляем об успехе
