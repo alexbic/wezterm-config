@@ -5,11 +5,10 @@
 -- ОБНОВЛЕНО: Интеграция с config.environment.icons
 --
 local colors = require("config.environment.colors")
--- ЗАВИСИМОСТИ: utils.debug, utils.debug-manager, config.environment, config.environment.icons, utils.environment
+-- ЗАВИСИМОСТИ: utils.debug, config.environment, config.environment.icons, utils.environment
 
 local wezterm = require('wezterm')
 local debug = require('utils.debug')
-local debug_manager = require('utils.debug-manager')
 local environment = require('config.environment')
 local icons = require('config.environment.icons')
 local env_utils = require('utils.environment')
@@ -70,7 +69,7 @@ end
 
 -- Создание выборов для селектора с централизованными иконками
 local function create_choices()
-  local modules = debug_manager.get_available_modules()
+  local modules = {}; for module_name, _ in pairs(debug.DEBUG_CONFIG) do table.insert(modules, module_name) end; table.sort(modules)
   local choices = {}
   
   -- Добавляем каждый модуль с цветовым выделением
@@ -130,7 +129,7 @@ end
 -- Показ панели отладки
 M.show_panel = function(window, pane)
   local choices = create_choices()
-  local modules = debug_manager.get_available_modules()
+  local modules = {}; for module_name, _ in pairs(debug.DEBUG_CONFIG) do table.insert(modules, module_name) end; table.sort(modules)
   
   -- Подсчет статистики
   local enabled_count = 0

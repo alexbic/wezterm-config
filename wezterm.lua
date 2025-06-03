@@ -90,8 +90,6 @@ appearance_utils.setup_window_centering(wezterm)
 local appearance_events = require("config.appearance.events")
 
 -- Тестирование системы отладки
-local debug_manager = require("utils.debug-manager")
-debug_manager.setup()
 if appearance_events and appearance_events.register then
    appearance_events.register()
 end

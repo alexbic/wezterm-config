@@ -3,9 +3,9 @@
     appearance = true,
     global = true,
     session_status = true,
-    workspace = true,
+    workspace = false,
     bindings = true,
-    resurrect = true
+    resurrect = false
   },
-  last_updated = "2025-06-01 22:31:01"
+  last_updated = "2025-06-03 10:49:53"
 }
