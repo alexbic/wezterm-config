@@ -21,15 +21,62 @@ end
 -- Главная функция создания диалогового окна
 M.create_dialog_box = function(config)
   local wezterm = require('wezterm')
+  -- Новые параметры для единообразного интерфейса
+  local action_type = config.action_type or "session"
+  local icon_key = config.icon_key or "workspace"
+  local current_value = config.current_value or "default"
+  local default_value = config.default_value
   
-  local lines = config.lines or {}
-  local hint_text = config.hint_text or "enter: ok  esc: cancel"
+  -- Создаем единый шаблон диалога (на основе workspace)
+  local lines = {}
+  if config.lines then
+    -- Совместимость со старым API
+    lines = config.lines
+  else
+    -- Новый единообразный шаблон
+    local icons = require("config.environment.icons")
+    local env_utils = require("utils.environment")
+    local icon = env_utils.get_icon(icons, icon_key)
+    
+    -- Определяем правильное название по типу
+    local type_names = {
+      workspace = "Текущая сессия",
+      window = "Текущее окно",
+      tab = "Текущая вкладка"
+    }
+    local display_name = type_names[icon_key] or "Текущая сессия"
+    
+    -- Создаем первую строку с цветовым разделением
+    -- Структура будет создана через format_elements, а не через lines
+    table.insert(lines, "PLACEHOLDER_FOR_COLORED_FIRST_LINE")
+    
+    -- Сохраняем данные для цветной первой строки
+    config._colored_first_line = {
+      icon = icon,
+      display_name = display_name,
+      current_value = current_value,
+      icon_color = border_color,  -- иконка в цвете рамки
+      label_color = "#4ECDC4",    -- "Текущая сессия" в бирюзовом
+      value_color = "#F8F8F2"     -- значение в белом
+    }    table.insert(lines, "Введите имя в поле ввода ниже:")
+  end  local hint_text = config.hint_text or "enter: ok  esc: cancel"
   local min_width = config.min_width or 40
   local max_width = config.max_width or 80
-  local border_color = config.border_color or "#BD93F9"
-  local content_color = config.content_color or "#F8F8F2"
-  local hint_color = config.hint_color or "#FFB86C"
-  local padding = 2
+  -- Получаем цвета: если передан ключ, получаем из централизованной системы, иначе используем как цвет
+  local function get_color_value(color_param, default_color)
+    if not color_param then return default_color end
+    if type(color_param) == "string" and color_param:match("^dialog_") then
+      local colors = require("config.environment.colors")
+      local env_utils = require("utils.environment")
+      return env_utils.get_color(colors, color_param)
+    else
+      return color_param
+    end
+  end
+  
+  local border_color = get_color_value(config.border_color, "#BD93F9")
+  local content_color = get_color_value(config.content_color, "#F8F8F2")
+  local hint_color = get_color_value(config.hint_color, "#FFB86C")  local padding = 2
 
   -- Вычисляем максимальную ширину контента
   local content_width = 0
@@ -71,6 +118,7 @@ M.create_dialog_box = function(config)
     if remaining >= 0 then
       table.insert(format_elements, { Foreground = { Color = content_color } })
       table.insert(format_elements, { Text = line })
+      table.insert(format_elements, { Foreground = { Color = content_color } })
       table.insert(format_elements, { Text = string.rep(" ", remaining) })
     else
       -- Обрезаем слишком длинную строку
@@ -81,6 +129,7 @@ M.create_dialog_box = function(config)
     end
 
     -- Отступ справа и закрывающая рамка
+    table.insert(format_elements, { Foreground = { Color = border_color } })
     table.insert(format_elements, { Text = string.rep(" ", padding) })
     table.insert(format_elements, { Foreground = { Color = border_color } })
     table.insert(format_elements, { Text = "│\n" })
@@ -110,7 +159,12 @@ M.create_dialog_box = function(config)
   table.insert(format_elements, { Foreground = { Color = border_color } })
   table.insert(format_elements, { Text = "╰" .. string.rep("─", left_border_width) })
   table.insert(format_elements, { Foreground = { Color = hint_color } })
-  table.insert(format_elements, { Text = hint_full })
+  table.insert(format_elements, { Foreground = { Color = border_color } })
+  table.insert(format_elements, { Text = "┤ " })
+  table.insert(format_elements, { Foreground = { Color = hint_color } })
+  table.insert(format_elements, { Text = hint_text })
+  table.insert(format_elements, { Foreground = { Color = border_color } })
+  table.insert(format_elements, { Text = " ├" })
   table.insert(format_elements, { Foreground = { Color = border_color } })
   table.insert(format_elements, { Text = "╯" })
 

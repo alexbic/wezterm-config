@@ -7,7 +7,7 @@
 -- ЗАВИСИМОСТИ: НЕТ
 
 local M = {}
-
+local colors = require("config.environment.colors")
 -- Безопасная функция для получения состояния workspace
 M.safe_get_workspace_state = function(resurrect)
   local ok, state = pcall(function()
@@ -99,7 +99,7 @@ M.create_save_workspace_handler = function(wezterm, resurrect, session_status, e
     
     tab:set_title(environment.locale.t("save_workspace_tab_title"))    window:perform_action(
       wezterm.action.PromptInputLine({
-        description = require("utils.dialog").create_dialog_box({ lines = { env_utils.get_icon(icons, "workspace") .. " " .. environment.locale.t("dialog_workspace_title") .. " " .. window:active_workspace(), "Введите имя в поле ввода ниже:" }, hint_text = environment.locale.t("dialog_hint_save"), min_width = 50, max_width = 80 }),
+        description = require("utils.dialog").create_dialog_box({ action_type = "save", icon_key = "workspace", current_value = window:active_workspace(), hint_text = environment.locale.t("dialog_hint_save"), min_width = 50, max_width = 80, border_color = "dialog_workspace_border", content_color = "dialog_content", hint_color = "dialog_hint" }),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name
           
@@ -170,7 +170,7 @@ M.create_save_window_handler = function(wezterm, resurrect, session_status, envi
     
     tab:set_title(environment.locale.t("save_window_tab_title"))    window:perform_action(
       wezterm.action.PromptInputLine({
-        description = require("utils.dialog").create_dialog_box({ lines = { env_utils.get_icon(icons, "window") .. " " .. environment.locale.t("dialog_window_title") .. " " .. current_workspace, "По умолчанию: " .. default_name, "Введите имя в поле ввода ниже:" }, hint_text = environment.locale.t("dialog_hint_save"), min_width = 50, max_width = 80 }),        action = wezterm.action_callback(function(inner_win, inner_pane, line)
+        description = require("utils.dialog").create_dialog_box({ action_type = "save", icon_key = "window", current_value = current_workspace, hint_text = environment.locale.t("dialog_hint_save"), min_width = 50, max_width = 80, border_color = "dialog_window_border", content_color = "dialog_content", hint_color = "dialog_hint" }),        action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
             local window_state = resurrect.window_state.get_window_state(inner_win:mux_window())
@@ -197,7 +197,7 @@ M.create_save_tab_handler = function(wezterm, resurrect, session_status, environ
     tab:set_title(environment.locale.t("save_tab_tab_title"))
     window:perform_action(
       wezterm.action.PromptInputLine({
-        description = env_utils.get_icon(icons, "save_tab_tab") .. " " .. environment.locale.t("save_tab_as") .. "\n" .. environment.locale.t("save_tab_default", default_name) .. "\n\n" .. environment.locale.t("save_tab_instructions"),
+        description = require("utils.dialog").create_dialog_box({ action_type = "save", icon_key = "tab", current_value = workspace, hint_text = environment.locale.t("dialog_hint_save"), min_width = 50, max_width = 80, border_color = "dialog_tab_border", content_color = "dialog_content", hint_color = "dialog_hint" }),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
