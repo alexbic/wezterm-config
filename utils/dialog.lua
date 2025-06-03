@@ -21,47 +21,13 @@ end
 -- Главная функция создания диалогового окна
 M.create_dialog_box = function(config)
   local wezterm = require('wezterm')
+  
   -- Новые параметры для единообразного интерфейса
   local action_type = config.action_type or "session"
   local icon_key = config.icon_key or "workspace"
   local current_value = config.current_value or "default"
   local default_value = config.default_value
   
-  -- Создаем единый шаблон диалога (на основе workspace)
-  local lines = {}
-  if config.lines then
-    -- Совместимость со старым API
-    lines = config.lines
-  else
-    -- Новый единообразный шаблон
-    local icons = require("config.environment.icons")
-    local env_utils = require("utils.environment")
-    local icon = env_utils.get_icon(icons, icon_key)
-    
-    -- Определяем правильное название по типу
-    local type_names = {
-      workspace = "Текущая сессия",
-      window = "Текущее окно",
-      tab = "Текущая вкладка"
-    }
-    local display_name = type_names[icon_key] or "Текущая сессия"
-    
-    -- Создаем первую строку с цветовым разделением
-    -- Структура будет создана через format_elements, а не через lines
-    table.insert(lines, "PLACEHOLDER_FOR_COLORED_FIRST_LINE")
-    
-    -- Сохраняем данные для цветной первой строки
-    config._colored_first_line = {
-      icon = icon,
-      display_name = display_name,
-      current_value = current_value,
-      icon_color = border_color,  -- иконка в цвете рамки
-      label_color = "#4ECDC4",    -- "Текущая сессия" в бирюзовом
-      value_color = "#F8F8F2"     -- значение в белом
-    }    table.insert(lines, "Введите имя в поле ввода ниже:")
-  end  local hint_text = config.hint_text or "enter: ok  esc: cancel"
-  local min_width = config.min_width or 40
-  local max_width = config.max_width or 80
   -- Получаем цвета: если передан ключ, получаем из централизованной системы, иначе используем как цвет
   local function get_color_value(color_param, default_color)
     if not color_param then return default_color end
@@ -76,12 +42,56 @@ M.create_dialog_box = function(config)
   
   local border_color = get_color_value(config.border_color, "#BD93F9")
   local content_color = get_color_value(config.content_color, "#F8F8F2")
-  local hint_color = get_color_value(config.hint_color, "#FFB86C")  local padding = 2
+  local hint_color = get_color_value(config.hint_color, "#FFB86C")
+  
+  -- Создаем строки содержимого
+  local lines = {}
+  if config.lines then
+    -- Совместимость со старым API
+    lines = config.lines
+  else
+    -- Новый единообразный шаблон
+    local icons = require("config.environment.icons")
+    local env_utils = require("utils.environment")
+    local icon = env_utils.get_icon(icons, icon_key)
+    
+    -- Определяем правильное название по типу
+    local type_names = {
+      workspace = "Текущая сессия",
+      window = "Текущее окно", 
+      tab = "Текущая вкладка"
+    }
+    local display_name = type_names[icon_key] or "Текущая сессия"
+    
+    -- Добавляем placeholder для цветной первой строки
+    table.insert(lines, "PLACEHOLDER_FOR_COLORED_FIRST_LINE")
+    table.insert(lines, "Введите имя в поле ввода ниже:")
+  end
+  
+  local hint_text = config.hint_text or "enter: ok  esc: cancel"
+  local min_width = config.min_width or 40
+  local max_width = config.max_width or 80
+  local padding = 2
 
   -- Вычисляем максимальную ширину контента
   local content_width = 0
   for _, line in ipairs(lines) do
-    content_width = math.max(content_width, utf8_len(line))
+    -- Для placeholder используем примерную длину цветной строки
+    if line == "PLACEHOLDER_FOR_COLORED_FIRST_LINE" then
+      local icons = require("config.environment.icons")
+      local env_utils = require("utils.environment")
+      local icon = env_utils.get_icon(icons, icon_key)
+      local type_names = {
+        workspace = "Текущая сессия",
+        window = "Текущее окно",
+        tab = "Текущая вкладка"
+      }
+      local display_name = type_names[icon_key] or "Текущая сессия"
+      local estimated_len = utf8_len(icon .. " " .. display_name .. ": " .. current_value)
+      content_width = math.max(content_width, estimated_len)
+    else
+      content_width = math.max(content_width, utf8_len(line))
+    end
   end
 
   -- Вычисляем ширину подсказки
@@ -107,25 +117,63 @@ M.create_dialog_box = function(config)
 
   -- Контентные строки
   for i, line in ipairs(lines) do
-    local line_len = utf8_len(line)
-    local remaining = inner_width - padding * 2 - line_len
-    
     -- Начало строки с рамкой
     table.insert(format_elements, { Foreground = { Color = border_color } })
     table.insert(format_elements, { Text = "│" .. string.rep(" ", padding) })
 
-    -- Контент строки
-    if remaining >= 0 then
+    -- Специальная обработка для placeholder цветной первой строки
+    if line == "PLACEHOLDER_FOR_COLORED_FIRST_LINE" then
+      local icons = require("config.environment.icons")
+      local env_utils = require("utils.environment")
+      local icon = env_utils.get_icon(icons, icon_key)
+      
+      local type_names = {
+        workspace = "Текущая сессия",
+        window = "Текущее окно",
+        tab = "Текущая вкладка"
+      }
+      local display_name = type_names[icon_key] or "Текущая сессия"
+      
+      -- Иконка в цвете рамки
+      table.insert(format_elements, { Foreground = { Color = border_color } })
+      table.insert(format_elements, { Text = icon .. " " })
+      
+      -- Название в бирюзовом
+      table.insert(format_elements, { Foreground = { Color = border_color } })
+      table.insert(format_elements, { Text = display_name })
+      
+      -- Двоеточие в белом
       table.insert(format_elements, { Foreground = { Color = content_color } })
-      table.insert(format_elements, { Text = line })
+      table.insert(format_elements, { Text = ": " })
+      
+      -- Значение в белом
       table.insert(format_elements, { Foreground = { Color = content_color } })
-      table.insert(format_elements, { Text = string.rep(" ", remaining) })
+      table.insert(format_elements, { Text = current_value })
+      
+      -- Вычисляем оставшееся место
+      local colored_line_len = utf8_len(icon .. " " .. display_name .. ": " .. current_value)
+      local remaining = inner_width - padding * 2 - colored_line_len
+      if remaining > 0 then
+        table.insert(format_elements, { Foreground = { Color = content_color } })
+        table.insert(format_elements, { Text = string.rep(" ", remaining) })
+      end
     else
-      -- Обрезаем слишком длинную строку
-      local max_len = inner_width - padding * 2 - 3
-      local truncated = string.sub(line, 1, max_len) .. "..."
-      table.insert(format_elements, { Foreground = { Color = content_color } })
-      table.insert(format_elements, { Text = truncated })
+      -- Обычная строка
+      local line_len = utf8_len(line)
+      local remaining = inner_width - padding * 2 - line_len
+      
+      if remaining >= 0 then
+        table.insert(format_elements, { Foreground = { Color = content_color } })
+        table.insert(format_elements, { Text = line })
+        table.insert(format_elements, { Foreground = { Color = content_color } })
+        table.insert(format_elements, { Text = string.rep(" ", remaining) })
+      else
+        -- Обрезаем слишком длинную строку
+        local max_len = inner_width - padding * 2 - 3
+        local truncated = string.sub(line, 1, max_len) .. "..."
+        table.insert(format_elements, { Foreground = { Color = content_color } })
+        table.insert(format_elements, { Text = truncated })
+      end
     end
 
     -- Отступ справа и закрывающая рамка
@@ -158,7 +206,6 @@ M.create_dialog_box = function(config)
 
   table.insert(format_elements, { Foreground = { Color = border_color } })
   table.insert(format_elements, { Text = "╰" .. string.rep("─", left_border_width) })
-  table.insert(format_elements, { Foreground = { Color = hint_color } })
   table.insert(format_elements, { Foreground = { Color = border_color } })
   table.insert(format_elements, { Text = "┤ " })
   table.insert(format_elements, { Foreground = { Color = hint_color } })
