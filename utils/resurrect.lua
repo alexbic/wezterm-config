@@ -99,7 +99,7 @@ M.create_save_workspace_handler = function(wezterm, resurrect, session_status, e
     
     tab:set_title(environment.locale.t("save_workspace_tab_title"))    window:perform_action(
       wezterm.action.PromptInputLine({
-        description = env_utils.get_icon(icons, "save_workspace_tab") .. " " .. environment.locale.t("enter_save_session_name") .. "\n" .. environment.locale.t("current_workspace", window:active_workspace()) .. "\n\n" .. environment.locale.t("enter_save_default"),
+        description = require("utils.dialog").create_dialog_box({ lines = { env_utils.get_icon(icons, "workspace") .. " " .. environment.locale.t("dialog_workspace_title") .. " " .. window:active_workspace(), "Введите имя в поле ввода ниже:" }, hint_text = environment.locale.t("dialog_hint_save"), min_width = 50, max_width = 80 }),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name
           

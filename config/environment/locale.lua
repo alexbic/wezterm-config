@@ -89,7 +89,15 @@ local available_languages = {
     enter_workspace_name_new_window = "Введите имя для нового workspace (новое окно)",
     
     -- === СИСТЕМА СЕССИЙ (RESURRECT) ===
-    -- Сообщения сохранения и восстановления сессий
+  
+  -- === ДИАЛОГИ СОХРАНЕНИЯ/ЗАГРУЗКИ ===
+  dialog_workspace_title = "Текущая сессия:",
+  dialog_window_title = "Сохранить окно:",
+  dialog_tab_title = "Сохранить вкладку:",
+  dialog_input_prompt = "Введите имя в поле ввода ниже:",
+  dialog_hint_save = "Enter: сохранить  Esc: отмена",
+  dialog_hint_load = "Enter: загрузить  /: поиск  Esc: отмена",
+  dialog_hint_delete = "Enter: удалить  /: поиск  Esc: отмена",    -- Сообщения сохранения и восстановления сессий
     session_restored = "Сессия восстановлена",
     session_restore_error = "Ошибка восстановления сессии",
     session_saved = "Сессия сохранена",
@@ -348,7 +356,15 @@ local available_languages = {
     enter_workspace_name_new_window = "Enter name for new workspace (new window)",
     
     -- === SESSION SYSTEM (RESURRECT) ===
-    -- Session save and restore messages
+  
+  -- === SAVE/LOAD DIALOGS ===
+  dialog_workspace_title = "Current session:",
+  dialog_window_title = "Save window:",
+  dialog_tab_title = "Save tab:",
+  dialog_input_prompt = "Enter name in the input field below:",
+  dialog_hint_save = "Enter: save  Esc: cancel",
+  dialog_hint_load = "Enter: load  /: search  Esc: cancel",
+  dialog_hint_delete = "Enter: delete  /: search  Esc: cancel",    -- Session save and restore messages
     session_restored = "Session restored",
     session_restore_error = "Session restore error",
     session_saved = "Session saved",
