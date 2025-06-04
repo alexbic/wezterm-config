@@ -55,14 +55,14 @@ M.send_special_char = function(wezterm, char)
   return wezterm.action.SendString(char)
 end
 
--- Функция для создания workspace (принимает wezterm и функцию перевода)
-M.create_workspace = function(wezterm, t_func)
-  t_func = t_func or function(key) return key end
+-- ИСПРАВЛЕНО: Функция для создания workspace (принимает готовый текст)
+M.create_workspace = function(wezterm, description_text)
+  description_text = description_text or "Enter workspace name:"
   return wezterm.action.PromptInputLine {
     description = wezterm.format {
       { Attribute = { Intensity = "Bold" } },
       { Foreground = { AnsiColor = "Fuchsia" } },
-      { Text = t_func("enter_workspace_name") },
+      { Text = description_text },
     },
     action = wezterm.action_callback(function(window, pane, line)
       if line then
@@ -77,14 +77,14 @@ M.create_workspace = function(wezterm, t_func)
   }
 end
 
--- Функция для создания workspace в новом окне
-M.create_workspace_new_window = function(wezterm, t_func)
-  t_func = t_func or function(key) return key end
+-- ИСПРАВЛЕНО: Функция для создания workspace в новом окне
+M.create_workspace_new_window = function(wezterm, description_text)
+  description_text = description_text or "Enter workspace name for new window:"
   return wezterm.action.PromptInputLine {
     description = wezterm.format {
       { Attribute = { Intensity = "Bold" } },
       { Foreground = { AnsiColor = "Fuchsia" } },
-      { Text = t_func("enter_workspace_name_new_window") },
+      { Text = description_text },
     },
     action = wezterm.action_callback(function(window, pane, line)
       if line then
@@ -99,11 +99,11 @@ M.create_workspace_new_window = function(wezterm, t_func)
   }
 end
 
--- Функция для переименования вкладки
-M.rename_tab = function(wezterm, t_func)
-  t_func = t_func or function(key) return key end
+-- ИСПРАВЛЕНО: Функция для переименования вкладки
+M.rename_tab = function(wezterm, description_text)
+  description_text = description_text or "Enter new tab name:"
   return wezterm.action.PromptInputLine({
-    description = t_func("enter_new_tab_name"),
+    description = description_text,
     action = wezterm.action_callback(function(window, pane, line)
       if line then
         window:active_tab():set_title(line)
@@ -146,18 +146,27 @@ M.generate_special_char_bindings = function(wezterm)
   }
 end
 
--- Функция для генерации биндингов workspace
-M.generate_workspace_bindings = function(wezterm, mod, t_func)
+-- ИСПРАВЛЕНО: Функция для генерации биндингов workspace (принимает готовые тексты)
+M.generate_workspace_bindings = function(wezterm, mod, workspace_text, workspace_new_window_text)
+  workspace_text = workspace_text or "Enter workspace name:"
+  workspace_new_window_text = workspace_new_window_text or "Enter workspace name for new window:"
+  
   return {
-    { key = "w", mods = "CTRL|SHIFT", action = M.create_workspace(wezterm, t_func) },
-    { key = "w", mods = "CTRL|SHIFT|ALT", action = M.create_workspace_new_window(wezterm, t_func) },
+    { key = "w", mods = "CTRL|SHIFT", action = M.create_workspace(wezterm, workspace_text) },
+    { key = "w", mods = "CTRL|SHIFT|ALT", action = M.create_workspace_new_window(wezterm, workspace_new_window_text) },
     { key = "w", mods = "LEADER", action = wezterm.action.EmitEvent("workspace.switch") },
     { key = "W", mods = "LEADER", action = wezterm.action.EmitEvent("workspace.restore") },
   }
 end
 
-
 -- Функция для активации режима отладки с разделением панели
+M.activate_debug_mode_with_panel = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local debug_panel = require("config.dialogs.debug-manager")
+    debug_panel.create_panel(window, pane)
+  end)
+end
+
 -- Функция для активации менеджера состояний
 M.activate_state_manager = function(wezterm)
   return wezterm.action_callback(function(window, pane)
@@ -166,12 +175,6 @@ M.activate_state_manager = function(wezterm)
   end)
 end
 
-M.activate_debug_mode_with_panel = function(wezterm)
-  return wezterm.action_callback(function(window, pane)
-    local debug_panel = require("config.dialogs.debug-manager")
-    debug_panel.create_panel(window, pane)
-  end)
-end
 -- Функция для закрытия отладочной панели
 M.close_debug_panel = function(wezterm)
   return wezterm.action_callback(function(window, pane)
@@ -189,4 +192,5 @@ M.close_debug_panel = function(wezterm)
     end
   end)
 end
+
 return M

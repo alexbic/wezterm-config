@@ -9,7 +9,7 @@
 return {
   -- === НАСТРОЙКИ ЛОКАЛИЗАЦИИ ===
   DEFAULT_LANGUAGE = "ru",
-  SUPPORTED_LANGUAGES = {"ru", "en", "de", "fr", "es"},
+  SUPPORTED_LANGUAGES = {"ru", "en", "de"},
   LOCALE_AUTO_CREATE = true,
   LOCALE_DIR = "config/locales",
   

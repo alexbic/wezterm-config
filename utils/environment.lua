@@ -234,6 +234,64 @@ M.create_locale_settings_from_data = function(language_data)
 end
 
 -- ========================================
+-- ИНТЕРФЕЙС ЛОКАЛИЗАЦИИ С GLOBALS
+-- ========================================
+
+-- Главная функция получения интерфейса локализации (использует globals.lua)
+M.get_locale_interface = function(wezterm_obj, config_dir_param, platform_param)
+  -- Безопасное получение globals
+  local success, globals = pcall(require, 'config.environment.globals')
+  if not success then
+    -- Fallback если globals.lua не найден
+    globals = {
+      DEFAULT_LANGUAGE = "ru",
+      SUPPORTED_LANGUAGES = {"ru", "en"},
+      LOCALE_AUTO_CREATE = true
+    }
+  end
+  
+  local current_language = os.getenv("WEZTERM_LANG") or globals.DEFAULT_LANGUAGE
+  
+  -- Пытаемся получить существующий кэш
+  local success_cache, cached_locale = pcall(require, 'config.environment.locale')
+  if success_cache and cached_locale and cached_locale.current_language == current_language then
+    -- Кэш актуален
+    return cached_locale
+  end
+  
+  -- Нужно обновить кэш
+  if wezterm_obj and config_dir_param and platform_param then
+    local success_rebuild = M.rebuild_locale_cache_file(config_dir_param, platform_param, current_language)
+    if success_rebuild then
+      -- Перезагружаем обновленный кэш
+      package.loaded['config.environment.locale'] = nil
+      local new_success, new_cached = pcall(require, 'config.environment.locale')
+      if new_success then
+        return new_cached
+      end
+    end
+  end
+  
+  -- Fallback - минимальный интерфейс
+  return {
+    current_language = current_language,
+    t = {
+      error = "Ошибка",
+      success = "Успешно",
+      loading = "Загрузка...",
+      enter_new_tab_name = "Введите новое имя вкладки",
+      enter_workspace_name = "Введите имя workspace",
+      enter_workspace_name_new_window = "Введите имя workspace для нового окна"
+    },
+    settings = {
+      LANG = "ru_RU.UTF-8",
+      LC_ALL = "ru_RU.UTF-8",
+      LC_TIME = "ru_RU.UTF-8"
+    }
+  }
+end
+
+-- ========================================
 -- ЛОКАЛИЗАЦИЯ И ПЕРЕВОДЫ (СТАРЫЕ ФУНКЦИИ)
 -- ========================================
 

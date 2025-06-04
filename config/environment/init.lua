@@ -2,9 +2,9 @@
 --
 -- ОПИСАНИЕ: Точка входа для environment-модулей WezTerm
 -- Собирает и экспортирует все подмодули окружения: локаль, devtools, цвета, терминал, приложения, шрифты.
--- ИСПРАВЛЕНО: Убрана зависимость от paths.lua (функции перенесены в utils/environment.lua)
+-- ОБНОВЛЕНО: Интегрирован с новой системой локализации через globals.lua
 --
--- ЗАВИСИМОСТИ: locale.lua, devtools.lua, colors.lua, terminal.lua, apps.lua, fonts.lua
+-- ЗАВИСИМОСТИ: locale.lua, devtools.lua, colors.lua, terminal.lua, apps.lua, fonts.lua, globals.lua
 
 local locale = require('config.environment.locale')
 local devtools = require('config.environment.devtools')
@@ -12,6 +12,7 @@ local colors = require('config.environment.colors')
 local terminal = require('config.environment.terminal')
 local apps = require('config.environment.apps')
 local fonts = require('config.environment.fonts')
+local globals = require('config.environment.globals')
 
 return {
   locale = locale,
@@ -20,4 +21,5 @@ return {
   terminal = terminal,
   apps = apps,
   fonts = fonts,
+  globals = globals,
 }

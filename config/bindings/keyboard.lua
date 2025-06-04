@@ -17,7 +17,7 @@ local environment = require('config.environment')
 local create_platform_info = require('utils.platform')
 local platform = create_platform_info(wezterm.target_triple)
 
--- Получаем модификаторы для текущей платформы (теперь utils.bindings не имеет зависимостей)
+-- Получаем модификаторы для текущей платформы
 local mod = {}
 if platform.is_mac then
   mod.SUPER = 'SUPER'  -- Command (⌘) на macOS
@@ -33,6 +33,9 @@ end
 -- Устанавливаем лидер-клавишу Alt+A для специальных функций
 local leader = { key = 'a', mods = 'ALT', timeout_milliseconds = 750 }
 
+-- Получаем тексты из статических данных локализации (с fallback)
+local locale_t = (environment.locale and environment.locale.t) or {}
+
 -- Базовые клавиши для основных функций
 local base_keys = {
    -- Общие функции --
@@ -44,6 +47,10 @@ local base_keys = {
    { key = 'F12',    mods = 'NONE',        action = act.ShowDebugOverlay },
    { key = "F12", mods = "SHIFT", action = bindings_utils.activate_debug_mode_with_panel(wezterm) },
    { key = "F10", mods = "NONE", action = bindings_utils.activate_state_manager(wezterm) },
+   { key = "F9", mods = "NONE", action = wezterm.action_callback(function(window, pane)
+     local locale_manager = require("config.dialogs.locale-manager")
+     locale_manager.show_locale_manager(window, pane)
+   end) },
    { key = 'f',      mods = mod.SUPER,     action = act.Search({ CaseInSensitiveString = '' }) },
 
    -- Принудительная перезагрузка конфигурации
@@ -71,20 +78,20 @@ local base_keys = {
    { key = 'n', mods = mod.SUPER, action = act.SpawnWindow },
    { key = 'q', mods = mod.SUPER, action = act.QuitApplication },
 
-   -- Переименование вкладки
-   { key = 'R', mods = 'CTRL|SHIFT', action = bindings_utils.rename_tab(wezterm, environment.locale.t) },
+   -- ИСПРАВЛЕНО: Переименование вкладки
+   { key = 'R', mods = 'CTRL|SHIFT', action = bindings_utils.rename_tab(wezterm, locale_t.enter_new_tab_name or "Введите новое имя вкладки") },
 
    {
      key = "t",
      mods = "CTRL|SHIFT",
      action = wezterm.action.SpawnTab "CurrentPaneDomain",
-     description = environment.locale.t("open_new_tab"),
+     description = locale_t.open_new_tab or "Открыть новую вкладку",
    },
    {
      key = "w",
      mods = "CTRL|SHIFT|ALT",
-     action = bindings_utils.create_workspace_new_window(wezterm, environment.locale.t),
-     description = environment.locale.t("create_workspace_new_window"),
+     action = bindings_utils.create_workspace_new_window(wezterm, locale_t.enter_workspace_name_new_window or "Введите имя workspace для нового окна"),
+     description = locale_t.create_workspace_new_window or "Создать workspace в новом окне",
    },
 }
 
@@ -114,8 +121,13 @@ local function build_keys()
     end
   end
 
-  -- Добавляем workspace клавиши
-  for _, key in ipairs(bindings_utils.generate_workspace_bindings(wezterm, mod, environment.locale.t)) do
+  -- ИСПРАВЛЕНО: Добавляем workspace клавиши с текстами
+  for _, key in ipairs(bindings_utils.generate_workspace_bindings(
+    wezterm, 
+    mod, 
+    locale_t.enter_workspace_name or "Введите имя workspace:",
+    locale_t.enter_workspace_name_new_window or "Введите имя workspace для нового окна:"
+  )) do
     table.insert(keys, key)
   end
 
