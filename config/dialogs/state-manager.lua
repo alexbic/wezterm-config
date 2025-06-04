@@ -69,7 +69,7 @@ local function create_main_menu_choices(stats)
     id = "header",
     label = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "session") } },
-      { Text = env_utils.get_icon(icons, "session") .. " " .. environment.locale.t("state_manager_title") }
+      { Text = env_utils.get_icon(icons, "session") .. " " .. environment.locale.t.state_manager_title }
     })
   })
   
@@ -205,7 +205,7 @@ local function show_states_of_type(window, pane, state_type, files)
       id = "empty",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "error") } },
-        { Text = env_utils.get_icon(icons, "error") .. " " .. environment.locale.t("no_states_of_type", state_type) }
+        { Text = env_utils.get_icon(icons, "error") .. " " .. environment.locale.t.no_states_of_type }
       })
     })
   else
@@ -271,9 +271,9 @@ M.show_main_menu = function(window, pane)
   local selector_config = {
     title = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "session") } },
-      { Text = env_utils.get_icon(icons, "session") .. " " .. environment.locale.t("state_manager_title") }
+      { Text = env_utils.get_icon(icons, "session") .. " " .. environment.locale.t.state_manager_title }
     }),
-    description = environment.locale.t("state_manager_description"),
+    description = environment.locale.t.state_manager_description,
     fuzzy = false,
     alphabet = "",
     choices = choices,

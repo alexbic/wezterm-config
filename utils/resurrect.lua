@@ -83,7 +83,7 @@ M.perform_restore = function(wezterm, resurrect, session_status, environment, wi
     end
     
     if not success then
-      session_status.load_session_error(window, environment.locale.t("cannot_get_state"))
+      session_status.load_session_error(window, environment.locale.t.cannot_get_state)
       pending_operation_ref.current = nil
     else
       session_status.load_session_success(window, session_name or environment.locale.t("session_saved_as", ""))
@@ -123,7 +123,7 @@ M.create_save_workspace_handler = function(wezterm, resurrect, session_status, e
             -- ПРИНУДИТЕЛЬНЫЙ ТАЙМЕР НА 2 СЕКУНДЫ для ошибок плагина
             state_refs.save_timeout_timer = wezterm.time.call_after(1, function()
               if window then
-                session_status.save_session_error(window, environment.locale.t("plugin_error"))
+                session_status.save_session_error(window, environment.locale.t.plugin_error)
               end
               state_refs.is_user_save = false
               state_refs.current_save_name = ""
@@ -141,7 +141,7 @@ M.create_save_workspace_handler = function(wezterm, resurrect, session_status, e
                   state_refs.save_timeout_timer:cancel()
                   state_refs.save_timeout_timer = nil
                 end
-                session_status.save_session_error(window, environment.locale.t("cannot_get_state"))
+                session_status.save_session_error(window, environment.locale.t.cannot_get_state)
                 state_refs.is_user_save = false
                 state_refs.current_save_name = ""
                 state_refs.current_operation = nil

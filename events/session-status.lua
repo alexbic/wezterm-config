@@ -337,7 +337,7 @@ M.setup = function()
       {Foreground = {Color = env_utils.get_color(colors, "system")}},
       {Text = env_utils.get_icon(icons, "system") .. " "},
       {Foreground = {Color = "#FFFFFF"}},
-      {Text = environment.locale.t("config_reloaded")}
+      {Text = environment.locale.t.config_reloaded}
     })
     
     window:set_right_status(success_msg)

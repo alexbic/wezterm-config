@@ -1,62 +1,85 @@
 #!/bin/bash
 
-# Универсальный скрипт для создания новой локали с опциональным автопереводом
-# Использование: ./create-locale.sh <source_lang> <target_lang> <target_name> <target_locale_string> [--auto-translate]
-# Пример: ./create-locale.sh ru en English en_US.UTF-8 --auto-translate
+# Создание новой локали с автопереводом
+# Использование: ./create-locale.sh <source_file> <target_lang> [-v]
 
-SOURCE_LANG="$1"
+SOURCE_FILE="$1"
 TARGET_LANG="$2"
-TARGET_NAME="$3"
-TARGET_LOCALE_STRING="$4"
-AUTO_TRANSLATE="$5"
+VERBOSE=""
 
-if [ -z "$SOURCE_LANG" ] || [ -z "$TARGET_LANG" ] || [ -z "$TARGET_NAME" ] || [ -z "$TARGET_LOCALE_STRING" ]; then
-    echo "❌ Использование: $0 <source_lang> <target_lang> <target_name> <target_locale_string> [--auto-translate]"
+# Проверка флага вербозности
+for arg in "$@"; do
+    case $arg in
+        -v|--verbose)
+            VERBOSE="-v"
+            ;;
+    esac
+done
+
+if [ -z "$SOURCE_FILE" ] || [ -z "$TARGET_LANG" ]; then
+    echo "❌ Использование: $0 <source_file> <target_lang> [-v]"
     echo ""
     echo "📝 Примеры:"
-    echo "   $0 ru en English en_US.UTF-8                    # Только создание шаблона"
-    echo "   $0 ru en English en_US.UTF-8 --auto-translate  # С автоматическим переводом"
-    echo "   $0 en de German de_DE.UTF-8 --auto-translate   # Английский → Немецкий"
+    echo "   $0 config/locales/ru.lua en           # Тихий режим"
+    echo "   $0 config/locales/ru.lua de -v        # С логированием"
     echo ""
-    echo "📂 Доступные исходные локали:"
-    ls ~/.config/wezterm/config/locales/*.lua 2>/dev/null | sed 's/.*\/\([^.]*\)\.lua/   \1/' | grep -v locale-manager || echo "   (нет файлов)"
     exit 1
 fi
 
-BASE_FILE="$HOME/.config/wezterm/config/locales/${SOURCE_LANG}.lua"
-NEW_FILE="$HOME/.config/wezterm/config/locales/${TARGET_LANG}.lua"
-SCRIPT_DIR="$(dirname "$0")"
-
-if [ ! -f "$BASE_FILE" ]; then
-    echo "❌ Исходный файл не найден: $BASE_FILE"
+if [ ! -f "$SOURCE_FILE" ]; then
+    echo "❌ Исходный файл не найден: $SOURCE_FILE"
     exit 1
 fi
+
+# Определяем путь для нового файла
+SOURCE_DIR=$(dirname "$SOURCE_FILE")
+NEW_FILE="$SOURCE_DIR/${TARGET_LANG}.lua"
+
+# Определяем локаль и имя языка по коду
+case "$TARGET_LANG" in
+    "en") 
+        TARGET_LOCALE="en_US.UTF-8"
+        TARGET_NAME="English"
+        ;;
+    "de") 
+        TARGET_LOCALE="de_DE.UTF-8"
+        TARGET_NAME="German"
+        ;;
+    "fr") 
+        TARGET_LOCALE="fr_FR.UTF-8"
+        TARGET_NAME="French"
+        ;;
+    "es") 
+        TARGET_LOCALE="es_ES.UTF-8"
+        TARGET_NAME="Spanish"
+        ;;
+    *)
+        TARGET_LOCALE="${TARGET_LANG}_${TARGET_LANG^^}.UTF-8"
+        TARGET_NAME="Unknown"
+        ;;
+esac
 
 if [ -f "$NEW_FILE" ]; then
-    echo "⚠️  Файл $NEW_FILE уже существует!"
-    read -p "🤔 Перезаписать? (y/N): " response
-    if [[ ! "$response" =~ ^[Yy]$ ]]; then
-        exit 0
-    fi
+    [ "$VERBOSE" ] && echo "⚠️  Файл $NEW_FILE уже существует - перезаписываем"
 fi
 
-echo "🚀 Создание локали: $SOURCE_LANG → $TARGET_LANG ($TARGET_NAME)"
+[ "$VERBOSE" ] && echo "🚀 Создание локали: $(basename $SOURCE_FILE) → $TARGET_LANG ($TARGET_NAME)"
 
-# Определяем название исходной локали
-SOURCE_NAME=$(grep 'name = ' "$BASE_FILE" | sed 's/.*name = "\([^"]*\)".*/\1/')
+# Получаем исходное имя языка
+SOURCE_NAME=$(grep 'name = ' "$SOURCE_FILE" | sed 's/.*name = "\([^"]*\)".*/\1/')
 
 # Создаем новый файл локали
 cat > "$NEW_FILE" << LOCALE_EOF
--- ${TARGET_NAME} localization (generated from ${SOURCE_LANG}.lua - ${SOURCE_NAME})
+-- ${TARGET_NAME} localization (generated from $(basename $SOURCE_FILE) - ${SOURCE_NAME})
 return {
-  locale = "${TARGET_LOCALE_STRING}",
+  locale = "${TARGET_LOCALE}",
   name = "${TARGET_NAME}",
   
-$(grep -E "^  [a-zA-Z_]+ = \".*\",$" "$BASE_FILE" | while IFS= read -r line; do
+$(grep -E "^  [a-zA-Z_]+ = \".*\",$" "$SOURCE_FILE" | while IFS= read -r line; do
     key=$(echo "$line" | sed 's/^  \([a-zA-Z_]*\) = .*/\1/')
     value=$(echo "$line" | sed 's/^  [a-zA-Z_]* = \(.*\),$/\1/')
     
-    # Пропускаем уже заданные ключи
+    # Пропускаем служебные ключи
     if [[ "$key" == "locale" || "$key" == "name" ]]; then
         continue
     fi
@@ -73,31 +96,16 @@ if ! luac -p "$NEW_FILE" 2>/dev/null; then
     exit 1
 fi
 
-echo "✅ Базовый файл локали создан!"
-echo "📝 Файл: $NEW_FILE"
-echo "📊 Ключей для перевода: $(grep -c "TODO: translate" "$NEW_FILE")"
+[ "$VERBOSE" ] && echo "✅ Базовый файл создан: $NEW_FILE"
+[ "$VERBOSE" ] && echo "📊 Ключей для перевода: $(grep -c "TODO: translate" "$NEW_FILE")"
 
-# Автоматический перевод, если запрошен
-if [ "$AUTO_TRANSLATE" = "--auto-translate" ]; then
-    echo ""
-    echo "🌐 Запуск автоматического перевода..."
-    
-    # Проверяем наличие скрипта автоперевода
-    if [ -f "$SCRIPT_DIR/auto-translate.sh" ]; then
-        if "$SCRIPT_DIR/auto-translate.sh" "$NEW_FILE" "$TARGET_LANG"; then
-            echo "🎉 Автоматический перевод завершен!"
-        else
-            echo "⚠️  Автоматический перевод завершился с ошибками"
-        fi
-    else
-        echo "❌ Скрипт auto-translate.sh не найден в $SCRIPT_DIR"
-    fi
+# Автоматический перевод (всегда включен)
+SCRIPT_DIR="$(dirname "$0")"
+if [ -f "$SCRIPT_DIR/auto-translate.sh" ]; then
+    "$SCRIPT_DIR/auto-translate.sh" "$NEW_FILE" "$TARGET_LANG" $VERBOSE
 else
-    echo "💡 Для автоматического перевода добавьте флаг --auto-translate"
+    echo "❌ Скрипт auto-translate.sh не найден"
+    exit 1
 fi
 
-echo ""
 echo "✨ Готово! Локаль $TARGET_LANG создана."
-if [ "$AUTO_TRANSLATE" != "--auto-translate" ]; then
-    echo "🔧 Следующий шаг: отредактируйте файл и переведите строки с -- TODO: translate"
-fi

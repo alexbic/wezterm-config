@@ -110,12 +110,12 @@ local function create_choices()
   -- Команды управления с локализацией и иконками
   table.insert(choices, {
     id = "enable_all",
-    label = "      " .. env_utils.get_icon(icons, "system") .. "  " .. environment.locale.t("debug_enable_all_modules")
+    label = "      " .. env_utils.get_icon(icons, "system") .. "  " .. environment.locale.t.debug_enable_all_modules
   })
   
   table.insert(choices, {
     id = "disable_all", 
-    label = "      " .. env_utils.get_icon(icons, "error") .. "  " .. environment.locale.t("debug_disable_all_modules")
+    label = "      " .. env_utils.get_icon(icons, "error") .. "  " .. environment.locale.t.debug_disable_all_modules
   })
   
   table.insert(choices, {
@@ -125,7 +125,7 @@ local function create_choices()
   
   table.insert(choices, {
     id = "exit",
-    label = "      " .. env_utils.get_icon(icons, "exit") .. "  " .. environment.locale.t("debug_save_and_exit")
+    label = "      " .. env_utils.get_icon(icons, "exit") .. "  " .. environment.locale.t.debug_save_and_exit
   })
   
   return choices
@@ -186,7 +186,7 @@ M.show_panel = function(window, pane)
           M.show_panel(inner_window, inner_pane)
         end
       end),
-      title = env_utils.get_icon(icons, "debug") .. " " .. environment.locale.t("debug_panel_title"),
+      title = env_utils.get_icon(icons, "debug") .. " " .. environment.locale.t.debug_panel_title,
       description = string.format("Активно: %d/%d модулей", enabled_count, #modules),
       fuzzy_description = "Найти модуль:",
       fuzzy = true,

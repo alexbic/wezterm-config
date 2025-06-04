@@ -15,7 +15,7 @@ local platform = create_platform_info(wezterm.target_triple)
 local function get_description()
    local ok, environment = pcall(require, 'config.environment')
    if ok and environment.locale then
-      return environment.locale.t("local_terminal")
+      return environment.locale.t.local_terminal
    end
    return "Local terminal"
 end

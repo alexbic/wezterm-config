@@ -1,118 +1,197 @@
 #!/bin/bash
 
-# Скрипт автоматического перевода локали с использованием Google Translate
-# Использование: ./auto-translate.sh <lang_file> <target_lang_code>
+# Кроссплатформенный автоматический перевод через Translate Shell
+# Поддержка: macOS, Linux, Windows (WSL/MSYS2/Cygwin)
+# Использование: ./auto-translate.sh <lang_file> <target_lang> [-v]
 
 LANG_FILE="$1"
 TARGET_LANG="$2"
+VERBOSE=""
+
+for arg in "$@"; do
+    case $arg in
+        -v|--verbose)
+            VERBOSE="true"
+            ;;
+    esac
+done
 
 if [ -z "$LANG_FILE" ] || [ -z "$TARGET_LANG" ] || [ ! -f "$LANG_FILE" ]; then
-    echo "❌ Использование: $0 <lang_file> <target_lang_code>"
-    echo "📝 Пример: $0 config/locales/en.lua en"
+    echo "❌ Использование: $0 <lang_file> <target_lang> [-v]"
     exit 1
 fi
 
-# Функция перевода через альтернативный API
-translate_text() {
-    local text="$1"
-    local target="$2"
+# Определение платформы
+detect_platform() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macos"
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        echo "linux"
+    elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+        echo "windows"
+    else
+        echo "unknown"
+    fi
+}
+
+# Автоустановка Translate Shell
+install_translate_shell() {
+    local platform="$1"
     
-    # Простая замена известных переводов для тестирования
-    case "$text" in
-        "✅ Конфигурация загружена") echo "✅ Konfiguration geladen" ;;
-        "Конфигурация загружена") echo "Konfiguration geladen" ;;
-        "Конфигурация перезагружена") echo "Konfiguration neu geladen" ;;
-        "Операция завершена") echo "Vorgang abgeschlossen" ;;
-        "Менеджер состояний") echo "Status-Manager" ;;
-        "Workspace: %d состояний") echo "Workspace: %d Zustände" ;;
-        "Window: %d состояний") echo "Fenster: %d Zustände" ;;
-        "Tab: %d состояний") echo "Tab: %d Zustände" ;;
-        "Просмотреть workspace состояния") echo "Workspace-Zustände anzeigen" ;;
-        "Просмотреть tab состояния") echo "Tab-Zustände anzeigen" ;;
-        "Выход") echo "Beenden" ;;
-        "Назад к главному меню") echo "Zurück zum Hauptmenü" ;;
-        "рабочая область") echo "Arbeitsbereich" ;;
-        "окно") echo "Fenster" ;;
-        "вкладка") echo "Tab" ;;
-        "неизвестно") echo "unbekannt" ;;
-        "Ошибка") echo "Fehler" ;;
-        "Загрузка...") echo "Lädt..." ;;
-        "Успешно") echo "Erfolgreich" ;;
-        "Отмена") echo "Abbrechen" ;;
-        "Панель управления отладкой") echo "Debug-Kontrollpanel" ;;
-        "Отладка включена для модуля: %s") echo "Debug aktiviert für Modul: %s" ;;
-        "⊠ Все модули отладки включены") echo "⊠ Alle Debug-Module aktiviert" ;;
-        "Сохранить окно") echo "Fenster speichern" ;;
-        "Сохранить сессию") echo "Sitzung speichern" ;;
-        "Загрузить сессию") echo "Sitzung laden" ;;
-        "Удалить сессию") echo "Sitzung löschen" ;;
-        *) echo "$text" ;; # Возвращаем оригинал для неизвестных строк
+    echo "📦 Translate Shell не найден. Устанавливаем..."
+    
+    case "$platform" in
+        "macos")
+            if command -v brew &> /dev/null; then
+                brew install translate-shell
+            else
+                echo "❌ Homebrew не найден. Установите: https://brew.sh"
+                return 1
+            fi
+            ;;
+        "linux")
+            if command -v apt-get &> /dev/null; then
+                sudo apt-get update && sudo apt-get install -y translate-shell
+            elif command -v yum &> /dev/null; then
+                sudo yum install -y translate-shell
+            elif command -v dnf &> /dev/null; then
+                sudo dnf install -y translate-shell
+            elif command -v pacman &> /dev/null; then
+                sudo pacman -S translate-shell
+            else
+                # Fallback - компиляция из исходников
+                echo "📦 Устанавливаем из исходников..."
+                local temp_dir=$(mktemp -d)
+                cd "$temp_dir"
+                git clone https://github.com/soimort/translate-shell.git
+                cd translate-shell
+                make && sudo make install
+                cd - > /dev/null
+                rm -rf "$temp_dir"
+            fi
+            ;;
+        "windows")
+            echo "🪟 Windows: устанавливаем через исходники..."
+            local temp_dir=$(mktemp -d)
+            cd "$temp_dir"
+            curl -L https://github.com/soimort/translate-shell/archive/develop.tar.gz | tar -xz
+            cd translate-shell-develop
+            make install PREFIX="$HOME/.local"
+            cd - > /dev/null
+            rm -rf "$temp_dir"
+            # Добавляем в PATH для текущей сессии
+            export PATH="$HOME/.local/bin:$PATH"
+            ;;
+        *)
+            echo "❌ Неподдерживаемая платформа: $platform"
+            return 1
+            ;;
     esac
 }
 
-echo "🌐 Автоматический перевод файла: $LANG_FILE"
-echo "🎯 Целевой язык: $TARGET_LANG"
+# Проверяем/устанавливаем Translate Shell
+PLATFORM=$(detect_platform)
+if ! command -v trans &> /dev/null; then
+    [ "$VERBOSE" ] && echo "🔍 Translate Shell не найден для платформы: $PLATFORM"
+    
+    if ! install_translate_shell "$PLATFORM"; then
+        echo "❌ Не удалось установить Translate Shell"
+        echo "💡 Ручная установка:"
+        case "$PLATFORM" in
+            "macos") echo "   brew install translate-shell" ;;
+            "linux") echo "   sudo apt install translate-shell  # или ваш пакетный менеджер" ;;
+            "windows") echo "   Скачайте с https://github.com/soimort/translate-shell" ;;
+        esac
+        exit 1
+    fi
+    
+    # Проверяем установку
+    if ! command -v trans &> /dev/null; then
+        echo "❌ Установка не удалась"
+        exit 1
+    fi
+    
+    echo "✅ Translate Shell успешно установлен!"
+fi
 
-# Создаем backup
+# Массив для непереведенных строк
+UNTRANSLATED=()
+
+[ "$VERBOSE" ] && echo "🌐 Автоматический перевод файла: $LANG_FILE"
+[ "$VERBOSE" ] && echo "🎯 Целевой язык: $TARGET_LANG"
+[ "$VERBOSE" ] && echo "🖥️  Платформа: $PLATFORM"
+
 cp "$LANG_FILE" "${LANG_FILE}.backup"
-
-# Временный файл для обработки
 TEMP_FILE=$(mktemp)
 cp "$LANG_FILE" "$TEMP_FILE"
 
-# Счетчики
 TOTAL_KEYS=0
 TRANSLATED_KEYS=0
+LINE_NUMBER=0
 
-echo "🔄 Начинаем перевод..."
+[ "$VERBOSE" ] && echo "🔄 Начинаем перевод..."
 
-# Используем правильное экранирование для BSD grep
 while IFS= read -r line; do
+    LINE_NUMBER=$((LINE_NUMBER + 1))
+    
     if echo "$line" | grep "\-\- TODO: translate" >/dev/null; then
         TOTAL_KEYS=$((TOTAL_KEYS + 1))
         
-        # Извлекаем русский текст между кавычками
         russian_text=$(echo "$line" | sed 's/.*= "\(.*\)", -- TODO: translate/\1/')
         
         if [ -n "$russian_text" ] && [ "$russian_text" != "$line" ]; then
-            echo "📝 Переводим: $russian_text"
+            [ "$VERBOSE" ] && echo "📝 Переводим: $russian_text"
+            # Отладка команды перевода
+            [ "$VERBOSE" ] && echo "   🔧 Команда: trans -brief "ru:${TARGET_LANG}" "$russian_text""            
+            # Используем trans для перевода с таймаутом
+            translated_text=$(trans -brief "ru:${TARGET_LANG}" "$russian_text" 2>/dev/null)
             
-            # Переводим текст
-            translated_text=$(translate_text "$russian_text" "$TARGET_LANG")
-            
-            if [ "$translated_text" != "$russian_text" ] && [ -n "$translated_text" ]; then
-                # Заменяем в файле (экранируем спецсимволы)
-                escaped_russian=$(printf '%s\n' "$russian_text" | sed 's/[[\.*^$()+?{|]/\\&/g')
-                escaped_translated=$(printf '%s\n' "$translated_text" | sed 's/[[\.*^$()+?{|]/\\&/g')
-                
-                # Используем совместимый с macOS sed
-                if [[ "$OSTYPE" == "darwin"* ]]; then
-                    sed -i '' "s/= \"${escaped_russian}\", -- TODO: translate/= \"${escaped_translated}\", -- Auto-translated/g" "$TEMP_FILE"
+            if [ $? -eq 0 ] && [ -n "$translated_text" ] && [ "$translated_text" != "$russian_text" ]; then
+                # Кроссплатформенная замена
+                if [[ "$PLATFORM" == "macos" ]]; then
+                    sed -i '' "/${russian_text//\//\\/}/s/TODO: translate/Auto-translated/" "$TEMP_FILE"
+                    sed -i '' "s|\"${russian_text//\//\\/}\"|\"${translated_text//\//\\/}\"|" "$TEMP_FILE"
                 else
-                    sed -i "s/= \"${escaped_russian}\", -- TODO: translate/= \"${escaped_translated}\", -- Auto-translated/g" "$TEMP_FILE"
+                    sed -i "/${russian_text//\//\\/}/s/TODO: translate/Auto-translated/" "$TEMP_FILE"
+                    sed -i "s|\"${russian_text//\//\\/}\"|\"${translated_text//\//\\/}\"|" "$TEMP_FILE"
                 fi
                 
                 TRANSLATED_KEYS=$((TRANSLATED_KEYS + 1))
-                echo "   ✅ → $translated_text"
+                [ "$VERBOSE" ] && echo "   ✅ → $translated_text"
+                sleep 0.2  # Пауза для API
             else
-                echo "   ⚠️  Перевод не изменился"
+                UNTRANSLATED+=("Строка $LINE_NUMBER: \"$russian_text\"")
+                [ "$VERBOSE" ] && echo "   ⚠️  Перевод не получен"
             fi
         fi
     fi
 done < "$LANG_FILE"
 
-# Проверяем синтаксис результата
-if luac -p "$TEMP_FILE" 2>/dev/null; then
+# Проверка синтаксиса (кроссплатформенная)
+if command -v luac &> /dev/null && luac -p "$TEMP_FILE" 2>/dev/null; then
     mv "$TEMP_FILE" "$LANG_FILE"
     rm -f "${LANG_FILE}.backup"
     
-    echo ""
     echo "✅ Автоматический перевод завершен!"
-    echo "📊 Всего ключей для перевода: $TOTAL_KEYS"
-    echo "📊 Успешно переведено: $TRANSLATED_KEYS"
-    echo "📊 Осталось перевести вручную: $((TOTAL_KEYS - TRANSLATED_KEYS))"
+    echo "📊 Всего ключей: $TOTAL_KEYS"
+    echo "📊 Переведено: $TRANSLATED_KEYS"
+    echo "📊 Осталось: $((TOTAL_KEYS - TRANSLATED_KEYS))"
+    
+    if [ ${#UNTRANSLATED[@]} -gt 0 ]; then
+        echo ""
+        echo "⚠️  НЕПЕРЕВЕДЕННЫЕ СТРОКИ:"
+        for item in "${UNTRANSLATED[@]}"; do
+            echo "   $item"
+        done
+        echo ""
+        echo "💡 Для редактирования:"
+        case "$PLATFORM" in
+            "windows") echo "   notepad $LANG_FILE" ;;
+            *) echo "   nano +НОМЕР_СТРОКИ $LANG_FILE" ;;
+        esac
+    fi
 else
-    echo "❌ Ошибка синтаксиса! Восстанавливаем из backup..."
+    echo "❌ Ошибка синтаксиса или луа не установлен! Восстанавливаем backup..."
     mv "${LANG_FILE}.backup" "$LANG_FILE"
     rm -f "$TEMP_FILE"
     exit 1
