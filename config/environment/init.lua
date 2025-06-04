@@ -1,11 +1,11 @@
--- cat > ~/.config/wezterm/config/environment/index.lua << 'EOF'
+-- cat > ~/.config/wezterm/config/environment/init.lua << 'EOF'
 --
 -- ОПИСАНИЕ: Точка входа для environment-модулей WezTerm
--- Собирает и экспортирует все подмодули окружения: пути, локаль, devtools, цвета, терминал, приложения, шрифты.
+-- Собирает и экспортирует все подмодули окружения: локаль, devtools, цвета, терминал, приложения, шрифты.
+-- ИСПРАВЛЕНО: Убрана зависимость от paths.lua (функции перенесены в utils/environment.lua)
 --
--- ЗАВИСИМОСТИ: paths.lua, locale.lua, devtools.lua, colors.lua, terminal.lua, apps.lua, fonts.lua
+-- ЗАВИСИМОСТИ: locale.lua, devtools.lua, colors.lua, terminal.lua, apps.lua, fonts.lua
 
-local paths = require('config.environment.paths')
 local locale = require('config.environment.locale')
 local devtools = require('config.environment.devtools')
 local colors = require('config.environment.colors')
@@ -14,7 +14,6 @@ local apps = require('config.environment.apps')
 local fonts = require('config.environment.fonts')
 
 return {
-  paths = paths,
   locale = locale,
   devtools = devtools,
   colors = colors,

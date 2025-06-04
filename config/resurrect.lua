@@ -30,7 +30,12 @@ resurrect.state_manager.periodic_save({
 resurrect.state_manager.set_max_nlines(5000)
 
 -- Настройка папки сохранения для нашего проекта (кроссплатформенно)
-local paths = require("config.environment.paths")
+-- Получаем пути через utils/environment.lua
+local wezterm = require("wezterm")
+local env_utils = require("utils.environment")
+local create_platform_info = require("utils.platform")
+local platform = create_platform_info(wezterm.target_triple)
+local paths = env_utils.create_environment_paths(wezterm.home_dir, wezterm.config_dir, platform)
 resurrect.state_manager.change_state_save_dir(paths.resurrect_state_dir)
 
 -- === ПЕРЕМЕННЫЕ СОСТОЯНИЯ ===

@@ -5,7 +5,6 @@
 --
 -- ЗАВИСИМОСТИ: нет
 
-local paths = require('config.environment.paths')
 
 local M = {
   EDITOR = 'nvim',
@@ -14,7 +13,7 @@ local M = {
   PAGER = 'less',
   LESS = '-R',
   NODE_ENV = 'development',
-  PYTHONPATH = paths.home .. '/.local/lib/python3.11/site-packages',
+  PYTHONPATH = os.getenv("HOME") .. '/.local/lib/python3.11/site-packages',
   BAT_THEME = 'TwoDark',
   FZF_DEFAULT_OPTS = '--height 40% --layout=reverse --border',
 }

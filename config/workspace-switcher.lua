@@ -15,7 +15,13 @@ local function get_resurrect_workspaces()
   local saved = {}
   
   -- Безопасная загрузка модулей с проверкой на ошибки
-  local success_paths, paths = pcall(require, "config.environment.paths")
+  -- Безопасная загрузка путей через utils/environment.lua
+  local success_paths, paths = pcall(function()
+    local env_utils = require("utils.environment")
+    local create_platform_info = require("utils.platform")
+    local platform = create_platform_info(wezterm.target_triple)
+    return env_utils.create_environment_paths(wezterm.home_dir, wezterm.config_dir, platform)
+  end)
   if not success_paths then
     debug.log(wezterm, environment.locale.t, "workspace", "error_config_environment_paths", tostring(paths))
     return saved

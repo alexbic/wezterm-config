@@ -8,6 +8,13 @@
 
 local env_utils = require('utils.environment')
 
+-- Функция для создания сообщений с иконками
+local function create_icon_message(category, message)
+  return function()
+    local icons = require('config.environment.icons')
+    return env_utils.format_message(icons, category, message)
+  end
+end
 
 -- Таблица переводов и языковых настроек
 local available_languages = {
@@ -138,10 +145,10 @@ local available_languages = {
     
     -- === ОТЛАДОЧНЫЕ СООБЩЕНИЯ РЕЖИМОВ ===
     -- Сообщения с автоматическими иконками из централизованной системы
-    mode_activated = "Активирован режим: %s",
-    mode_deactivated = "Деактивирован режим",
-    mode_timeout_exit = "Режим завершён по таймауту",
-    mode_manual_exit = "Режим завершён вручную",
+    mode_activated = create_icon_message("mode_activated", "Активирован режим: %s"),
+    mode_deactivated = create_icon_message("mode_deactivated", "Деактивирован режим"),
+    mode_timeout_exit = create_icon_message("timeout_exit", "Режим завершён по таймауту"),
+    mode_manual_exit = create_icon_message("manual_exit", "Режим завершён вручную"),
     
     -- Названия режимов
     mode_session_control = "Управление сессиями",
@@ -447,10 +454,10 @@ local available_languages = {
     
     -- === DEBUG MODE MESSAGES ===
     -- Messages with automatic icons from centralized system
-    mode_activated = "Mode activated: %s",
-    mode_deactivated = "Mode deactivated",
-    mode_timeout_exit = "Mode timed out",
-    mode_manual_exit = "Mode exited manually",
+    mode_activated = create_icon_message("mode_activated", "Mode activated: %s"),
+    mode_deactivated = create_icon_message("mode_deactivated", "Mode deactivated"),
+    mode_timeout_exit = create_icon_message("timeout_exit", "Mode timed out"),
+    mode_manual_exit = create_icon_message("manual_exit", "Mode exited manually"),
     
     -- Mode names
     mode_session_control = "Session Management",

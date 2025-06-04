@@ -1,7 +1,7 @@
 -- cat > ~/.config/wezterm/config/dialogs/state-manager.lua << 'EOF'
 --
 -- ОПИСАНИЕ: Менеджер управления сохраненными состояниями (ПОЛНОСТЬЮ ФУНКЦИОНАЛЬНЫЙ)
--- Убрана нумерация, исправлены счетчики, добавлена базовая функциональность
+-- Исправлена локализация и добавлено красивое форматирование с выравниванием
 -- ЗАВИСИМОСТИ: config.environment, utils.environment, utils.dialog
 --
 
@@ -14,9 +14,14 @@ local dialog = require('utils.dialog')
 
 local M = {}
 
--- Получение статистики состояний (ИСПРАВЛЕНО)
+-- Получение статистики состояний
 local function get_states_statistics()
-  local paths = require('config.environment.paths')
+  -- Получаем пути через utils/environment.lua
+  local wezterm = require("wezterm")
+  local env_utils = require("utils.environment")
+  local create_platform_info = require("utils.platform")
+  local platform = create_platform_info(wezterm.target_triple)
+  local paths = env_utils.create_environment_paths(wezterm.home_dir, wezterm.config_dir, platform)
   local state_dir = paths.resurrect_state_dir
   
   local stats = {
@@ -55,48 +60,77 @@ local function get_states_statistics()
   return stats
 end
 
--- Создание выборов для главного меню (БЕЗ НУМЕРАЦИИ)
+-- Создание выборов с красивым форматированием и локализацией
 local function create_main_menu_choices(stats)
   local choices = {}
   
-  -- Заголовок
-  table.insert(choices, dialog.create_choice({
+  -- Заголовок с локализацией
+  table.insert(choices, {
     id = "header",
-    icon = env_utils.get_icon(icons, "session"),
-    text = environment.locale.t("state_manager_title"),
-    colored = true,
-    color = "system"
-  }))
+    label = wezterm.format({
+      { Foreground = { Color = env_utils.get_color(colors, "session") } },
+      { Text = env_utils.get_icon(icons, "session") .. " " .. environment.locale.t("state_manager_title") }
+    })
+  })
   
   table.insert(choices, { 
     id = "separator1", 
     label = "─────────────────────────────────────────" 
   })
   
-  -- Статистика с РАБОТАЮЩИМИ счетчиками
-  table.insert(choices, dialog.create_choice({
+  -- Статистика с выравниванием и локализацией
+  local max_width = 35  -- Общая ширина строки
+  
+  -- Workspace
+  local workspace_text = "Workspace"
+  local workspace_count = tostring(stats.workspace.count) .. " состояний"
+  local workspace_spaces = string.rep(" ", max_width - string.len(workspace_text) - string.len(workspace_count))
+  
+  table.insert(choices, {
     id = "stats_workspace",
-    icon = env_utils.get_icon(icons, "workspace"),
-    text = "Workspace: " .. stats.workspace.count .. " состояний",
-    colored = true,
-    color = "workspace"
-  }))
+    label = wezterm.format({
+      { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
+      { Text = env_utils.get_icon(icons, "workspace") .. " " .. workspace_text },
+      { Foreground = { Color = "#666666" } },
+      { Text = workspace_spaces },
+      { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
+      { Text = workspace_count }
+    })
+  })
   
-  table.insert(choices, dialog.create_choice({
+  -- Window
+  local window_text = "Window"
+  local window_count = tostring(stats.window.count) .. " состояний"
+  local window_spaces = string.rep(" ", max_width - string.len(window_text) - string.len(window_count))
+  
+  table.insert(choices, {
     id = "stats_window",
-    icon = env_utils.get_icon(icons, "window"),
-    text = "Window: " .. stats.window.count .. " состояний",
-    colored = true,
-    color = "window"
-  }))
+    label = wezterm.format({
+      { Foreground = { Color = env_utils.get_color(colors, "window") } },
+      { Text = env_utils.get_icon(icons, "window") .. " " .. window_text },
+      { Foreground = { Color = "#666666" } },
+      { Text = window_spaces },
+      { Foreground = { Color = env_utils.get_color(colors, "window") } },
+      { Text = window_count }
+    })
+  })
   
-  table.insert(choices, dialog.create_choice({
+  -- Tab
+  local tab_text = "Tab"
+  local tab_count = tostring(stats.tab.count) .. " состояний"
+  local tab_spaces = string.rep(" ", max_width - string.len(tab_text) - string.len(tab_count))
+  
+  table.insert(choices, {
     id = "stats_tab",
-    icon = env_utils.get_icon(icons, "tab"),
-    text = "Tab: " .. stats.tab.count .. " состояний",
-    colored = true,
-    color = "tab"
-  }))
+    label = wezterm.format({
+      { Foreground = { Color = env_utils.get_color(colors, "tab") } },
+      { Text = env_utils.get_icon(icons, "tab") .. " " .. tab_text },
+      { Foreground = { Color = "#666666" } },
+      { Text = tab_spaces },
+      { Foreground = { Color = env_utils.get_color(colors, "tab") } },
+      { Text = tab_count }
+    })
+  })
   
   table.insert(choices, { 
     id = "separator2", 
@@ -105,33 +139,33 @@ local function create_main_menu_choices(stats)
   
   -- Действия (ТОЛЬКО если есть состояния)
   if stats.workspace.count > 0 then
-    table.insert(choices, dialog.create_choice({
+    table.insert(choices, {
       id = "view_workspace",
-      icon = env_utils.get_icon(icons, "workspace"),
-      text = environment.locale.t("view_workspace_states"),
-      colored = true,
-      color = "workspace"
-    }))
+      label = wezterm.format({
+        { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
+        { Text = env_utils.get_icon(icons, "workspace") .. " " .. environment.locale.t("view_workspace_states") }
+      })
+    })
   end
   
   if stats.window.count > 0 then
-    table.insert(choices, dialog.create_choice({
+    table.insert(choices, {
       id = "view_window",
-      icon = env_utils.get_icon(icons, "window"),
-      text = environment.locale.t("view_window_states"),
-      colored = true,
-      color = "window"
-    }))
+      label = wezterm.format({
+        { Foreground = { Color = env_utils.get_color(colors, "window") } },
+        { Text = env_utils.get_icon(icons, "window") .. " " .. environment.locale.t("view_window_states") }
+      })
+    })
   end
   
   if stats.tab.count > 0 then
-    table.insert(choices, dialog.create_choice({
+    table.insert(choices, {
       id = "view_tab",
-      icon = env_utils.get_icon(icons, "tab"),
-      text = environment.locale.t("view_tab_states"),
-      colored = true,
-      color = "tab"
-    }))
+      label = wezterm.format({
+        { Foreground = { Color = env_utils.get_color(colors, "tab") } },
+        { Text = env_utils.get_icon(icons, "tab") .. " " .. environment.locale.t("view_tab_states") }
+      })
+    })
   end
   
   -- Добавляем разделитель только если есть действия
@@ -142,34 +176,38 @@ local function create_main_menu_choices(stats)
       label = "─────────────────────────────────────────" 
     })
     
-    table.insert(choices, dialog.create_choice({
+    table.insert(choices, {
       id = "cleanup",
-      icon = env_utils.get_icon(icons, "system"),
-      text = environment.locale.t("cleanup_old_states")
-    }))
+      label = wezterm.format({
+        { Foreground = { Color = env_utils.get_color(colors, "system") } },
+        { Text = env_utils.get_icon(icons, "system") .. " " .. environment.locale.t("cleanup_old_states") }
+      })
+    })
   end
   
-  table.insert(choices, dialog.create_choice({
+  table.insert(choices, {
     id = "exit",
-    icon = env_utils.get_icon(icons, "exit"),
-    text = environment.locale.t("exit")
-  }))
+    label = wezterm.format({
+      { Foreground = { Color = env_utils.get_color(colors, "exit") } },
+      { Text = env_utils.get_icon(icons, "exit") .. " " .. environment.locale.t("exit") }
+    })
+  })
   
   return choices
 end
 
--- Показ состояний конкретного типа (ФУНКЦИОНАЛЬНЫЙ)
+-- Показ состояний конкретного типа
 local function show_states_of_type(window, pane, state_type, files)
   local choices = {}
   
   if #files == 0 then
-    table.insert(choices, dialog.create_choice({
+    table.insert(choices, {
       id = "empty",
-      icon = env_utils.get_icon(icons, "error"),
-      text = environment.locale.t("no_states_of_type", state_type),
-      colored = true,
-      color = "error"
-    }))
+      label = wezterm.format({
+        { Foreground = { Color = env_utils.get_color(colors, "error") } },
+        { Text = env_utils.get_icon(icons, "error") .. " " .. environment.locale.t("no_states_of_type", state_type) }
+      })
+    })
   else
     for _, file in ipairs(files) do
       table.insert(choices, {
@@ -183,28 +221,31 @@ local function show_states_of_type(window, pane, state_type, files)
       label = "─────────────────────────────────────────" 
     })
     
-    table.insert(choices, dialog.create_choice({
+    table.insert(choices, {
       id = "delete_multiple",
-      icon = env_utils.get_icon(icons, "error"),
-      text = environment.locale.t("delete_selected_states"),
-      colored = true,
-      color = "error"
-    }))
+      label = wezterm.format({
+        { Foreground = { Color = env_utils.get_color(colors, "error") } },
+        { Text = env_utils.get_icon(icons, "error") .. " " .. environment.locale.t("delete_selected_states") }
+      })
+    })
   end
   
-  table.insert(choices, dialog.create_choice({
+  table.insert(choices, {
     id = "back",
-    icon = env_utils.get_icon(icons, "exit"),
-    text = environment.locale.t("back_to_main_menu")
-  }))
+    label = wezterm.format({
+      { Foreground = { Color = env_utils.get_color(colors, "exit") } },
+      { Text = env_utils.get_icon(icons, "exit") .. " " .. environment.locale.t("back_to_main_menu") }
+    })
+  })
   
-  -- БЕЗ НУМЕРАЦИИ
-  local selector_config = dialog.create_input_selector({
-    icon = env_utils.get_icon(icons, state_type),
-    title = environment.locale.t(state_type .. "_states_title"),
+  local selector_config = {
+    title = wezterm.format({
+      { Foreground = { Color = env_utils.get_color(colors, state_type) } },
+      { Text = env_utils.get_icon(icons, state_type) .. " " .. environment.locale.t(state_type .. "_states_title") }
+    }),
     description = environment.locale.t("select_state_action"),
-    title_color = state_type,
     fuzzy = true,
+    alphabet = "",
     choices = choices,
     action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
       if id == "back" or id == "empty" then
@@ -217,25 +258,24 @@ local function show_states_of_type(window, pane, state_type, files)
         M.show_main_menu(inner_window, inner_pane)
       end
     end)
-  })
-  
-  -- УБИРАЕМ НУМЕРАЦИЮ
-  selector_config.alphabet = ""
+  }
   
   window:perform_action(wezterm.action.InputSelector(selector_config), pane)
 end
 
--- Главное меню менеджера состояний (БЕЗ НУМЕРАЦИИ)
+-- Главное меню менеджера состояний
 M.show_main_menu = function(window, pane)
   local stats = get_states_statistics()
   local choices = create_main_menu_choices(stats)
   
-  local selector_config = dialog.create_input_selector({
-    icon = env_utils.get_icon(icons, "session"),
-    title = environment.locale.t("state_manager_title"),
+  local selector_config = {
+    title = wezterm.format({
+      { Foreground = { Color = env_utils.get_color(colors, "session") } },
+      { Text = env_utils.get_icon(icons, "session") .. " " .. environment.locale.t("state_manager_title") }
+    }),
     description = environment.locale.t("state_manager_description"),
-    title_color = "session",
     fuzzy = false,
+    alphabet = "",
     choices = choices,
     action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
       if id == "exit" or not id then
@@ -251,10 +291,7 @@ M.show_main_menu = function(window, pane)
         M.show_main_menu(inner_window, inner_pane)
       end
     end)
-  })
-  
-  -- УБИРАЕМ НУМЕРАЦИЮ
-  selector_config.alphabet = ""
+  }
   
   window:perform_action(wezterm.action.InputSelector(selector_config), pane)
 end

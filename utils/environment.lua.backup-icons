@@ -189,24 +189,6 @@ M.create_environment_paths = function(home_dir, config_dir, platform)
   return paths
 end
 
--- ========================================
--- СОЗДАНИЕ СООБЩЕНИЙ С ИКОНКАМИ
--- ========================================
-
--- Функция для создания локализованных сообщений с иконками (принимает зависимости как параметры)
-M.create_icon_message = function(icons_data, category, message)
-  local icon = M.get_icon(icons_data, category)
-  return icon .. " " .. message
-end
-
--- Функция для создания функции-замыкания с иконками (для совместимости с locale.lua)
-M.create_icon_message_function = function(category, message)
-  return function()
-    local icons = require("config.environment.icons")
-    return M.create_icon_message(icons, category, message)
-  end
-end
-
   return M.is_valid_icon_category(icons_data, category) and M.is_valid_color_category(colors_data, category)
 end
 
@@ -403,24 +385,6 @@ M.create_environment_paths = function(home_dir, config_dir, platform)
   end
   
   return paths
-end
-
--- ========================================
--- СОЗДАНИЕ СООБЩЕНИЙ С ИКОНКАМИ
--- ========================================
-
--- Функция для создания локализованных сообщений с иконками (принимает зависимости как параметры)
-M.create_icon_message = function(icons_data, category, message)
-  local icon = M.get_icon(icons_data, category)
-  return icon .. " " .. message
-end
-
--- Функция для создания функции-замыкания с иконками (для совместимости с locale.lua)
-M.create_icon_message_function = function(category, message)
-  return function()
-    local icons = require("config.environment.icons")
-    return M.create_icon_message(icons, category, message)
-  end
 end
 
 return M
