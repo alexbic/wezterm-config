@@ -6,6 +6,18 @@
 --
 -- ЗАВИСИМОСТИ: НЕТ
 
+-- Функция получения цвета (была пропущена при расширении)
+local function get_color_value(color_param, default_color)
+  if not color_param then return default_color end
+  if type(color_param) == "string" and color_param:match("^dialog_") then
+    local colors = require("config.environment.colors")
+    local env_utils = require("utils.environment")
+    return env_utils.get_color(colors, color_param)
+  else
+    return color_param
+  end
+end
+
 local M = {}
 
 -- Функция подсчета длины UTF-8 строки
@@ -218,4 +230,49 @@ M.create_dialog_box = function(config)
   return wezterm.format(format_elements)
 end
 
+
+-- Универсальная функция создания InputSelector диалога
+M.create_input_selector = function(config)
+  local wezterm = require("wezterm")
+  local colors = require("config.environment.colors")
+  local env_utils = require("utils.environment")
+  
+  local title_color = get_color_value(config.title_color or "dialog_border", "#BD93F9")
+  local description_color = get_color_value(config.description_color or "dialog_content", "#F8F8F2")
+  
+  return {
+    title = wezterm.format({
+      { Foreground = { Color = title_color } },
+      { Text = (config.icon or "") .. " " .. (config.title or "Диалог") }
+    }),
+    description = config.description or "",
+    fuzzy_description = config.fuzzy_description,
+    fuzzy = config.fuzzy or false,
+    choices = config.choices or {},
+    action = config.action
+  }
+end
+
+-- Создание стандартного choice элемента
+M.create_choice = function(config)
+  local wezterm = require("wezterm")
+  local colors = require("config.environment.colors")
+  local env_utils = require("utils.environment")
+  
+  if config.colored then
+    local color = get_color_value(config.color, "#FFFFFF")
+    return {
+      id = config.id,
+      label = wezterm.format({
+        { Foreground = { Color = color } },
+        { Text = (config.icon or "") .. " " .. (config.text or "") }
+      })
+    }
+  else
+    return {
+      id = config.id,
+      label = (config.icon or "") .. " " .. (config.text or "")
+    }
+  end
+end
 return M

@@ -1,10 +1,9 @@
 -- cat > ~/.config/wezterm/utils/debug.lua << 'EOF'
 --
--- ОПИСАНИЕ: Улучшенная система управляемого отладочного логирования
--- Позволяет включать/выключать отладочные сообщения, локализовать их и отлаживать таблицы
+-- ОПИСАНИЕ: Самодостаточная система управляемого отладочного логирования
+-- Позволяет включать/выключать отладочные сообщения по модулям
 -- ПОЛНОСТЬЮ САМОДОСТАТОЧНЫЙ МОДУЛЬ - все зависимости передаются как параметры.
 --
-local colors = require("config.environment.colors")
 -- ЗАВИСИМОСТИ: НЕТ
 
 local M = {}
@@ -51,56 +50,20 @@ end
 
 M.table_to_string = table_to_string
 
--- Функция отладочного логирования с локализацией и централизованными иконками
-M.log_system = function(wezterm, t_func, message_key, ...)
-  local localized_msg = t_func(message_key) or message_key
-  local formatted_msg = string.format(localized_msg, ...)
-  
-  -- Получаем иконку и цвет из централизованной системы
-  local ok_icons, icons = pcall(require, "config.environment.icons")
-  local ok_env, env_utils = pcall(require, "utils.environment")
-  
-  if ok_icons and ok_env then
-    local icon = env_utils.get_icon(icons, "system")
-    local color = env_utils.get_color(colors, "system")
-    wezterm.log_info(wezterm.format({
-      { Foreground = { Color = color } },
-      { Text = icon .. " " .. formatted_msg }
-    }))
-  else
-    wezterm.log_info("⚙ " .. formatted_msg)
-  end
-end
-
+-- Простое логирование без зависимостей
 M.log = function(wezterm, t_func, module, message_key, ...)
   if M.DEBUG_CONFIG[module] then
-    local localized_msg = t_func(message_key) or message_key
+    local localized_msg = t_func and t_func(message_key) or message_key
     local formatted_msg = string.format(localized_msg, ...)
-    
-    -- Простой вывод без иконок для обычных отладочных сообщений
     wezterm.log_info("[" .. module .. "] " .. formatted_msg)
   end
 end
+
 -- Функция для отладки таблиц
 M.log_table = function(wezterm, module, table_name, tbl)
   if M.DEBUG_CONFIG[module] then
     local table_str = table_to_string(tbl)
-    
-    -- Получаем иконку и цвет из централизованной системы
-    local ok_icons, icons = pcall(require, "config.environment.icons")
-    local ok_env, env_utils = pcall(require, "utils.environment")
-    
-    if ok_icons and ok_env then
-      -- Для обычных отладочных сообщений НЕ используем иконки
-      wezterm.log_info("[" .. module .. "] " .. formatted_msg)      local icon = env_utils.get_icon(icons, category)
-      local color = env_utils.get_color(colors, category)
-      wezterm.log_info(wezterm.format({
-        { Foreground = { Color = color } },
-        { Text = icon .. " [" .. module .. "] TABLE " .. table_name .. ":\n" .. table_str }
-      }))
-    else
-      wezterm.log_info("⊠ [" .. module .. "] TABLE " .. table_name .. ":\n" .. table_str)
-    end
+    wezterm.log_info("⊠ [" .. module .. "] TABLE " .. table_name .. ":\n" .. table_str)
   end
 end
 
@@ -116,65 +79,22 @@ M.log_event = function(wezterm, module, event_name, ...)
         args_str = args_str .. "arg" .. i .. "=" .. tostring(arg) .. " "
       end
     end
-    
-    -- Получаем иконку и цвет из централизованной системы
-    local ok_icons, icons = pcall(require, "config.environment.icons")
-    local ok_env, env_utils = pcall(require, "utils.environment")
-    
-    if ok_icons and ok_env then
-      -- Для обычных отладочных сообщений НЕ используем иконки
-      wezterm.log_info("[" .. module .. "] " .. formatted_msg)      local icon = env_utils.get_icon(icons, category)
-      local color = env_utils.get_color(colors, category)
-      wezterm.log_info(wezterm.format({
-        { Foreground = { Color = color } },
-        { Text = icon .. " [" .. module .. "] EVENT " .. event_name .. " " .. args_str }
-      }))
-    else
-      wezterm.log_info("⊠ [" .. module .. "] EVENT " .. event_name .. " " .. args_str)
-    end
+    wezterm.log_info("⊠ [" .. module .. "] EVENT " .. event_name .. " " .. args_str)
   end
 end
 
 -- Включить отладку для модуля
 M.enable_debug = function(wezterm, t_func, module)
   M.DEBUG_CONFIG[module] = true
-  local msg = t_func("debug_enabled_for_module")
-  
-  -- Получаем иконку и цвет из централизованной системы
-  local ok_icons, icons = pcall(require, "config.environment.icons")
-  local ok_env, env_utils = pcall(require, "utils.environment")
-  
-  if ok_icons and ok_env then
-    local icon = env_utils.get_icon(icons, "system")
-    local color = env_utils.get_color(colors, "system")
-    wezterm.log_info(wezterm.format({
-      { Foreground = { Color = color } },
-      { Text = icon .. " " .. string.format(msg, module) }
-    }))
-  else
-    wezterm.log_info("⚙ " .. string.format(msg, module))
-  end
+  local msg = t_func and t_func("debug_enabled_for_module") or "Debug enabled for module: %s"
+  wezterm.log_info("⚙ " .. string.format(msg, module))
 end
 
 -- Выключить отладку для модуля  
 M.disable_debug = function(wezterm, t_func, module)
   M.DEBUG_CONFIG[module] = false
-  local msg = t_func("debug_disabled_for_module")
-  
-  -- Получаем иконку и цвет из централизованной системы
-  local ok_icons, icons = pcall(require, "config.environment.icons")
-  local ok_env, env_utils = pcall(require, "utils.environment")
-  
-  if ok_icons and ok_env then
-    local icon = env_utils.get_icon(icons, "system")
-    local color = env_utils.get_color(colors, "system")
-    wezterm.log_info(wezterm.format({
-      { Foreground = { Color = color } },
-      { Text = icon .. " " .. string.format(msg, module) }
-    }))
-  else
-    wezterm.log_info("⚙ " .. string.format(msg, module))
-  end
+  local msg = t_func and t_func("debug_disabled_for_module") or "Debug disabled for module: %s"
+  wezterm.log_info("⚙ " .. string.format(msg, module))
 end
 
 -- Включить отладку для всех модулей
@@ -182,22 +102,8 @@ M.enable_all = function(wezterm, t_func)
   for module, _ in pairs(M.DEBUG_CONFIG) do
     M.DEBUG_CONFIG[module] = true
   end
-  local msg = t_func("debug_all_enabled")
-  
-  -- Получаем иконку и цвет из централизованной системы
-  local ok_icons, icons = pcall(require, "config.environment.icons")
-  local ok_env, env_utils = pcall(require, "utils.environment")
-  
-  if ok_icons and ok_env then
-    local icon = env_utils.get_icon(icons, "system")
-    local color = env_utils.get_color(colors, "system")
-    wezterm.log_info(wezterm.format({
-      { Foreground = { Color = color } },
-      { Text = icon .. " " .. msg }
-    }))
-  else
-    wezterm.log_info("⚙ " .. msg)
-  end
+  local msg = t_func and t_func("debug_all_enabled") or "All debug modules enabled"
+  wezterm.log_info("⚙ " .. msg)
 end
 
 -- Выключить отладку для всех модулей
@@ -205,28 +111,8 @@ M.disable_all = function(wezterm, t_func)
   for module, _ in pairs(M.DEBUG_CONFIG) do
     M.DEBUG_CONFIG[module] = false
   end
-  local msg = t_func("debug_all_disabled")
-  
-  -- Получаем иконку и цвет из централизованной системы
-  local ok_icons, icons = pcall(require, "config.environment.icons")
-  local ok_env, env_utils = pcall(require, "utils.environment")
-  
-  if ok_icons and ok_env then
-    local icon = env_utils.get_icon(icons, "system")
-    local color = env_utils.get_color(colors, "system")
-    wezterm.log_info(wezterm.format({
-      { Foreground = { Color = color } },
-      { Text = icon .. " " .. msg }
-    }))
-  else
-    wezterm.log_info("⚙ " .. msg)
-  end
-end
-
--- Функция для запуска WezTerm с детальным логированием
-M.enable_verbose_logging = function(wezterm)
-  wezterm.log_info("⚙ Для детального логирования запустите WezTerm с:")
-  wezterm.log_info("⚙ WEZTERM_LOG=info wezterm")
+  local msg = t_func and t_func("debug_all_disabled") or "All debug modules disabled"
+  wezterm.log_info("⚙ " .. msg)
 end
 
 -- Функция загрузки настроек отладки из Lua файла

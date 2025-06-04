@@ -11,69 +11,6 @@ local act = wezterm.action
 local environment = require('config.environment')
 
 return {
-    debug_control = {
-        -- Навигация по панели
-        { key = "UpArrow", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.move_up()
-        end) },
-        { key = "k", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.move_up()
-        end) },
-        { key = "DownArrow", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.move_down()
-        end) },
-        { key = "j", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.move_down()
-        end) },
-        
-        -- Переключение модулей
-        { key = "Space", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.toggle_current()
-        end) },
-        { key = "Enter", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.toggle_current()
-        end) },
-        
-        -- Управление всеми модулями
-        { key = "a", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.enable_all()
-        end) },
-        { key = "A", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.enable_all()
-        end) },
-        { key = "o", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.disable_all()
-        end) },
-        { key = "O", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.disable_all()
-        end) },
-        
-        -- Сохранение и выход
-        { key = "s", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.save_and_close(window)
-        end) },
-        { key = "S", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.save_and_close(window)
-        end) },
-        
-        -- Отмена и выход
-        { key = "Escape", action = wezterm.action_callback(function(window, pane)
-            local debug_panel = require("utils.debug-panel")
-            debug_panel.cancel_and_close(window)
-        end) }
-    },
     session_control = {
         { key = "s", action = act.Multiple({
             act.EmitEvent("resurrect.save_state"),

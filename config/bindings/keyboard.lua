@@ -43,6 +43,7 @@ local base_keys = {
    { key = 'F11',    mods = 'NONE',        action = act.ToggleFullScreen },
    { key = 'F12',    mods = 'NONE',        action = act.ShowDebugOverlay },
    { key = "F12", mods = "SHIFT", action = bindings_utils.activate_debug_mode_with_panel(wezterm) },
+   { key = "F10", mods = "NONE", action = bindings_utils.activate_state_manager(wezterm) },
    { key = 'f',      mods = mod.SUPER,     action = act.Search({ CaseInSensitiveString = '' }) },
 
    -- Принудительная перезагрузка конфигурации

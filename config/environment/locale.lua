@@ -396,6 +396,48 @@ local available_languages = {
     tab_type = "tab",
     unknown_type = "unknown",
     
+    -- === STATE MANAGER ===
+    -- Интерфейс менеджера состояний
+    state_manager_title = "Менеджер состояний",
+    state_manager_description = "Управление сохраненными состояниями WezTerm",
+    workspace_states_count = "Workspace: %d состояний",
+    window_states_count = "Window: %d состояний",
+    tab_states_count = "Tab: %d состояний",
+    view_workspace_states = "Просмотреть workspace состояния",
+    view_window_states = "Просмотреть window состояния",
+    view_tab_states = "Просмотреть tab состояния",
+    cleanup_old_states = "Очистка старых состояний",
+    export_states = "Экспорт состояний",
+    no_states_of_type = "Нет сохраненных %s состояний",
+    delete_selected_states = "Удалить выбранные",
+    back_to_main_menu = "Назад к главному меню",
+    workspace_states_title = "Workspace состояния",
+    window_states_title = "Window состояния",
+    tab_states_title = "Tab состояния",
+    select_state_action = "Выберите действие со состояниями",
+    exit = "Выход",
+
+    -- === STATE MANAGER ===
+    -- State manager interface
+    state_manager_title = "State Manager",
+    state_manager_description = "Manage saved WezTerm states",
+    workspace_states_count = "Workspace: %d states",
+    window_states_count = "Window: %d states",
+    tab_states_count = "Tab: %d states",
+    view_workspace_states = "View workspace states",
+    view_window_states = "View window states",
+    view_tab_states = "View tab states",
+    cleanup_old_states = "Cleanup old states",
+    export_states = "Export states",
+    no_states_of_type = "No saved %s states",
+    delete_selected_states = "Delete selected",
+    back_to_main_menu = "Back to main menu",
+    workspace_states_title = "Workspace states",
+    window_states_title = "Window states",
+    tab_states_title = "Tab states",
+    select_state_action = "Select action with states",
+    exit = "Exit",
+
     -- === WORKSPACE MANAGEMENT ===
     -- Workspace switching and management messages
     workspace_switch_title = "🔄 Select workspace/path/state",

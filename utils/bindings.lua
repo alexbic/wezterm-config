@@ -158,9 +158,17 @@ end
 
 
 -- Функция для активации режима отладки с разделением панели
+-- Функция для активации менеджера состояний
+M.activate_state_manager = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local state_manager = require("config.dialogs.state-manager")
+    state_manager.show_main_menu(window, pane)
+  end)
+end
+
 M.activate_debug_mode_with_panel = function(wezterm)
   return wezterm.action_callback(function(window, pane)
-    local debug_panel = require("utils.debug-panel")
+    local debug_panel = require("config.dialogs.debug-manager")
     debug_panel.create_panel(window, pane)
   end)
 end

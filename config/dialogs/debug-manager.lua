@@ -1,16 +1,16 @@
--- cat > ~/.config/wezterm/utils/debug-panel.lua << 'EOF'
+-- cat > ~/.config/wezterm/config/dialogs/debug-manager.lua << 'EOF'
 --
--- ОПИСАНИЕ: Локализованная панель отладки с централизованными иконками
--- Использует ключи локализации и централизованную систему иконок
--- ОБНОВЛЕНО: Интеграция с config.environment.icons
---
-local colors = require("config.environment.colors")
+-- ОПИСАНИЕ: UI панель управления отладкой с централизованными иконками
+-- Интерактивный диалог для включения/выключения модулей отладки
 -- ЗАВИСИМОСТИ: utils.debug, config.environment, config.environment.icons, utils.environment
+--
+-- ЗАВИСИМОСТИ: config.environment, utils.debug
 
 local wezterm = require('wezterm')
 local debug = require('utils.debug')
 local environment = require('config.environment')
 local icons = require('config.environment.icons')
+local colors = require('config.environment.colors')
 local env_utils = require('utils.environment')
 
 local M = {}
@@ -69,7 +69,12 @@ end
 
 -- Создание выборов для селектора с централизованными иконками
 local function create_choices()
-  local modules = {}; for module_name, _ in pairs(debug.DEBUG_CONFIG) do table.insert(modules, module_name) end; table.sort(modules)
+  local modules = {}
+  for module_name, _ in pairs(debug.DEBUG_CONFIG) do 
+    table.insert(modules, module_name) 
+  end
+  table.sort(modules)
+  
   local choices = {}
   
   -- Добавляем каждый модуль с цветовым выделением
@@ -129,7 +134,11 @@ end
 -- Показ панели отладки
 M.show_panel = function(window, pane)
   local choices = create_choices()
-  local modules = {}; for module_name, _ in pairs(debug.DEBUG_CONFIG) do table.insert(modules, module_name) end; table.sort(modules)
+  local modules = {}
+  for module_name, _ in pairs(debug.DEBUG_CONFIG) do 
+    table.insert(modules, module_name) 
+  end
+  table.sort(modules)
   
   -- Подсчет статистики
   local enabled_count = 0
@@ -191,16 +200,5 @@ end
 M.create_panel = function(window, pane)
   M.show_panel(window, pane)
 end
-
--- Заглушки для совместимости
-M.move_up = function() end
-M.move_down = function() end
-M.toggle_current = function() end
-M.enable_all = function() end
-M.disable_all = function() end
-M.save_and_close = function(window) end
-M.cancel_and_close = function(window) end
-M.close_panel = function(window, saved) end
-M.update_display = function() end
 
 return M
