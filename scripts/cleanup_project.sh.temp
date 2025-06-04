@@ -43,7 +43,6 @@ fi
 
 cd "$PROJECT_DIR" || exit 1
 
-# Исключаем backup директорию из поиска - она управляется вручную
 # Паттерны для поиска ненужных файлов (кроссплатформенные)
 PATTERNS=(
     "*.backup*"
@@ -81,7 +80,7 @@ cross_platform_find() {
     if [ "$PLATFORM" = "windows" ]; then
         powershell.exe -Command "Get-ChildItem -Path '.' -Filter '$pattern' -Recurse -File | ForEach-Object { \$_.FullName.Replace((Get-Location).Path + '\\', '.\\').Replace('\\', '/') }"
     else
-        find . -name "$pattern" -type f -not -path "./backup/*" 2>/dev/null
+        find . -name "$pattern" -type f 2>/dev/null
     fi
 }
 
