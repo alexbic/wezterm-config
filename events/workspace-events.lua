@@ -11,6 +11,8 @@ local environment = require("config.environment")
 local icons = require("config.environment.icons")
 local env_utils = require("utils.environment")
 local wezterm = require('wezterm')
+local create_platform_info = require('utils.platform')
+local platform = create_platform_info(wezterm.target_triple)
 
 local M = {}
 
@@ -27,14 +29,14 @@ M.setup = function()
         id = "active|" .. workspace_name,
         label = wezterm.format({
           { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
-          { Text = env_utils.get_icon(icons, "workspace") .. " : " .. workspace_name .. " (" .. environment.locale.t("workspace_type") .. ")" }
+          { Text = env_utils.get_icon(icons, "workspace") .. " : " .. workspace_name .. " (" .. environment.locale.t.workspace_type .. ")" }
         })
       })
     end
 
     -- 2. Сохранённые workspace
-    local paths = require('config.environment.paths')
-    local workspace_dir = paths.resurrect_state_dir .. "workspace"
+    -- paths module removed
+    local workspace_dir = env_utils.create_environment_paths(wezterm.home_dir, wezterm.config_dir, platform).resurrect_state_dir .. "workspace"
     local cmd = "ls " .. workspace_dir .. "/*.json 2>/dev/null || true"
     local handle = io.popen(cmd)
     if handle then
@@ -45,7 +47,7 @@ M.setup = function()
             id = "saved|workspace|" .. name,
             label = wezterm.format({
               { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
-              { Text = env_utils.get_icon(icons, "workspace") .. " : " .. name .. " (" .. environment.locale.t("workspace_type") .. ")" }
+              { Text = env_utils.get_icon(icons, "workspace") .. " : " .. name .. " (" .. environment.locale.t.workspace_type .. ")" }
             })
           })
         end
@@ -56,7 +58,7 @@ M.setup = function()
     -- 3. Сохранённые window и tab
     local other_types = {"window", "tab"}
     for _, state_type in ipairs(other_types) do
-      local state_dir = paths.resurrect_state_dir .. state_type
+      local state_dir = env_utils.create_environment_paths(wezterm.home_dir, wezterm.config_dir, platform).resurrect_state_dir .. state_type
       local cmd = "ls " .. state_dir .. "/*.json 2>/dev/null || true"
       local handle = io.popen(cmd)
       if handle then
@@ -95,7 +97,7 @@ M.setup = function()
     if #choices == 0 then
       table.insert(choices, {
         id = "none",
-        label = "❌ " .. environment.locale.t("no_workspaces_available")
+        label = "❌ " .. environment.locale.t.no_workspaces_available
       })
     end
 
@@ -181,12 +183,12 @@ M.setup = function()
                 })
               end
             else
-              wezterm.log_error(environment.locale.t("failed_to_load_state", state_name))
+              wezterm.log_error(environment.locale.t.failed_to_load_state)
             end
           end
         end),
-        title = env_utils.get_icon(icons, "list_picker_tab") .. " " .. environment.locale.t("workspace_switch_title"),
-        description = environment.locale.t("workspace_switch_description"),
+        title = env_utils.get_icon(icons, "list_picker_tab") .. " " .. environment.locale.t.workspace_switch_title,
+        description = environment.locale.t.workspace_switch_description,
         fuzzy_description = "Поиск workspace/состояния: ",
         fuzzy = true,
         choices = choices,

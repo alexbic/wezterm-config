@@ -30,7 +30,7 @@ local session_state = {
 
 -- Получение дней и месяцев из locale
 local function get_localized_strings(lang)
-  local l = environment.locale.get_language_table(lang)
+  local l = { days = environment.locale.t.days or {}, months = environment.locale.t.months or {} }
   return {
     days = l.days or {},
     months = l.months or {},

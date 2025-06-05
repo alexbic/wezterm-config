@@ -86,7 +86,7 @@ M.perform_restore = function(wezterm, resurrect, session_status, environment, wi
       session_status.load_session_error(window, environment.locale.t.cannot_get_state)
       pending_operation_ref.current = nil
     else
-      session_status.load_session_success(window, session_name or environment.locale.t("session_saved_as", ""))
+      session_status.load_session_success(window, session_name or environment.locale.t.session_saved_as)
     end
   end)
 end
@@ -97,9 +97,9 @@ M.create_save_workspace_handler = function(wezterm, resurrect, session_status, e
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
     
-    tab:set_title(environment.locale.t("save_workspace_tab_title"))    window:perform_action(
+    tab:set_title(environment.locale.t.save_workspace_tab_title)    window:perform_action(
       wezterm.action.PromptInputLine({
-        description = require("utils.dialog").create_dialog_box({ action_type = "save", icon_key = "workspace", current_value = window:active_workspace() .. "_" .. os.date("%H%M%S"), hint_text = environment.locale.t("dialog_hint_save"), min_width = 50, max_width = 80, border_color = "dialog_workspace_border", content_color = "dialog_content", hint_color = "dialog_hint" }),
+        description = require("utils.dialog").create_dialog_box({ action_type = "save", icon_key = "workspace", current_value = window:active_workspace() .. "_" .. os.date("%H%M%S"), hint_text = environment.locale.t.dialog_hint_save, min_width = 50, max_width = 80, border_color = "dialog_workspace_border", content_color = "dialog_content", hint_color = "dialog_hint" }),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name
           
@@ -168,9 +168,9 @@ M.create_save_window_handler = function(wezterm, resurrect, session_status, envi
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
     
-    tab:set_title(environment.locale.t("save_window_tab_title"))    window:perform_action(
+    tab:set_title(environment.locale.t.save_window_tab_title)    window:perform_action(
       wezterm.action.PromptInputLine({
-        description = require("utils.dialog").create_dialog_box({ action_type = "save", icon_key = "window", current_value = default_name, hint_text = environment.locale.t("dialog_hint_save"), min_width = 50, max_width = 80, border_color = "dialog_window_border", content_color = "dialog_content", hint_color = "dialog_hint" }),        action = wezterm.action_callback(function(inner_win, inner_pane, line)
+        description = require("utils.dialog").create_dialog_box({ action_type = "save", icon_key = "window", current_value = default_name, hint_text = environment.locale.t.dialog_hint_save, min_width = 50, max_width = 80, border_color = "dialog_window_border", content_color = "dialog_content", hint_color = "dialog_hint" }),        action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
             local window_state = resurrect.window_state.get_window_state(inner_win:mux_window())
@@ -194,17 +194,17 @@ M.create_save_tab_handler = function(wezterm, resurrect, session_status, environ
     
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
-    tab:set_title(environment.locale.t("save_tab_tab_title"))
+    tab:set_title(environment.locale.t.save_tab_tab_title)
     window:perform_action(
       wezterm.action.PromptInputLine({
-        description = require("utils.dialog").create_dialog_box({ action_type = "save", icon_key = "tab", current_value = default_name, hint_text = environment.locale.t("dialog_hint_save"), min_width = 50, max_width = 80, border_color = "dialog_tab_border", content_color = "dialog_content", hint_color = "dialog_hint" }),
+        description = require("utils.dialog").create_dialog_box({ action_type = "save", icon_key = "tab", current_value = default_name, hint_text = environment.locale.t.dialog_hint_save, min_width = 50, max_width = 80, border_color = "dialog_tab_border", content_color = "dialog_content", hint_color = "dialog_hint" }),
         action = wezterm.action_callback(function(inner_win, inner_pane, line)
           local save_name = (line == "" or line == nil) and default_name or line
           if save_name then
             local tab = inner_pane:tab() or inner_win:active_tab()
             if not tab then
               wezterm.log_error("Cannot get tab from pane or window")
-              session_status.save_session_error(inner_win, environment.locale.t("cannot_get_tab_error"))
+              session_status.save_session_error(inner_win, environment.locale.t.cannot_get_tab_error)
               return
             end
             local tab_state = resurrect.tab_state.get_tab_state(tab)
@@ -228,7 +228,7 @@ M.create_load_state_handler = function(wezterm, resurrect, session_status, envir
     pending_operation_ref.current = nil
     session_status.load_session_start(window)
     local tab = window:active_tab()
-    tab:set_title(environment.locale.t("load_session_tab_title"))
+    tab:set_title(environment.locale.t.load_session_tab_title)
     
     resurrect.fuzzy_loader.fuzzy_load(
       window, 
@@ -236,13 +236,13 @@ M.create_load_state_handler = function(wezterm, resurrect, session_status, envir
       function(id, label)
         state_refs.current_operation = nil
         local type = string.match(id, "^([^/]+)")
-        local type_display = environment.locale.t("unknown_type")
+        local type_display = environment.locale.t.unknown_type
         if type == "workspace" then
-          type_display = environment.locale.t("workspace_type")
+          type_display = environment.locale.t.workspace_type
         elseif type == "window" then
-          type_display = environment.locale.t("window_type")
+          type_display = environment.locale.t.window_type
         elseif type == "tab" then
-          type_display = environment.locale.t("tab_type")
+          type_display = environment.locale.t.tab_type
         end
         
         if label and label ~= "" then
@@ -257,9 +257,9 @@ M.create_load_state_handler = function(wezterm, resurrect, session_status, envir
         window:active_tab():set_title("")
       end,
       {
-        title = environment.locale.t("loading_sessions_title"),
-        description = environment.locale.t("loading_sessions_description"),
-        fuzzy_description = environment.locale.t("loading_sessions_fuzzy"),
+        title = environment.locale.t.loading_sessions_title,
+        description = environment.locale.t.loading_sessions_description,
+        fuzzy_description = environment.locale.t.loading_sessions_fuzzy,
         is_fuzzy = true,
       }
     )

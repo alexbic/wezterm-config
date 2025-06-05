@@ -28,45 +28,6 @@ local function get_module_description(module_name)
   return descriptions[module_name] or "Модуль отладки"
 end
 
--- Функция показа справки с централизованными иконками
-local function show_help(window, pane)
-  local t = environment.locale.t
-  
-  local help_choices = {
-    { id = "title", label = env_utils.get_icon(icons, "exit") .. " " .. t("debug_help_title") },
-    { id = "empty1", label = "" },
-    { id = "what", label = t("debug_help_what") },
-    { id = "empty2", label = "" },
-    { id = "how", label = env_utils.get_icon(icons, "system") .. " " .. t("debug_help_how") },
-    { id = "step1", label = t("debug_help_step1") },
-    { id = "step2", label = t("debug_help_step2") },
-    { id = "step3", label = t("debug_help_step3") },
-    { id = "step4", label = t("debug_help_step4") },
-    { id = "empty3", label = "" },
-    { id = "modules", label = env_utils.get_icon(icons, "mode") .. " " .. t("debug_help_modules") },
-    { id = "appearance", label = t("debug_help_appearance") },
-    { id = "bindings", label = t("debug_help_bindings") },
-    { id = "global", label = t("debug_help_global") },
-    { id = "resurrect", label = t("debug_help_resurrect") },
-    { id = "session", label = t("debug_help_session") },
-    { id = "workspace", label = t("debug_help_workspace") }
-  }
-  
-  window:perform_action(
-    wezterm.action.InputSelector({
-      action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
-        M.show_panel(inner_window, inner_pane)
-      end),
-      title = env_utils.get_icon(icons, "debug") .. " " .. t("debug_help_title"),
-      description = "Нажмите Enter для возврата к панели отладки",
-      fuzzy = false,
-      alphabet = "",
-      choices = help_choices,
-    }),
-    pane
-  )
-end
-
 -- Создание выборов для селектора с централизованными иконками
 local function create_choices()
   local modules = {}
@@ -110,22 +71,22 @@ local function create_choices()
   -- Команды управления с локализацией и иконками
   table.insert(choices, {
     id = "enable_all",
-    label = "      " .. env_utils.get_icon(icons, "system") .. "  " .. environment.locale.t.debug_enable_all_modules
+    label = "      " .. env_utils.get_icon(icons, "system") .. "  Включить все модули"
   })
   
   table.insert(choices, {
     id = "disable_all", 
-    label = "      " .. env_utils.get_icon(icons, "error") .. "  " .. environment.locale.t.debug_disable_all_modules
+    label = "      " .. env_utils.get_icon(icons, "error") .. "  Выключить все модули"
   })
   
   table.insert(choices, {
     id = "help",
-    label = "      " .. env_utils.get_icon(icons, "tip") .. "  " .. (environment.locale.get_language_table().name == "English" and "Help and Info" or "Справка и помощь")
+    label = "      " .. env_utils.get_icon(icons, "tip") .. "  Справка и помощь"
   })
   
   table.insert(choices, {
     id = "exit",
-    label = "      " .. env_utils.get_icon(icons, "exit") .. "  " .. environment.locale.t.debug_save_and_exit
+    label = "      " .. env_utils.get_icon(icons, "exit") .. "  Сохранить и выйти"
   })
   
   return choices
@@ -161,7 +122,8 @@ M.show_panel = function(window, pane)
         end
         
         if id == "help" then
-          show_help(inner_window, inner_pane)
+          -- TODO: показать справку
+          M.show_panel(inner_window, inner_pane)
           return
         end
         
@@ -186,7 +148,7 @@ M.show_panel = function(window, pane)
           M.show_panel(inner_window, inner_pane)
         end
       end),
-      title = env_utils.get_icon(icons, "debug") .. " " .. environment.locale.t.debug_panel_title,
+      title = env_utils.get_icon(icons, "debug") .. " Панель управления отладкой",
       description = string.format("Активно: %d/%d модулей", enabled_count, #modules),
       fuzzy_description = "Найти модуль:",
       fuzzy = true,

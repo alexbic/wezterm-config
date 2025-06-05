@@ -143,7 +143,7 @@ local function create_main_menu_choices(stats)
       id = "view_workspace",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
-        { Text = env_utils.get_icon(icons, "workspace") .. " " .. environment.locale.t("view_workspace_states") }
+        { Text = env_utils.get_icon(icons, "workspace") .. " " .. environment.locale.t.view_workspace_states }
       })
     })
   end
@@ -153,7 +153,7 @@ local function create_main_menu_choices(stats)
       id = "view_window",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "window") } },
-        { Text = env_utils.get_icon(icons, "window") .. " " .. environment.locale.t("view_window_states") }
+        { Text = env_utils.get_icon(icons, "window") .. " " .. environment.locale.t.view_window_states }
       })
     })
   end
@@ -163,7 +163,7 @@ local function create_main_menu_choices(stats)
       id = "view_tab",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "tab") } },
-        { Text = env_utils.get_icon(icons, "tab") .. " " .. environment.locale.t("view_tab_states") }
+        { Text = env_utils.get_icon(icons, "tab") .. " " .. environment.locale.t.view_tab_states }
       })
     })
   end
@@ -175,21 +175,13 @@ local function create_main_menu_choices(stats)
       id = "separator3", 
       label = "─────────────────────────────────────────" 
     })
-    
-    table.insert(choices, {
-      id = "cleanup",
-      label = wezterm.format({
-        { Foreground = { Color = env_utils.get_color(colors, "system") } },
-        { Text = env_utils.get_icon(icons, "system") .. " " .. environment.locale.t("cleanup_old_states") }
-      })
-    })
   end
   
   table.insert(choices, {
     id = "exit",
     label = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "exit") } },
-      { Text = env_utils.get_icon(icons, "exit") .. " " .. environment.locale.t("exit") }
+      { Text = env_utils.get_icon(icons, "exit") .. " " .. environment.locale.t.exit }
     })
   })
   
@@ -205,7 +197,7 @@ local function show_states_of_type(window, pane, state_type, files)
       id = "empty",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "error") } },
-        { Text = env_utils.get_icon(icons, "error") .. " " .. environment.locale.t.no_states_of_type }
+        { Text = env_utils.get_icon(icons, "error") .. " Нет сохраненных состояний" }
       })
     })
   else
@@ -220,38 +212,27 @@ local function show_states_of_type(window, pane, state_type, files)
       id = "separator", 
       label = "─────────────────────────────────────────" 
     })
-    
-    table.insert(choices, {
-      id = "delete_multiple",
-      label = wezterm.format({
-        { Foreground = { Color = env_utils.get_color(colors, "error") } },
-        { Text = env_utils.get_icon(icons, "error") .. " " .. environment.locale.t("delete_selected_states") }
-      })
-    })
   end
   
   table.insert(choices, {
     id = "back",
     label = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "exit") } },
-      { Text = env_utils.get_icon(icons, "exit") .. " " .. environment.locale.t("back_to_main_menu") }
+      { Text = env_utils.get_icon(icons, "exit") .. " " .. environment.locale.t.back_to_main_menu }
     })
   })
   
   local selector_config = {
     title = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, state_type) } },
-      { Text = env_utils.get_icon(icons, state_type) .. " " .. environment.locale.t(state_type .. "_states_title") }
+      { Text = env_utils.get_icon(icons, state_type) .. " Состояния " .. state_type }
     }),
-    description = environment.locale.t("select_state_action"),
+    description = "Выберите действие с состояниями",
     fuzzy = true,
     alphabet = "",
     choices = choices,
     action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
       if id == "back" or id == "empty" then
-        M.show_main_menu(inner_window, inner_pane)
-      elseif id == "delete_multiple" then
-        -- TODO: реализовать множественное удаление
         M.show_main_menu(inner_window, inner_pane)
       elseif id and id:match("^" .. state_type .. "|") then
         -- TODO: реализовать действия с конкретным файлом
@@ -283,9 +264,6 @@ M.show_main_menu = function(window, pane)
       elseif id:match("^view_") then
         local state_type = id:match("^view_(.+)$")
         show_states_of_type(inner_window, inner_pane, state_type, stats[state_type].files)
-      elseif id == "cleanup" then
-        -- TODO: реализовать очистку
-        M.show_main_menu(inner_window, inner_pane)
       elseif id:match("^stats_") or id:match("^separator") or id == "header" then
         -- Игнорируем клики по статистике и разделителям
         M.show_main_menu(inner_window, inner_pane)
