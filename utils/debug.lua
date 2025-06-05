@@ -60,8 +60,7 @@ M.disable_all = function(wezterm, t_table)
 end
 
 -- Функция загрузки настроек отладки из Lua файла
-M.load_debug_settings = function()
-  local wezterm = require("wezterm")
+M.load_debug_settings = function(wezterm)
   local settings_file = wezterm.config_dir .. "/session-state/debug-settings.lua"
   local file = io.open(settings_file, "r")
   if file then
@@ -83,7 +82,6 @@ end
 
 -- Функция сохранения настроек отладки в Lua файл
 M.save_debug_settings = function()
-  local wezterm = require("wezterm")
   local settings_file = wezterm.config_dir .. "/session-state/debug-settings.lua"
   local lua_content = string.format([[{
   debug_modules = {

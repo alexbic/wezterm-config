@@ -240,7 +240,6 @@ M.get_language_table = function(available_languages)
   return available_languages[default_language] or available_languages["ru"]
 end
 -- Функция создания настроек локали (БЕЗ логирования)
-end
 M.create_locale_settings = function(available_languages)
   local default_language = os.getenv("WEZTERM_LANG") or "ru"
   local lang_table = available_languages[default_language] or available_languages["ru"]
@@ -263,13 +262,11 @@ end
 -- ========================================
 
 -- Получить иконку для категории
-end
 M.get_icon = function(icons_data, category)
   return icons_data.ICONS[category] or "?"
 end
 
 -- Получить HEX цвет для категории из отдельного модуля colors
-end
 M.get_color = function(colors_data, category)
   return colors_data.COLORS[category] or "#FFFFFF"
 end
@@ -280,7 +277,6 @@ M.get_ansi_color = function(colors_data, category)
 end
 
 -- Создать простое сообщение с иконкой (только иконки)
-end
 M.format_message = function(icons_data, category, message)
   local icon = M.get_icon(icons_data, category)
   return icon .. " " .. message
@@ -322,7 +318,6 @@ M.create_environment_paths = function(home_dir, config_dir, platform)
   return paths
 end
 
-return M
 
 -- ========================================
 -- УПРАВЛЕНИЕ СОСТОЯНИЕМ КОНФИГУРАЦИИ
@@ -392,6 +387,5 @@ M.detect_service_window_type = function(static_title, active_title, process_name
   end
   
   return nil
-end
 end
 return M

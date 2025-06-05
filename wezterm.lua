@@ -6,7 +6,7 @@
 
 local wezterm = require('wezterm')
 local debug = require("utils.debug")
-debug.load_debug_settings()
+debug.load_debug_settings(wezterm)
 local environment = require('config.environment')
 local create_platform_info = require('utils.platform')
 local platform = create_platform_info(wezterm.target_triple)
