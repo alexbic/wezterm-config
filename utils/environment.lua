@@ -427,4 +427,31 @@ M.create_font_config = function(wezterm, platform, fonts_data)
   }
 end
 
+
+-- ========================================
+-- ИНИЦИАЛИЗАЦИЯ ОКРУЖЕНИЯ WEZTERM
+-- ========================================
+
+-- Главная функция инициализации окружения (принимает wezterm, platform, environment_data)
+M.init_wezterm_environment = function(wezterm, platform, environment_data)
+  local fonts_config = M.create_font_config(wezterm, platform, environment_data.fonts_data)
+  
+  local result = {
+    locale = environment_data.locale,
+    devtools = environment_data.devtools,
+    colors = environment_data.colors,
+    terminal = environment_data.terminal,
+    apps = environment_data.apps,
+    fonts_data = environment_data.fonts_data,
+    globals = environment_data.globals,
+  }
+  
+  -- Разворачиваем fonts_config в result
+  for key, value in pairs(fonts_config) do
+    result[key] = value
+  end
+  
+  return result
+end
+
 return M

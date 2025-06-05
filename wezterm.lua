@@ -7,8 +7,11 @@
 local wezterm = require('wezterm')
 local debug = require("utils.debug")
 debug.load_debug_settings(wezterm)
-local environment = require('config.environment')
-local create_platform_info = require('utils.platform')
+local environment_data = require("config.environment")
+local env_utils = require("utils.environment")
+local create_platform_info = require("utils.platform")
+local platform = create_platform_info(wezterm.target_triple)
+local environment = env_utils.init_wezterm_environment(wezterm, platform, environment_data)local create_platform_info = require('utils.platform')
 local platform = create_platform_info(wezterm.target_triple)
 
 -- Защита от повторного логирования через файл состояния
