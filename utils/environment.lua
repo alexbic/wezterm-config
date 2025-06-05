@@ -388,4 +388,43 @@ M.detect_service_window_type = function(static_title, active_title, process_name
   
   return nil
 end
+-- ========================================
+-- РАБОТА СО ШРИФТАМИ
+-- ========================================
+
+-- Функция создания конфигурации шрифтов (принимает wezterm, platform, fonts_data)
+M.create_font_config = function(wezterm, platform, fonts_data)
+  local platform_key = platform.is_mac and "macos" or 
+                       platform.is_win and "windows" or 
+                       "linux"
+  
+  local font_settings = fonts_data.PLATFORM_FONTS[platform_key]
+  local render_settings = fonts_data.RENDER_SETTINGS
+  
+  return {
+    font = wezterm.font(font_settings.primary, { 
+      weight = font_settings.weight,
+      stretch = "Normal"
+    }),
+    font_size = font_settings.size,
+    font_rules = {
+      {
+        intensity = "Bold",
+        font = wezterm.font(font_settings.primary, {
+          weight = "Bold"
+        })
+      },
+      {
+        italic = true,
+        font = wezterm.font(font_settings.primary, {
+          style = "Italic"
+        })
+      }
+    },
+    warn_about_missing_glyphs = render_settings.warn_about_missing_glyphs,
+    freetype_load_target = render_settings.freetype_load_target,
+    freetype_render_target = render_settings.freetype_render_target,
+  }
+end
+
 return M

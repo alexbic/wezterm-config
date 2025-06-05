@@ -55,7 +55,7 @@ local function create_choices(language_status)
   -- Заголовок
   table.insert(choices, {
     id = "header",
-    label = wezterm.format({ { Foreground = { Color = "#BD93F9" } }, { Text = environment.locale.t.locale_manager_title } })
+    label = wezterm.format({ { Foreground = { Color = "#BD93F9" } }, { Text = "🌍 Менеджер локализации" } })
   })
   
   table.insert(choices, {
@@ -78,7 +78,7 @@ local function create_choices(language_status)
   if #language_status.available > 0 then
     table.insert(choices, {
       id = "available_header",
-      label = environment.locale.t.locale_available_languages
+      label = "✅ ДОСТУПНЫЕ ЯЗЫКИ:"
     })
     
     for _, lang in ipairs(language_status.available) do
@@ -102,7 +102,7 @@ local function create_choices(language_status)
     
     table.insert(choices, {
       id = "missing_header",
-      label = environment.locale.t.locale_missing_languages
+      label = "❌ НЕДОСТУПНЫЕ ЯЗЫКИ:"
     })
     
     for _, lang in ipairs(language_status.missing) do

@@ -130,7 +130,6 @@ require("events.workspace-events").setup()
 -- Применяем конфигурацию
 return ConfigClass:init()
   :append(require('config.general'))
-  :append(require('config.environment.fonts'))
   :append(require('config.appearance'))
   :append(require('config.launch'))
   :append(bindings)

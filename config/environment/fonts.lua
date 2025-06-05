@@ -1,28 +1,51 @@
 -- cat > ~/.config/wezterm/config/environment/fonts.lua << 'EOF'
 --
--- ОПИСАНИЕ: Настройки шрифтов для WezTerm
--- Определяет используемый шрифт, его размер и другие связанные параметры.
--- Размер шрифта зависит от платформы (больше на macOS/Linux, меньше на Windows).
+-- ОПИСАНИЕ: Настройки шрифтов для WezTerm (ТОЛЬКО ДАННЫЕ)
+-- Определяет платформо-зависимые шрифты, размеры и параметры рендеринга.
+-- Соответствует архитектуре: config/ = только данные, функции в utils/
 --
--- ЗАВИСИМОСТИ: wezterm, config.environment.locale
+-- ЗАВИСИМОСТИ: НЕТ
 
-local wezterm = require('wezterm')
-local locale = require('config.environment.locale')
-
--- Создаем platform_info используя utils.platform
-local create_platform_info = require('utils.platform')
-local platform = create_platform_info(wezterm.target_triple)
-
-local font = 'JetBrainsMono Nerd Font Mono' -- JetBrains Mono
-local font_size = platform.is_win and 12 or 14
-
-local M = {
-    font = wezterm.font(font, { weight = "Light" }),
-    font_size = font_size,
-    warn_about_missing_glyphs = false,
-    --ref: https://wezfurlong.org/wezterm/config/lua/config/freetype_pcf_long_family_names.html\#why-doesnt-wezterm-use-the-distro-freetype-or-match-its-configuration
-    freetype_load_target = 'Normal', ---@type 'Normal'|'Light'|'Mono'|'HorizontalLcd'
-    freetype_render_target = 'Normal', ---@type 'Normal'|'Light'|'Mono'|'HorizontalLcd'
+-- === ПЛАТФОРМО-ЗАВИСИМЫЕ ШРИФТЫ ===
+local PLATFORM_FONTS = {
+  macos = {
+    primary = 'JetBrainsMono Nerd Font Mono',
+    fallback = {'SF Mono', 'Monaco', 'Menlo'},
+    size = 14,
+    weight = "Light"
+  },
+  windows = {
+    primary = 'JetBrainsMono Nerd Font Mono', 
+    fallback = {'Consolas', 'Courier New'},
+    size = 12,
+    weight = "Light"
+  },
+  linux = {
+    primary = 'JetBrainsMono Nerd Font Mono',
+    fallback = {'DejaVu Sans Mono', 'Liberation Mono', 'monospace'},
+    size = 14,
+    weight = "Light"
+  }
 }
 
-return M
+-- === НАСТРОЙКИ РЕНДЕРИНГА ===
+local RENDER_SETTINGS = {
+  warn_about_missing_glyphs = false,
+  freetype_load_target = 'Normal',
+  freetype_render_target = 'Normal',
+  font_antialias = 'Subpixel',
+  font_hinting = 'Full'
+}
+
+-- === ПРАВИЛА ШРИФТОВ ===
+local FONT_RULES = {
+  bold = { intensity = "Bold", weight = "Bold" },
+  italic = { italic = true, style = "Italic" },
+  bold_italic = { intensity = "Bold", italic = true, weight = "Bold", style = "Italic" }
+}
+
+return {
+  PLATFORM_FONTS = PLATFORM_FONTS,
+  RENDER_SETTINGS = RENDER_SETTINGS,
+  FONT_RULES = FONT_RULES
+}

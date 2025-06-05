@@ -1,25 +1,30 @@
--- cat > ~/.config/wezterm/config/environment/init.lua << 'EOF'
---
--- ОПИСАНИЕ: Точка входа для environment-модулей WezTerm
--- Собирает и экспортирует все подмодули окружения: локаль, devtools, цвета, терминал, приложения, шрифты.
--- ОБНОВЛЕНО: Интегрирован с новой системой локализации через globals.lua
---
--- ЗАВИСИМОСТИ: locale.lua, devtools.lua, colors.lua, terminal.lua, apps.lua, fonts.lua, globals.lua
+local wezterm = require('wezterm')
+local env_utils = require('utils.environment')
+local create_platform_info = require('utils.platform')
+local platform = create_platform_info(wezterm.target_triple)
 
 local locale = require('config.environment.locale')
 local devtools = require('config.environment.devtools')
 local colors = require('config.environment.colors')
 local terminal = require('config.environment.terminal')
 local apps = require('config.environment.apps')
-local fonts = require('config.environment.fonts')
+local fonts_data = require('config.environment.fonts')
 local globals = require('config.environment.globals')
 
-return {
+local fonts_config = env_utils.create_font_config(wezterm, platform, fonts_data)
+
+local result = {
   locale = locale,
   devtools = devtools,
   colors = colors,
   terminal = terminal,
   apps = apps,
-  fonts = fonts,
   globals = globals,
 }
+
+-- Добавляем fonts_config ключи в result-- Разворачиваем fonts_config ключи в result
+for key, value in pairs(fonts_config) do
+  result[key] = value
+end
+
+return result
