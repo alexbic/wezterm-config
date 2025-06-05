@@ -65,7 +65,7 @@ M.setup = function()
         for line in handle:lines() do
           local name = line:match("([^/]+)%.json$")
           if name then
-            local type_label = environment.locale.t(state_type .. "_type")
+            local type_label = environment.locale.t[state_type .. "_type"]
             
             table.insert(choices, {
               id = "saved|" .. state_type .. "|" .. name,
@@ -103,7 +103,7 @@ M.setup = function()
 
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
-    tab:set_title(environment.locale.t("load_session_tab_title"))
+    tab:set_title(environment.locale.t.load_session_tab_title)
         -- InputSelector с цветным форматированием
     window:perform_action(
       wezterm.action.InputSelector({

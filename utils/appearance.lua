@@ -110,12 +110,15 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
     session_status.start_dialog()    
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
-    tab:set_title(environment.locale.t("delete_session_tab_title"))
+    tab:set_title(environment.locale.t.delete_session_tab_title)
     
     local choices = {}
 
     -- Получаем все сохранённые состояния с нашими иконками и цветами
-    local paths = require('config.environment.paths')
+    local env_utils = require("utils.environment")
+    local create_platform_info = require("utils.platform")
+    local platform = create_platform_info(wezterm.target_triple)
+    local paths = env_utils.create_environment_paths(wezterm.home_dir, wezterm.config_dir, platform)
     local state_types = {
       {type = "workspace", icon = "󱂬", color = "workspace"},
       {type = "window", icon = nil, color = "window"},
@@ -130,7 +133,7 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
         for line in handle:lines() do
           local name = line:match("([^/]+)%.json$")
           if name then
-            local type_label = environment.locale.t(state_info.type .. "_type")
+            local type_label = environment.locale.t[state_info.type .. "_type"]
             
             table.insert(choices, {
               id = state_info.type .. "/" .. name .. ".json",
@@ -150,7 +153,7 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
         id = "none",
         label = wezterm.format({
           { Foreground = { Color = env_utils.get_color(colors, "error") } },
-          { Text = "❌ " .. environment.locale.t("no_workspaces_available") }
+          { Text = "❌ " .. environment.locale.t.no_workspaces_available }
         })
       })
     end
@@ -181,9 +184,9 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
             session_status.delete_session_success(inner_window, clean_id)
           end)
         end),
-        title = env_utils.get_icon(icons, "list_delete_tab") .. " " .. environment.locale.t("deleting_sessions_title"),
-        description = environment.locale.t("deleting_sessions_description"),
-        fuzzy_description = environment.locale.t("deleting_sessions_fuzzy"),
+        title = env_utils.get_icon(icons, "list_delete_tab") .. " " .. environment.locale.t.deleting_sessions_title,
+        description = environment.locale.t.deleting_sessions_description,
+        fuzzy_description = environment.locale.t.deleting_sessions_fuzzy,
         fuzzy = true,
         choices = choices,
       }),

@@ -46,4 +46,15 @@ return {
   save_workspace_tab_title = "Сохранить сессию",
   load_session_tab_title = "Загрузить сессию",
   delete_session_tab_title = "Удалить сессию",
+  
+  -- === WORKSPACE SWITCHING ===
+  workspace_switch_title = "Выберите workspace/путь/состояние",
+  workspace_switch_description = "активная workspace window tab путь | ESC=отмена",
+  no_workspaces_available = "Нет доступных workspace",
+  failed_to_load_state = "Не удалось загрузить состояние",
+  
+  -- === DELETE SESSIONS ===
+  deleting_sessions_title = "Удаление сессии",
+  deleting_sessions_description = "Выберите сессию для удаления и нажмите Enter = удалить, Esc = отмена",
+  deleting_sessions_fuzzy = "Поиск сессии для удаления: ",
 }
