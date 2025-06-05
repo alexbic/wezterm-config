@@ -51,9 +51,7 @@ M.scan_locale_files = function(config_dir, platform_utils)
     
     -- Пропускаем служебные файлы
     if filename and not filename:match("manager") and not filename:match("init") then
-      local success, locale_data = pcall(function()
-        return dofile(file_path)
-      end)
+      local success, locale_data = pcall(dofile, file_path)
       
       if success and locale_data and locale_data.locale and locale_data.name then
         available_languages[filename] = locale_data
@@ -92,93 +90,6 @@ M.get_locale_stats = function(available_languages)
 end
 
 -- ========================================
--- СИСТЕМА КЭШИРОВАНИЯ ЛОКАЛИЗАЦИИ
--- ========================================
-
--- Генерация кэшированного файла локализации
-M.generate_locale_cache = function(config_dir, platform_utils, language_code)
-  local available_languages = M.scan_locale_files(config_dir, platform_utils)
-  local target_language = available_languages[language_code]
-  
-  if not target_language then
-    return false, "Language not found: " .. language_code
-  end
-  
-  -- Создаем кэшированную таблицу
-  local cache_content = {
-    current_language = language_code,
-    t = {},
-    settings = M.create_locale_settings_from_data(target_language)
-  }
-  
-  -- Копируем все ключи кроме служебных
-  for key, value in pairs(target_language) do
-    if key ~= "locale" and key ~= "name" then
-      cache_content.t[key] = value
-    end
-  end
-  
-  return cache_content
-end
-
--- Перезапись файла кэша локализации
-M.rebuild_locale_cache_file = function(config_dir, platform_utils, language_code)
-  local cache_content, error_msg = M.generate_locale_cache(config_dir, platform_utils, language_code)
-  
-  if not cache_content then
-    return false, error_msg
-  end
-  
-  local locale_file_path = config_dir .. "/config/environment/locale.lua"
-  
-  -- Создаем содержимое файла
-  local file_content = string.format([[-- cat > ~/.config/wezterm/config/environment/locale.lua << 'EOF'
---
--- ОПИСАНИЕ: Кэшированная локализация WezTerm
--- Автоматически сгенерированный файл с предкомпилированными переводами.
--- НЕ РЕДАКТИРОВАТЬ ВРУЧНУЮ! Файл перезаписывается при смене языка.
---
--- Текущий язык: %s
--- Сгенерировано: %s
-
-return {
-  current_language = "%s",
-  t = %s,
-  settings = %s
-}
-]], cache_content.current_language, os.date("%Y-%m-%d %H:%M:%S"), 
-    cache_content.current_language, 
-    M.table_to_lua_string(cache_content.t),
-    M.table_to_lua_string(cache_content.settings))
-  
-  -- Записываем файл
-  local file = io.open(locale_file_path, "w")
-  if not file then
-    return false, "Cannot write to file: " .. locale_file_path
-  end
-  
-  file:write(file_content)
-  file:close()
-  
-  return true
-end
-
--- Переключение языка с перестройкой кэша
-M.switch_language_and_rebuild = function(config_dir, platform_utils, new_language)
-  -- Сначала устанавливаем переменную окружения
-  os.execute("export WEZTERM_LANG=" .. new_language)
-  
-  -- Перестраиваем кэш
-  local success, error_msg = M.rebuild_locale_cache_file(config_dir, platform_utils, new_language)
-  
-  if not success then
-    return false, error_msg
-  end
-  
-  return true
-end
-
--- ========================================
 -- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ КЭШИРОВАНИЯ
 -- ========================================
 
@@ -189,7 +100,6 @@ M.table_to_lua_string = function(tbl, indent)
   local result = "{\n"
   
   for k, v in pairs(tbl) do
-    -- ИСПРАВЛЕНИЕ: правильное экранирование ключей
     local key_str
     if type(k) == "string" then
       -- Проверяем, является ли ключ валидным идентификатором Lua
@@ -234,61 +144,77 @@ M.create_locale_settings_from_data = function(language_data)
 end
 
 -- ========================================
--- ИНТЕРФЕЙС ЛОКАЛИЗАЦИИ С GLOBALS
+-- СИСТЕМА КЭШИРОВАНИЯ ЛОКАЛИЗАЦИИ
 -- ========================================
 
--- Главная функция получения интерфейса локализации (использует globals.lua)
-M.get_locale_interface = function(wezterm_obj, config_dir_param, platform_param)
-  -- Безопасное получение globals
-  local success, globals = pcall(require, 'config.environment.globals')
-  if not success then
-    -- Fallback если globals.lua не найден
-    globals = {
-      DEFAULT_LANGUAGE = "ru",
-      SUPPORTED_LANGUAGES = {"ru", "en"},
-      LOCALE_AUTO_CREATE = true
-    }
+-- Генерация кэшированного файла локализации
+M.generate_locale_cache = function(config_dir, platform_utils, language_code)
+  local available_languages = M.scan_locale_files(config_dir, platform_utils)
+  local target_language = available_languages[language_code]
+  
+  if not target_language then
+    return false, "Language not found: " .. language_code
   end
   
-  local current_language = os.getenv("WEZTERM_LANG") or globals.DEFAULT_LANGUAGE
+  -- Создаем кэшированную таблицу
+  local cache_content = {
+    current_language = language_code,
+    t = {},
+    settings = M.create_locale_settings_from_data(target_language)
+  }
   
-  -- Пытаемся получить существующий кэш
-  local success_cache, cached_locale = pcall(require, 'config.environment.locale')
-  if success_cache and cached_locale and cached_locale.current_language == current_language then
-    -- Кэш актуален
-    return cached_locale
-  end
-  
-  -- Нужно обновить кэш
-  if wezterm_obj and config_dir_param and platform_param then
-    local success_rebuild = M.rebuild_locale_cache_file(config_dir_param, platform_param, current_language)
-    if success_rebuild then
-      -- Перезагружаем обновленный кэш
-      package.loaded['config.environment.locale'] = nil
-      local new_success, new_cached = pcall(require, 'config.environment.locale')
-      if new_success then
-        return new_cached
-      end
+  -- Копируем все ключи кроме служебных
+  for key, value in pairs(target_language) do
+    if key ~= "locale" and key ~= "name" then
+      cache_content.t[key] = value
     end
   end
   
-  -- Fallback - минимальный интерфейс
-  return {
-    current_language = current_language,
-    t = {
-      error = "Ошибка",
-      success = "Успешно",
-      loading = "Загрузка...",
-      enter_new_tab_name = "Введите новое имя вкладки",
-      enter_workspace_name = "Введите имя workspace",
-      enter_workspace_name_new_window = "Введите имя workspace для нового окна"
-    },
-    settings = {
-      LANG = "ru_RU.UTF-8",
-      LC_ALL = "ru_RU.UTF-8",
-      LC_TIME = "ru_RU.UTF-8"
-    }
-  }
+  return cache_content
+end
+
+-- ИСПРАВЛЕННАЯ функция перезаписи файла кэша локализации
+M.rebuild_locale_cache_file = function(config_dir, platform_utils, language_code)
+  local cache_content, error_msg = M.generate_locale_cache(config_dir, platform_utils, language_code)
+  
+  if not cache_content then
+    return false, error_msg
+  end
+  
+  local locale_file_path = config_dir .. "/config/environment/locale.lua"
+  
+  local file_content = string.format([[-- Кэшированная локализация WezTerm
+-- Текущий язык: %s
+-- Сгенерировано: %s
+
+return {
+  current_language = "%s",
+  t = %s,
+  settings = %s
+}
+]], cache_content.current_language, os.date("%Y-%m-%d %H:%M:%S"), 
+    cache_content.current_language, 
+    M.table_to_lua_string(cache_content.t),
+    M.table_to_lua_string(cache_content.settings))
+  
+  local file = io.open(locale_file_path, "w")
+  if not file then
+    return false, "Cannot write to file: " .. locale_file_path
+  end
+  
+  file:write(file_content)
+  file:close()
+  
+  return true
+end
+
+-- Переключение языка с перестройкой кэша
+M.switch_language_and_rebuild = function(config_dir, platform_utils, new_language)
+  local success, error_msg = M.rebuild_locale_cache_file(config_dir, platform_utils, new_language)
+  if not success then
+    return false, error_msg or "Unknown error during cache rebuild"
+  end
+  return true
 end
 
 -- ========================================
@@ -313,8 +239,8 @@ M.get_language_table = function(available_languages)
   local default_language = os.getenv("WEZTERM_LANG") or "ru"
   return available_languages[default_language] or available_languages["ru"]
 end
-
 -- Функция создания настроек локали (БЕЗ логирования)
+end
 M.create_locale_settings = function(available_languages)
   local default_language = os.getenv("WEZTERM_LANG") or "ru"
   local lang_table = available_languages[default_language] or available_languages["ru"]
@@ -336,16 +262,14 @@ end
 -- РАБОТА С ИКОНКАМИ И ФОРМАТИРОВАНИЕМ
 -- ========================================
 
--- === ФУНКЦИИ ДЛЯ РАБОТЫ С ИКОНКАМИ ===
-
 -- Получить иконку для категории
+end
 M.get_icon = function(icons_data, category)
   return icons_data.ICONS[category] or "?"
 end
 
--- === ФУНКЦИИ ДЛЯ РАБОТЫ С ЦВЕТАМИ ===
-
 -- Получить HEX цвет для категории из отдельного модуля colors
+end
 M.get_color = function(colors_data, category)
   return colors_data.COLORS[category] or "#FFFFFF"
 end
@@ -355,153 +279,50 @@ M.get_ansi_color = function(colors_data, category)
   return colors_data.ANSI_COLORS[category] or "15"
 end
 
--- === УНИВЕРСАЛЬНЫЕ ФУНКЦИИ ДЛЯ РАБОТЫ С ИКОНКАМИ И ЦВЕТАМИ ===
-
 -- Создать простое сообщение с иконкой (только иконки)
+end
 M.format_message = function(icons_data, category, message)
   local icon = M.get_icon(icons_data, category)
   return icon .. " " .. message
 end
 
--- Создать сообщение с иконкой и цветом
-M.format_colored_message = function(icons_data, colors_data, category, message)
-  local icon = M.get_icon(icons_data, category)
-  local color = M.get_color(colors_data, category)
-  return icon .. " " .. message, color
-end
+-- ========================================
+-- РАБОТА С ПУТЯМИ И ДИРЕКТОРИЯМИ
+-- ========================================
 
--- Создать ANSI форматированное сообщение для терминала
-M.format_ansi_message = function(icons_data, colors_data, category, message)
-  local icon = M.get_icon(icons_data, category)
-  local color = M.get_ansi_color(colors_data, category)
-  return string.format("\033[38;5;%sm%s\033[0m %s", color, icon, message)
-end
+-- Константы путей
+M.BACKDROPS_DIR = "backdrops"
+M.RESURRECT_STATE_PATH = "plugins/resurrect.wezterm/state"
 
--- Создать HTML форматированное сообщение
-M.format_html_message = function(icons_data, colors_data, category, message)
-  local icon = M.get_icon(icons_data, category)
-  local color = M.get_color(colors_data, category)
-  return string.format('<span style="color: %s">%s</span> %s', color, icon, message)
-end
-
--- Создать сообщение для WezTerm логирования
-M.format_wezterm_log = function(wezterm, icons_data, colors_data, category, message)
-  local formatted = M.format_message(icons_data, category, message)
-  wezterm.log_info(formatted)
-end
-
--- === СОВМЕСТИМОСТЬ СО СТАРОЙ СИСТЕМОЙ РЕЖИМОВ ===
-
--- Функция для получения данных режима в старом формате (для events/session-status.lua)
-M.get_mode_data = function(icons_data, colors_data, mode_name)
-  return {
-    icon = M.get_icon(icons_data, mode_name) or "?",
-    name = "",
-    color = M.get_color(colors_data, mode_name) or "#FFFFFF"
+-- Функция создания путей для окружения (принимает home_dir, config_dir, platform как параметры)
+M.create_environment_paths = function(home_dir, config_dir, platform)
+  local paths = {
+    home = home_dir,
+    config = config_dir,
   }
-end
-
--- === ФУНКЦИИ ВАЛИДАЦИИ ===
-
--- Проверить, существует ли категория в иконках
-M.is_valid_icon_category = function(icons_data, category)
-  return icons_data.ICONS[category] ~= nil
-end
-
--- Проверить, существует ли категория в цветах
-M.is_valid_color_category = function(colors_data, category)
-  return colors_data.COLORS[category] ~= nil
-end
-
--- Проверить, существует ли категория и в иконках, и в цветах
-M.is_valid_category = function(icons_data, colors_data, category)
-  return M.is_valid_icon_category(icons_data, category) and M.is_valid_color_category(colors_data, category)
-end
-
--- Получить список всех доступных категорий иконок
-M.get_icon_categories = function(icons_data)
-  local categories = {}
-  for category, _ in pairs(icons_data.ICONS) do
-    table.insert(categories, category)
-  end
-  table.sort(categories)
-  return categories
-end
-
--- Получить список всех доступных категорий цветов
-M.get_color_categories = function(colors_data)
-  local categories = {}
-  for category, _ in pairs(colors_data.COLORS) do
-    table.insert(categories, category)
-  end
-  table.sort(categories)
-  return categories
-end
-
--- Получить список категорий сообщений (без режимов управления)
-M.get_message_categories = function()
-  return {"system", "platform", "ui", "tip", "mode", "time", "appearance", "input", "session", "workspace", "debug", "error"}
-end
-
--- Получить список режимов управления
-M.get_control_modes = function()
-  return {"session_control", "pane_control", "font_control", "debug_control", "workspace_search"}
-end
-
--- === ДЕМОНСТРАЦИЯ И ТЕСТИРОВАНИЕ ===
-
--- Функция для демонстрации всех иконок и цветов
-M.demo_icons = function(icons_data, colors_data)
-  print("=== ДЕМОНСТРАЦИЯ ИКОНОК И ЦВЕТОВ ===")
   
-  print("\n--- КАТЕГОРИИ СООБЩЕНИЙ ---")
-  local message_categories = M.get_message_categories()
+  local separator = platform.is_win and "\\" or "/"
   
-  for _, category in ipairs(message_categories) do
-    if M.is_valid_category(icons_data, colors_data, category) then
-      local message = M.format_ansi_message(icons_data, colors_data, category, category .. "_* - " .. category .. " сообщения")
-      print(message)
-    end
+  -- Общие пути для всех платформ
+  paths.backdrops = config_dir .. separator .. M.BACKDROPS_DIR
+  paths.resurrect_state_dir = config_dir .. separator .. M.RESURRECT_STATE_PATH .. separator
+  
+  -- Платформо-специфичные пути
+  if platform.is_win then
+    paths.program_files = "C:\\Program Files"
+    paths.appdata = os.getenv("APPDATA") or ""
+  elseif platform.is_mac then
+    paths.brew = "/opt/homebrew"
+    paths.applications = "/Applications"
+  else
+    paths.local_bin = home_dir .. "/.local/bin"
+    paths.usr_local = "/usr/local"
   end
   
-  print("\n--- РЕЖИМЫ УПРАВЛЕНИЯ ---")
-  local control_modes = M.get_control_modes()
-  
-  for _, mode in ipairs(control_modes) do
-    if M.is_valid_category(icons_data, colors_data, mode) then
-      local message = M.format_ansi_message(icons_data, colors_data, mode, mode .. " - режим управления")
-      print(message)
-    end
-  end
-  
-  print("\n=== ВСЕ ИКОНКИ ВМЕСТЕ ===")
-  local all_icon_categories = M.get_icon_categories(icons_data)
-  local all_icons = ""
-  for _, category in ipairs(all_icon_categories) do
-    if M.is_valid_color_category(colors_data, category) then
-      local color = M.get_ansi_color(colors_data, category)
-      local icon = M.get_icon(icons_data, category)
-      all_icons = all_icons .. string.format("\033[38;5;%sm%s\033[0m", color, icon)
-    end
-  end
-  print(all_icons)
+  return paths
 end
 
--- Функция для тестирования конкретной категории
-M.test_category = function(icons_data, colors_data, category, test_message)
-  test_message = test_message or "Тестовое сообщение"
-  
-  if not M.is_valid_category(icons_data, colors_data, category) then
-    print("❌ Категория '" .. category .. "' не найдена!")
-    return false
-  end
-  
-  print("=== ТЕСТ КАТЕГОРИИ: " .. category .. " ===")
-  print("Простое: " .. M.format_message(icons_data, category, test_message))
-  print("ANSI:    " .. M.format_ansi_message(icons_data, colors_data, category, test_message))
-  print("HTML:    " .. M.format_html_message(icons_data, colors_data, category, test_message))
-  return true
-end
+return M
 
 -- ========================================
 -- УПРАВЛЕНИЕ СОСТОЯНИЕМ КОНФИГУРАЦИИ
@@ -548,10 +369,6 @@ M.force_config_reload = function(wezterm)
   wezterm.reload_configuration()
 end
 
--- ========================================
--- РАБОТА С ЗАГОЛОВКАМИ ВКЛАДОК
--- ========================================
-
 -- Функция для определения типа служебного окна (БЕЗ require config/)
 M.detect_service_window_type = function(static_title, active_title, process_name, locale_function)
   local title = static_title or active_title or ""
@@ -576,41 +393,5 @@ M.detect_service_window_type = function(static_title, active_title, process_name
   
   return nil
 end
-
--- ========================================
--- РАБОТА С ПУТЯМИ И ДИРЕКТОРИЯМИ
--- ========================================
-
--- Константы путей
-M.BACKDROPS_DIR = "backdrops"
-M.RESURRECT_STATE_PATH = "plugins/resurrect.wezterm/state"
-
--- Функция создания путей для окружения (принимает home_dir, config_dir, platform как параметры)
-M.create_environment_paths = function(home_dir, config_dir, platform)
-  local paths = {
-    home = home_dir,
-    config = config_dir,
-  }
-  
-  local separator = platform.is_win and "\\" or "/"
-  
-  -- Общие пути для всех платформ
-  paths.backdrops = config_dir .. separator .. M.BACKDROPS_DIR
-  paths.resurrect_state_dir = config_dir .. separator .. M.RESURRECT_STATE_PATH .. separator
-  
-  -- Платформо-специфичные пути
-  if platform.is_win then
-    paths.program_files = "C:\\Program Files"
-    paths.appdata = os.getenv("APPDATA") or ""
-  elseif platform.is_mac then
-    paths.brew = "/opt/homebrew"
-    paths.applications = "/Applications"
-  else
-    paths.local_bin = home_dir .. "/.local/bin"
-    paths.usr_local = "/usr/local"
-  end
-  
-  return paths
 end
-
 return M
