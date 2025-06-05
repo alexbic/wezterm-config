@@ -1,6 +1,7 @@
 -- cat > ~/.config/wezterm/config/dialogs/locale-manager.lua << 'EOF'
 --
 -- ОПИСАНИЕ: UI управления локализацией WezTerm
+local environment = require("config.environment")
 -- Интерфейс для переключения между языками и управления локалями.
 -- Использует новую систему кэширования локализации.
 --
@@ -54,7 +55,7 @@ local function create_choices(language_status)
   -- Заголовок
   table.insert(choices, {
     id = "header",
-    label = "🌍 УПРАВЛЕНИЕ ЛОКАЛИЗАЦИЕЙ"
+    label = wezterm.format({ { Foreground = { Color = "#BD93F9" } }, { Text = environment.locale.t.locale_manager_title } })
   })
   
   table.insert(choices, {
@@ -77,7 +78,7 @@ local function create_choices(language_status)
   if #language_status.available > 0 then
     table.insert(choices, {
       id = "available_header",
-      label = "✅ ДОСТУПНЫЕ ЯЗЫКИ:"
+      label = environment.locale.t.locale_available_languages
     })
     
     for _, lang in ipairs(language_status.available) do
@@ -101,7 +102,7 @@ local function create_choices(language_status)
     
     table.insert(choices, {
       id = "missing_header",
-      label = "❌ НЕДОСТУПНЫЕ ЯЗЫКИ:"
+      label = environment.locale.t.locale_missing_languages
     })
     
     for _, lang in ipairs(language_status.missing) do
@@ -161,8 +162,25 @@ local function handle_choice(window, pane, choice_id, language_status)
     
   elseif choice_id:match("^create_") then
     -- Создание нового языка
-    local lang_code = choice_id:match("^create_(.+)$")
-    window:toast_notification("Информация", "Создание локали " .. lang_code .. " пока не реализовано", nil, 3000)
+    -- Создаем локаль через наш скрипт
+    local script_path = wezterm.config_dir .. "/scripts/create-locale.sh"
+    local ru_path = wezterm.config_dir .. "/config/locales/ru.lua"
+    local cmd = script_path .. " " .. ru_path .. " " .. lang_code
+    local handle = io.popen(cmd .. " 2>&1")
+    if handle then
+      local result = handle:read("*a")
+      local success = handle:close()
+      if success then
+        window:toast_notification("Успех", "Локаль " .. lang_code .. " создана! Переключаемся...", nil, 3000)
+        -- Переключаемся на созданную локаль
+        local switch_success = env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
+        if switch_success then
+          wezterm.reload_configuration()
+        end
+      else
+        window:toast_notification("Ошибка", "Не удалось создать локаль: " .. tostring(result), nil, 5000)
+      end
+    end
     
   elseif choice_id == "regenerate" then
     -- Перегенерация кэша
