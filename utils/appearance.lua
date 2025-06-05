@@ -110,7 +110,7 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
     session_status.start_dialog()    
     -- Устанавливаем название вкладки для правильного определения
     local tab = window:active_tab()
-    tab:set_title(environment.locale.t.delete_session_tab_title)
+    tab:set_title(environment.locale.t.delete_session_tab_title or "Delete")
     
     local choices = {}
 

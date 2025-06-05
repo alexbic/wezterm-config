@@ -97,7 +97,7 @@ wezterm.on('resurrect.state_manager.save_state.finished', function(session_path)
   
   if not state_refs.is_periodic_save and state_refs.is_user_save then
     local path = session_path:match(".+/([^/]+)$")
-    local name = path and path:match("^(.+)%.json$") or state_refs.current_save_name or environment.locale.t("unknown_type")
+    local name = path and path:match("^(.+)%.json$") or state_refs.current_save_name or environment.locale.t.unknown_type
     
     local window = nil
     if wezterm.mux and wezterm.mux.get_active_window then
@@ -135,7 +135,7 @@ wezterm.on('resurrect.state_manager.save_state.start', function(state, opt_name)
       end
       
       if window and state_refs.is_user_save then
-        session_status.save_session_error(window, environment.locale.t("plugin_error"))
+        session_status.save_session_error(window, environment.locale.t.plugin_error)
         state_refs.is_user_save = false
         state_refs.current_save_name = ""
         state_refs.current_operation = nil

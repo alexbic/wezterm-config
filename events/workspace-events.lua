@@ -29,7 +29,7 @@ M.setup = function()
         id = "active|" .. workspace_name,
         label = wezterm.format({
           { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
-          { Text = env_utils.get_icon(icons, "workspace") .. " : " .. workspace_name .. " (" .. environment.locale.t.workspace_type .. ")" }
+          { Text = env_utils.get_icon(icons, "workspace") .. " : " .. workspace_name .. " (" .. environment.locale.t.workspace_type or "workspace" .. ")" }
         })
       })
     end
@@ -47,7 +47,7 @@ M.setup = function()
             id = "saved|workspace|" .. name,
             label = wezterm.format({
               { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
-              { Text = env_utils.get_icon(icons, "workspace") .. " : " .. name .. " (" .. environment.locale.t.workspace_type .. ")" }
+              { Text = env_utils.get_icon(icons, "workspace") .. " : " .. name .. " (" .. environment.locale.t.workspace_type or "workspace" .. ")" }
             })
           })
         end
