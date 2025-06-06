@@ -47,7 +47,7 @@ M.show_locale_manager = function(window, pane)
   -- Заголовок
   table.insert(choices, dialog.create_choice({
     id = "header",
-    icon = "🌍",
+    icon = "🔧",
     text = safe_get_text("locale_manager_title"),
     colored = true,
     color = "#BD93F9"
@@ -63,8 +63,8 @@ M.show_locale_manager = function(window, pane)
   -- Команда экстренного восстановления
   table.insert(choices, dialog.create_choice({
     id = "emergency_fix",
-    icon = "🔧",
-    text = "🔧 Экстренное восстановление ru.lua"
+    icon = "",
+    text = "Экстренное восстановление ru.lua"
   }))
   
   -- Доступные языки

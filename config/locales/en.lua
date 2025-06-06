@@ -1,7 +1,7 @@
--- Русская локализация (базовая версия)
+-- English localization
 return {
-  locale = "ru_RU.UTF-8",
-  name = "Русский",
+  locale = "en_US.UTF-8",
+  name = "English",
   
   -- === СИСТЕМНЫЕ СООБЩЕНИЯ ===
   config_loaded_info = "Конфигурация загружена",
