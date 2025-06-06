@@ -80,6 +80,8 @@ return {
   loading = "Загрузка...",
   success = "Успешно",
   cancel = "Отмена",
+}
+  
   -- === ДОПОЛНИТЕЛЬНЫЕ КЛЮЧИ ===
   cannot_get_state = "Не удалось получить состояние",
   cannot_get_tab_error = "Ошибка: невозможно получить вкладку",
@@ -202,4 +204,3 @@ return {
   error_platform_initialization = "Не удалось инициализировать platform",
   error_workspace_switch_failed = "Ошибка при переключении workspace",
   error_load_state_failed = "Не удалось загрузить состояние для workspace",
-}
