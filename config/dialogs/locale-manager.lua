@@ -1,226 +1,172 @@
--- cat > ~/.config/wezterm/config/dialogs/locale-manager.lua << 'EOF'
 --
--- ОПИСАНИЕ: UI управления локализацией WezTerm
-local environment = require("config.environment")
--- Интерфейс для переключения между языками и управления локалями.
--- Использует новую систему кэширования локализации.
+-- ОПИСАНИЕ: UI управления локализацией с fallback защитой
 --
--- ЗАВИСИМОСТИ: utils.environment, config.environment.globals
-
 local wezterm = require('wezterm')
+local environment = require("config.environment")
 local env_utils = require('utils.environment')
 local globals = require('config.environment.globals')
+local dialog = require('utils.dialog')
 
 local M = {}
 
--- Получение списка доступных и недоступных языков
-local function get_language_status()
-  local create_platform_info = require('utils.platform')
-  local platform = create_platform_info(wezterm.target_triple)
-  
-  local available_languages = env_utils.scan_locale_files(wezterm.config_dir, platform)
-  local stats = env_utils.get_locale_stats(available_languages)
-  
-  local result = {
-    available = {},
-    missing = {},
-    current = os.getenv("WEZTERM_LANG") or globals.DEFAULT_LANGUAGE
-  }
-  
-  -- Проверяем каждый поддерживаемый язык
-  for _, lang_code in ipairs(globals.SUPPORTED_LANGUAGES) do
-    if available_languages[lang_code] then
-      table.insert(result.available, {
-        code = lang_code,
-        name = available_languages[lang_code].name,
-        locale = available_languages[lang_code].locale,
-        keys = stats.languages[lang_code] and stats.languages[lang_code].keys or 0
-      })
-    else
-      table.insert(result.missing, {
-        code = lang_code,
-        name = "Unknown Language",
-        status = "Файл не найден"
-      })
-    end
-  end
-  
-  return result
-end
+-- FALLBACK тексты на случай поломки локализации
+local FALLBACK_TEXTS = {
+  locale_manager_title = "🌍 Управление локализацией",
+  locale_manager_wezterm_title = "🌍 Менеджер локализации WezTerm", 
+  locale_manager_description = "Выберите действие для управления языками",
+  locale_current_language = "📍 Текущий язык: %s",
+  locale_create_new = "📝 Создать %s локаль",
+  locale_regenerate_cache = "🔄 Перегенерировать кэш текущего языка",
+  locale_show_stats = "📊 Показать статистику локализации",
+  exit = "🚪 Выход"
+}
 
--- Создание выборов для InputSelector
-local function create_choices(language_status)
-  local choices = {}
-  
-  -- Заголовок
-  table.insert(choices, {
-    id = "header",
-    label = wezterm.format({ { Foreground = { Color = "#BD93F9" } }, { Text = "🌍 Менеджер локализации" } })
-  })
-  
-  table.insert(choices, {
-    id = "separator1", 
-    label = "─────────────────────────────────────"
-  })
-  
-  -- Текущий язык
-  table.insert(choices, {
-    id = "current",
-    label = "📍 Текущий язык: " .. language_status.current
-  })
-  
-  table.insert(choices, {
-    id = "separator2", 
-    label = "─────────────────────────────────────"
-  })
-  
-  -- Доступные языки
-  if #language_status.available > 0 then
-    table.insert(choices, {
-      id = "available_header",
-      label = "✅ ДОСТУПНЫЕ ЯЗЫКИ:"
-    })
-    
-    for _, lang in ipairs(language_status.available) do
-      local status_icon = (lang.code == language_status.current) and "🟢" or "⚪"
-      local label = string.format("%s %s (%s) - %d ключей", 
-        status_icon, lang.name, lang.code, lang.keys)
-      
-      table.insert(choices, {
-        id = "switch_" .. lang.code,
-        label = label
-      })
-    end
-  end
-  
-  -- Недоступные языки
-  if #language_status.missing > 0 then
-    table.insert(choices, {
-      id = "separator3", 
-      label = "─────────────────────────────────────"
-    })
-    
-    table.insert(choices, {
-      id = "missing_header",
-      label = "❌ НЕДОСТУПНЫЕ ЯЗЫКИ:"
-    })
-    
-    for _, lang in ipairs(language_status.missing) do
-      table.insert(choices, {
-        id = "create_" .. lang.code,
-        label = "📝 Создать " .. lang.code .. " локаль"
-      })
-    end
-  end
-  
-  -- Управляющие команды
-  table.insert(choices, {
-    id = "separator4", 
-    label = "─────────────────────────────────────"
-  })
-  
-  table.insert(choices, {
-    id = "regenerate",
-    label = "🔄 Перегенерировать кэш текущего языка"
-  })
-  
-  table.insert(choices, {
-    id = "stats",
-    label = "📊 Показать статистику локализации"
-  })
-  
-  table.insert(choices, {
-    id = "exit",
-    label = "🚪 Выход"
-  })
-  
-  return choices
-end
-
--- Обработка выбора пользователя
-local function handle_choice(window, pane, choice_id, language_status)
-  if not choice_id or choice_id == "exit" or choice_id:match("separator") or choice_id:match("_header") or choice_id == "header" or choice_id == "current" then
-    return
-  end
-  
-  local create_platform_info = require('utils.platform')
-  local platform = create_platform_info(wezterm.target_triple)
-  
-  if choice_id:match("^switch_") then
-    -- Переключение языка
-    local lang_code = choice_id:match("^switch_(.+)$")
-    if lang_code and lang_code ~= language_status.current then
-      local success = env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
-      if success then
-        window:toast_notification("Локализация", "Язык переключен на: " .. lang_code, nil, 3000)
-        -- Перезагружаем конфигурацию
-        wezterm.reload_configuration()
-      else
-        window:toast_notification("Ошибка", "Не удалось переключить язык", nil, 3000)
-      end
-    end
-    
-  elseif choice_id:match("^create_") then
-    -- Создание нового языка
-    -- Создаем локаль через наш скрипт
-    local script_path = wezterm.config_dir .. "/scripts/create-locale.sh"
-    local ru_path = wezterm.config_dir .. "/config/locales/ru.lua"
-    local cmd = script_path .. " " .. ru_path .. " " .. lang_code
-    local handle = io.popen(cmd .. " 2>&1")
-    if handle then
-      local result = handle:read("*a")
-      local success = handle:close()
-      if success then
-        window:toast_notification("Успех", "Локаль " .. lang_code .. " создана! Переключаемся...", nil, 3000)
-        -- Переключаемся на созданную локаль
-        local switch_success = env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
-        if switch_success then
-          wezterm.reload_configuration()
-        end
-      else
-        window:toast_notification("Ошибка", "Не удалось создать локаль: " .. tostring(result), nil, 5000)
-      end
-    end
-    
-  elseif choice_id == "regenerate" then
-    -- Перегенерация кэша
-    local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, language_status.current)
-    if success then
-      window:toast_notification("Локализация", "Кэш перегенерирован для: " .. language_status.current, nil, 3000)
-      -- Перезагружаем конфигурацию
-      wezterm.reload_configuration()
-    else
-      window:toast_notification("Ошибка", "Не удалось перегенерировать кэш", nil, 3000)
-    end
-    
-  elseif choice_id == "stats" then
-    -- Показ статистики
-    local available_languages = env_utils.scan_locale_files(wezterm.config_dir, platform)
-    local stats = env_utils.get_locale_stats(available_languages)
-    local stats_text = string.format("Всего языков: %d, Максимум ключей: %d", 
-      stats.total_languages, stats.total_keys)
-    window:toast_notification("Статистика локализации", stats_text, nil, 5000)
+-- Безопасная функция получения текста с fallback
+local function safe_get_text(key, ...)
+  local text = (environment.locale and environment.locale.t and environment.locale.t[key]) or FALLBACK_TEXTS[key] or key
+  if ... then
+    return string.format(text, ...)
+  else
+    return text
   end
 end
 
 -- Главная функция показа менеджера локализации
 M.show_locale_manager = function(window, pane)
-  local language_status = get_language_status()
-  local choices = create_choices(language_status)
+  local create_platform_info = require('utils.platform')
+  local platform = create_platform_info(wezterm.target_triple)
   
-  window:perform_action(
-    wezterm.action.InputSelector({
-      action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
-        handle_choice(inner_window, inner_pane, id, language_status)
-      end),
-      title = "🌍 Менеджер локализации WezTerm",
-      description = "Выберите действие для управления языками",
-      fuzzy = false,
-      alphabet = "",
-      choices = choices,
-    }),
-    pane
-  )
+  -- Получаем данные о языках
+  local available_languages = env_utils.scan_locale_files(wezterm.config_dir, platform)
+  local stats = env_utils.get_locale_stats(available_languages)
+  local current_language = (environment.locale and environment.locale.current_language) or "ru"
+  
+  -- Создаем choices с fallback защитой
+  local choices = {}
+  
+  -- Заголовок
+  table.insert(choices, dialog.create_choice({
+    id = "header",
+    icon = "🌍",
+    text = safe_get_text("locale_manager_title"),
+    colored = true,
+    color = "#BD93F9"
+  }))
+  
+  -- Текущий язык
+  table.insert(choices, dialog.create_choice({
+    id = "current", 
+    icon = "📍",
+    text = safe_get_text("locale_current_language", current_language)
+  }))
+  
+  -- Команда экстренного восстановления
+  table.insert(choices, dialog.create_choice({
+    id = "emergency_fix",
+    icon = "🔧",
+    text = "🔧 Экстренное восстановление ru.lua"
+  }))
+  
+  -- Доступные языки
+  for _, lang_code in ipairs(globals.SUPPORTED_LANGUAGES) do
+    if available_languages[lang_code] then
+      local lang_data = available_languages[lang_code]
+      local key_count = stats.languages[lang_code] and stats.languages[lang_code].keys or 0
+      local status_icon = (lang_code == current_language) and "🟢" or "⚪"
+      
+      table.insert(choices, dialog.create_choice({
+        id = "switch_" .. lang_code,
+        icon = status_icon,
+        text = string.format("%s (%s) - %d ключей", lang_data.name, lang_code, key_count)
+      }))
+    else
+      table.insert(choices, dialog.create_choice({
+        id = "create_" .. lang_code,
+        icon = "📝", 
+        text = safe_get_text("locale_create_new", lang_code)
+      }))
+    end
+  end
+  
+  -- Управляющие команды
+  table.insert(choices, dialog.create_choice({
+    id = "regenerate",
+    icon = "🔄",
+    text = safe_get_text("locale_regenerate_cache")
+  }))
+  
+  table.insert(choices, dialog.create_choice({
+    id = "exit",
+    icon = "🚪", 
+    text = safe_get_text("exit")
+  }))
+  
+  -- Создаем InputSelector
+  local selector_config = dialog.create_input_selector({
+    title = safe_get_text("locale_manager_wezterm_title"),
+    description = safe_get_text("locale_manager_description"),
+    choices = choices,
+    action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
+      if not id or id == "exit" or id == "header" or id == "current" then
+        return
+      end
+      
+      if id == "emergency_fix" then
+        -- ЭКСТРЕННОЕ ВОССТАНОВЛЕНИЕ
+        local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, "ru")
+        if success then
+          inner_window:toast_notification("Восстановление", "Восстановлено на русский язык", nil, 3000)
+          wezterm.reload_configuration()
+        end
+        
+      elseif id:match("^switch_") then
+        -- Переключение языка с пересозданием
+        local lang_code = id:match("^switch_(.+)$")
+        if lang_code and lang_code ~= current_language then
+          -- ПЕРЕСОЗДАЕМ локаль перед переключением
+          if lang_code ~= "ru" then
+            local script_path = wezterm.config_dir .. "/scripts/create-locale.sh"
+            local ru_path = wezterm.config_dir .. "/config/locales/ru.lua"
+            local cmd = script_path .. " " .. ru_path .. " " .. lang_code
+            os.execute(cmd)
+          end
+          
+          local success = env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
+          if success then
+            inner_window:toast_notification("Локализация", "Язык переключен на: " .. lang_code, nil, 3000)
+            wezterm.reload_configuration()
+          end
+        end
+        
+      elseif id:match("^create_") then
+        -- Создание нового языка  
+        local lang_code = id:match("^create_(.+)$")
+        local script_path = wezterm.config_dir .. "/scripts/create-locale.sh"
+        local ru_path = wezterm.config_dir .. "/config/locales/ru.lua"
+        local cmd = script_path .. " " .. ru_path .. " " .. lang_code
+        local handle = io.popen(cmd .. " 2>&1")
+        if handle then
+          local result = handle:read("*a")
+          local success = handle:close()
+          if success then
+            inner_window:toast_notification("Успех", "Локаль создана", nil, 3000)
+            env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
+            wezterm.reload_configuration()
+          end
+        end
+        
+      elseif id == "regenerate" then
+        -- Перегенерация кэша
+        local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, current_language)
+        if success then
+          inner_window:toast_notification("Локализация", "Кэш перегенерирован", nil, 3000)
+          wezterm.reload_configuration()
+        end
+      end
+    end)
+  })
+  
+  window:perform_action(wezterm.action.InputSelector(selector_config), pane)
 end
 
 return M
