@@ -11,14 +11,14 @@ local M = {}
 
 -- FALLBACK тексты на случай поломки локализации
 local FALLBACK_TEXTS = {
-  locale_manager_title = "🌍 Управление локализацией",
-  locale_manager_wezterm_title = "🌍 Менеджер локализации WezTerm", 
+  locale_manager_title = "Управление локализацией",
+  locale_manager_wezterm_title = "Менеджер локализации WezTerm", 
   locale_manager_description = "Выберите действие для управления языками",
-  locale_current_language = "📍 Текущий язык: %s",
-  locale_create_new = "📝 Создать %s локаль",
-  locale_regenerate_cache = "🔄 Перегенерировать кэш текущего языка",
-  locale_show_stats = "📊 Показать статистику локализации",
-  exit = "🚪 Выход"
+  locale_current_language = "Текущий язык",
+  locale_create_new = "Создать новую локаль",
+  locale_regenerate_cache = "Перегенерировать кэш текущего языка",
+  locale_show_stats = "Показать статистику локализации",
+  exit = "Выход"
 }
 
 -- Безопасная функция получения текста с fallback
@@ -47,7 +47,7 @@ M.show_locale_manager = function(window, pane)
   -- Заголовок
   table.insert(choices, dialog.create_choice({
     id = "header",
-    icon = "🔧",
+    icon = environment.icons.t."system",
     text = safe_get_text("locale_manager_title"),
     colored = true,
     color = "#BD93F9"
@@ -56,14 +56,14 @@ M.show_locale_manager = function(window, pane)
   -- Текущий язык
   table.insert(choices, dialog.create_choice({
     id = "current", 
-    icon = "📍",
+    icon = environment.icons.t."locale_current",
     text = safe_get_text("locale_current_language", current_language)
   }))
   
   -- Команда экстренного восстановления
   table.insert(choices, dialog.create_choice({
     id = "emergency_fix",
-    icon = "",
+    icon = environment.icons.t."locale_emergency",
     text = "Экстренное восстановление ru.lua"
   }))
   
@@ -82,7 +82,7 @@ M.show_locale_manager = function(window, pane)
     else
       table.insert(choices, dialog.create_choice({
         id = "create_" .. lang_code,
-        icon = "📝", 
+        icon = environment.icons.t."locale_create", 
         text = safe_get_text("locale_create_new", lang_code)
       }))
     end
@@ -91,13 +91,13 @@ M.show_locale_manager = function(window, pane)
   -- Управляющие команды
   table.insert(choices, dialog.create_choice({
     id = "regenerate",
-    icon = "🔄",
+    icon = environment.icons.t."locale_refresh",
     text = safe_get_text("locale_regenerate_cache")
   }))
   
   table.insert(choices, dialog.create_choice({
     id = "exit",
-    icon = "🚪", 
+    icon = environment.icons.t."exit", 
     text = safe_get_text("exit")
   }))
   

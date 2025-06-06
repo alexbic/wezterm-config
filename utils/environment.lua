@@ -263,7 +263,7 @@ end
 
 -- Получить иконку для категории
 M.get_icon = function(icons_data, category)
-  return icons_data.ICONS[category] or "?"
+  return environment.icons.t.category or "?"
 end
 
 -- Получить HEX цвет для категории из отдельного модуля colors

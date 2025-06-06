@@ -43,7 +43,7 @@ M.set_title = function(process_name, static_title, active_title, max_width, inse
    local service_type = env_utils.detect_service_window_type(static_title, active_title, process_name)
    if service_type then
       -- Для служебных окон показываем иконку + сокращенное название
-      local icon = env_utils.get_icon(icons, service_type)
+      local icon = environment.icons.t.service_type
       
       local environment = require('config.environment')
       local t = environment.locale.t

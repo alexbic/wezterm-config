@@ -33,7 +33,7 @@ return {
   
   -- === WORKSPACE УПРАВЛЕНИЕ ===
   workspace_switch_title = "Выберите workspace/путь/состояние",
-  workspace_switch_description = "🟢=активная 💾=workspace 🪟=window 📑=tab 📁=путь | ESC=отмена",
+  workspace_switch_description = "активная workspace window tab путь ESC отмена",
   no_workspaces_available = "Нет доступных workspace",
   unknown_type = "неизвестно",
   

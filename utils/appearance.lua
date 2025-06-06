@@ -139,7 +139,7 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
               id = state_info.type .. "/" .. name .. ".json",
               label = wezterm.format({
                 { Foreground = { Color = env_utils.get_color(colors, state_info.color) } },
-                { Text = (state_info.icon or env_utils.get_icon(icons, state_info.type)) .. " : " .. name .. " (" .. type_label .. ")" }
+                { Text = (state_info.icon or environment.icons.t.state_info.type) .. " : " .. name .. " (" .. type_label .. ")" }
               })
             })
           end
@@ -184,7 +184,7 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
             session_status.delete_session_success(inner_window, clean_id)
           end)
         end),
-        title = env_utils.get_icon(icons, "list_delete_tab") .. " " .. environment.locale.t.deleting_sessions_title,
+        title = environment.icons.t."list_delete_tab" .. " " .. environment.locale.t.deleting_sessions_title,
         description = environment.locale.t.deleting_sessions_description,
         fuzzy_description = environment.locale.t.deleting_sessions_fuzzy,
         fuzzy = true,

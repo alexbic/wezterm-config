@@ -41,7 +41,7 @@ local function create_choices()
   -- Добавляем каждый модуль с цветовым выделением
   for i, module_name in ipairs(modules) do
     local enabled = debug.DEBUG_CONFIG[module_name] or false
-    local status_icon = enabled and env_utils.get_icon(icons, "system") or env_utils.get_icon(icons, "error")
+    local status_icon = enabled and environment.icons.t."system" or environment.icons.t."error"
     local description = get_module_description(module_name)
     
     if enabled then
@@ -71,22 +71,22 @@ local function create_choices()
   -- Команды управления с локализацией и иконками
   table.insert(choices, {
     id = "enable_all",
-    label = "      " .. env_utils.get_icon(icons, "system") .. "  Включить все модули"
+    label = "      " .. environment.icons.t."system" .. "  Включить все модули"
   })
   
   table.insert(choices, {
     id = "disable_all", 
-    label = "      " .. env_utils.get_icon(icons, "error") .. "  Выключить все модули"
+    label = "      " .. environment.icons.t."error" .. "  Выключить все модули"
   })
   
   table.insert(choices, {
     id = "help",
-    label = "      " .. env_utils.get_icon(icons, "tip") .. "  Справка и помощь"
+    label = "      " .. environment.icons.t."tip" .. "  Справка и помощь"
   })
   
   table.insert(choices, {
     id = "exit",
-    label = "      " .. env_utils.get_icon(icons, "exit") .. "  Сохранить и выйти"
+    label = "      " .. environment.icons.t."exit" .. "  Сохранить и выйти"
   })
   
   return choices
@@ -148,7 +148,7 @@ M.show_panel = function(window, pane)
           M.show_panel(inner_window, inner_pane)
         end
       end),
-      title = env_utils.get_icon(icons, "debug") .. " Панель управления отладкой",
+      title = environment.icons.t."debug" .. " Панель управления отладкой",
       description = string.format("Активно: %d/%d модулей", enabled_count, #modules),
       fuzzy_description = "Найти модуль:",
       fuzzy = true,

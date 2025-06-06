@@ -65,7 +65,7 @@ M.create_dialog_box = function(config)
     -- Новый единообразный шаблон
     local icons = require("config.environment.icons")
     local env_utils = require("utils.environment")
-    local icon = env_utils.get_icon(icons, icon_key)
+    local icon = environment.icons.t.icon_key
     
     -- Определяем правильное название по типу
     local type_names = {
@@ -92,7 +92,7 @@ M.create_dialog_box = function(config)
     if line == "PLACEHOLDER_FOR_COLORED_FIRST_LINE" then
       local icons = require("config.environment.icons")
       local env_utils = require("utils.environment")
-      local icon = env_utils.get_icon(icons, icon_key)
+      local icon = environment.icons.t.icon_key
       local type_names = {
         workspace = "Текущая сессия",
         window = "Текущее окно",
@@ -137,7 +137,7 @@ M.create_dialog_box = function(config)
     if line == "PLACEHOLDER_FOR_COLORED_FIRST_LINE" then
       local icons = require("config.environment.icons")
       local env_utils = require("utils.environment")
-      local icon = env_utils.get_icon(icons, icon_key)
+      local icon = environment.icons.t.icon_key
       
       local type_names = {
         workspace = "Текущая сессия",
