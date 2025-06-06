@@ -69,7 +69,7 @@ local function create_main_menu_choices(stats)
     id = "header",
     label = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "session") } },
-      { Text = environment.icons.t."session" .. " " .. environment.locale.t.state_manager_title }
+      { Text = environment.icons.t.session .. " " .. environment.locale.t.state_manager_title }
     })
   })
   
@@ -90,7 +90,7 @@ local function create_main_menu_choices(stats)
     id = "stats_workspace",
     label = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
-      { Text = environment.icons.t."workspace" .. " " .. workspace_text },
+      { Text = environment.icons.t.workspace .. " " .. workspace_text },
       { Foreground = { Color = "#666666" } },
       { Text = workspace_spaces },
       { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
@@ -107,7 +107,7 @@ local function create_main_menu_choices(stats)
     id = "stats_window",
     label = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "window") } },
-      { Text = environment.icons.t."window" .. " " .. window_text },
+      { Text = environment.icons.t.window .. " " .. window_text },
       { Foreground = { Color = "#666666" } },
       { Text = window_spaces },
       { Foreground = { Color = env_utils.get_color(colors, "window") } },
@@ -124,7 +124,7 @@ local function create_main_menu_choices(stats)
     id = "stats_tab",
     label = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "tab") } },
-      { Text = environment.icons.t."tab" .. " " .. tab_text },
+      { Text = environment.icons.t.tab .. " " .. tab_text },
       { Foreground = { Color = "#666666" } },
       { Text = tab_spaces },
       { Foreground = { Color = env_utils.get_color(colors, "tab") } },
@@ -143,7 +143,7 @@ local function create_main_menu_choices(stats)
       id = "view_workspace",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
-        { Text = environment.icons.t."workspace" .. " " .. environment.locale.t.view_workspace_states }
+        { Text = environment.icons.t.workspace .. " " .. environment.locale.t.view_workspace_states }
       })
     })
   end
@@ -153,7 +153,7 @@ local function create_main_menu_choices(stats)
       id = "view_window",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "window") } },
-        { Text = environment.icons.t."window" .. " " .. environment.locale.t.view_window_states }
+        { Text = environment.icons.t.window .. " " .. environment.locale.t.view_window_states }
       })
     })
   end
@@ -163,7 +163,7 @@ local function create_main_menu_choices(stats)
       id = "view_tab",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "tab") } },
-        { Text = environment.icons.t."tab" .. " " .. environment.locale.t.view_tab_states }
+        { Text = environment.icons.t.tab .. " " .. environment.locale.t.view_tab_states }
       })
     })
   end
@@ -181,7 +181,7 @@ local function create_main_menu_choices(stats)
     id = "exit",
     label = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "exit") } },
-      { Text = environment.icons.t."exit" .. " " .. environment.locale.t.exit }
+      { Text = environment.icons.t.exit .. " " .. environment.locale.t.exit }
     })
   })
   
@@ -197,7 +197,7 @@ local function show_states_of_type(window, pane, state_type, files)
       id = "empty",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "error") } },
-        { Text = environment.icons.t."error" .. " Нет сохраненных состояний" }
+        { Text = environment.icons.t.error .. " Нет сохраненных состояний" }
       })
     })
   else
@@ -218,7 +218,7 @@ local function show_states_of_type(window, pane, state_type, files)
     id = "back",
     label = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "exit") } },
-      { Text = environment.icons.t."exit" .. " " .. environment.locale.t.back_to_main_menu }
+      { Text = environment.icons.t.exit .. " " .. environment.locale.t.back_to_main_menu }
     })
   })
   
@@ -252,7 +252,7 @@ M.show_main_menu = function(window, pane)
   local selector_config = {
     title = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "session") } },
-      { Text = environment.icons.t."session" .. " " .. environment.locale.t.state_manager_title }
+      { Text = environment.icons.t.session .. " " .. environment.locale.t.state_manager_title }
     }),
     description = environment.locale.t.state_manager_description,
     fuzzy = false,

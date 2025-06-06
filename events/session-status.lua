@@ -169,7 +169,7 @@ M.set_mode = function(mode_name)
   -- Логируем только если режим действительно изменился
   if session_state.current_mode ~= mode_name then
     local display_name = get_mode_display_name(mode_name)
-    local activation_icon = environment.icons.t."mode_activated"
+    local activation_icon = environment.icons.t.mode_activated
     local message = activation_icon .. " Активирован режим: " .. display_name
     wezterm.log_info("[session_status] " .. message)
   end
@@ -181,8 +181,8 @@ end
 
 M.clear_mode = function()
   -- ИСПРАВЛЕНО: Очищаем ВСЁ при таймауте
-  local deactivation_icon = environment.icons.t."mode_deactivated"
-  local timeout_icon = environment.icons.t."timeout_exit"
+  local deactivation_icon = environment.icons.t.mode_deactivated
+  local timeout_icon = environment.icons.t.timeout_exit
   local main_message = deactivation_icon .. " Деактивирован режим"
   local detail_message = "   " .. timeout_icon .. " Режим завершён по таймауту"
   
@@ -195,8 +195,8 @@ M.clear_mode = function()
 end
 
 M.clear_saved_mode = function()
-  local deactivation_icon = environment.icons.t."mode_deactivated"
-  local manual_icon = environment.icons.t."manual_exit"
+  local deactivation_icon = environment.icons.t.mode_deactivated
+  local manual_icon = environment.icons.t.manual_exit
   local main_message = deactivation_icon .. " Деактивирован режим"
   local detail_message = "   " .. manual_icon .. " Режим завершён вручную"
   
@@ -335,7 +335,7 @@ M.setup = function()
     
     local success_msg = wezterm.format({
       {Foreground = {Color = env_utils.get_color(colors, "system")}},
-      {Text = environment.icons.t."system" .. " "},
+      {Text = environment.icons.t.system .. " "},
       {Foreground = {Color = "#FFFFFF"}},
       {Text = environment.locale.t.config_reloaded}
     })

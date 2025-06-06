@@ -6,7 +6,7 @@ local terminal = require('config.environment.terminal')
 local apps = require('config.environment.apps')
 local fonts_data = require('config.environment.fonts')
 local globals = require('config.environment.globals')
-
+local icons = require('config.environment.icons')
 return {
   locale = locale,
   devtools = devtools,
@@ -15,4 +15,4 @@ return {
   apps = apps,
   fonts_data = fonts_data,
   globals = globals,
-}
+  icons = icons,}

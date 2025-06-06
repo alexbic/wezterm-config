@@ -29,7 +29,7 @@ M.setup = function()
         id = "active|" .. workspace_name,
         label = wezterm.format({
           { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
-          { Text = environment.icons.t."workspace" .. " : " .. workspace_name .. " (" .. environment.locale.t.workspace_type or "workspace" .. ")" }
+          { Text = environment.icons.t.workspace .. " : " .. workspace_name .. " (" .. environment.locale.t.workspace_type or "workspace" .. ")" }
         })
       })
     end
@@ -47,7 +47,7 @@ M.setup = function()
             id = "saved|workspace|" .. name,
             label = wezterm.format({
               { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
-              { Text = environment.icons.t."workspace" .. " : " .. name .. " (" .. environment.locale.t.workspace_type or "workspace" .. ")" }
+              { Text = environment.icons.t.workspace .. " : " .. name .. " (" .. environment.locale.t.workspace_type or "workspace" .. ")" }
             })
           })
         end
@@ -187,7 +187,7 @@ M.setup = function()
             end
           end
         end),
-        title = environment.icons.t."list_picker_tab" .. " " .. environment.locale.t.workspace_switch_title,
+        title = environment.icons.t.list_picker_tab .. " " .. environment.locale.t.workspace_switch_title,
         description = environment.locale.t.workspace_switch_description,
         fuzzy_description = "Поиск workspace/состояния: ",
         fuzzy = true,

@@ -184,7 +184,7 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
             session_status.delete_session_success(inner_window, clean_id)
           end)
         end),
-        title = environment.icons.t."list_delete_tab" .. " " .. environment.locale.t.deleting_sessions_title,
+        title = environment.icons.t.list_delete_tab .. " " .. environment.locale.t.deleting_sessions_title,
         description = environment.locale.t.deleting_sessions_description,
         fuzzy_description = environment.locale.t.deleting_sessions_fuzzy,
         fuzzy = true,

@@ -116,7 +116,7 @@ M.show_locale_manager = function(window, pane)
         local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, "ru")
         if success then
           inner_window:toast_notification("Восстановление", "Восстановлено на русский язык", nil, 3000)
-          wezterm.reload_configuration()
+          if switch_success then          wezterm.reload_configuration()
         end
         
       elseif id:match("^switch_") then
@@ -131,10 +131,10 @@ M.show_locale_manager = function(window, pane)
             os.execute(cmd)
           end
           
-          local success = env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
+            local switch_success =           local success = switch_success = env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
           if success then
             inner_window:toast_notification("Локализация", "Язык переключен на: " .. lang_code, nil, 3000)
-            wezterm.reload_configuration()
+          if switch_success then            wezterm.reload_configuration()
           end
         end
         
@@ -150,8 +150,8 @@ M.show_locale_manager = function(window, pane)
           local success = handle:close()
           if success then
             inner_window:toast_notification("Успех", "Локаль создана", nil, 3000)
-            env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
-            wezterm.reload_configuration()
+            local switch_success =             switch_success = env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
+          if switch_success then            wezterm.reload_configuration()
           end
         end
         
@@ -160,7 +160,7 @@ M.show_locale_manager = function(window, pane)
         local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, current_language)
         if success then
           inner_window:toast_notification("Локализация", "Кэш перегенерирован", nil, 3000)
-          wezterm.reload_configuration()
+          if switch_success then          wezterm.reload_configuration()
         end
       end
     end)
