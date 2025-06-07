@@ -1,6 +1,17 @@
 #!/bin/bash
 # Создание локали с пакетным переводом (РАБОЧАЯ ВЕРСИЯ)
 
+# Функция прогресс-бара
+show_progress() {
+    local duration=$1
+    local message="$2"
+    echo -n "$message "
+    for i in $(seq 1 $duration); do
+        echo -n "."
+        sleep 1
+    done
+    echo ""
+}
 SOURCE_FILE="$1"
 TARGET_LANG="$2"
 VERBOSE=""
@@ -56,7 +67,7 @@ sed -i '' "s/\"Русский\"/\"$TARGET_NAME\"/g" "$NEW_FILE"
 sed -i '' "s/-- Русская локализация.*/-- $TARGET_NAME localization/" "$NEW_FILE"
 
 # Добавляем TODO маркеры
-sed -i '' 's/ = "\([^"]*[а-яё][^"]*\)"/ = "\1" -- TODO:translate/gi' "$NEW_FILE"
+sed -i '' 's/ = "\([^"]*[а-яё][^"]*\)"/ = "\1", -- TODO:translate/gi' "$NEW_FILE"
 
 # СБОР ДАННЫХ ДЛЯ ПАКЕТНОГО ПЕРЕВОДА
 KEYS=()
@@ -90,8 +101,8 @@ for russian_text in "${RUSSIAN_TEXTS[@]}"; do
     echo "$russian_text" >> "$BATCH_INPUT"
 done
 
-echo "🔄 Идет перевод..."
-
+echo "🔄 Пакетный перевод $TOTAL_KEYS строк"
+show_progress 3 "⏳ Отправка данных на сервер"
 # ВЫПОЛНЯЕМ ПАКЕТНЫЙ ПЕРЕВОД
 if gtimeout 120 trans -brief "ru:${TARGET_LANG}" -i "$BATCH_INPUT" > "$BATCH_OUTPUT" 2>/dev/null; then
     echo "✅ Пакетный перевод выполнен!"
