@@ -77,7 +77,7 @@ show_progress() {
     for ((i=1; i<=filled; i++)); do bar+="█"; done
     for ((i=1; i<=empty; i++)); do bar+="░"; done
     
-    printf "\r🌐 Создание %s.lua из %s.lua %s [%d/%d]" "$target_lang" "$source_lang" "$bar" "$current" "$total"
+    printf "\r🌐 Создание %s.lua из %s.lua %s [%d/%d кл.]" "$target_lang" "$source_lang" "$bar" "$current" "$total"
 }
 
 # Определение исходного языка
@@ -103,8 +103,6 @@ NEW_FILE="$SOURCE_DIR/${TARGET_LANG}.lua"
 TEMP_DIR=$(cross_platform_mktemp)
 trap "rm -rf $TEMP_DIR" EXIT
 
-echo "Создание $TARGET_NAME локализации из $SOURCE_LANG"
-
 # Извлекаем все ключи для перевода
 grep -E '^  [a-zA-Z_]+ = ' "$SOURCE_FILE" | \
     grep -v '^  locale = ' | \
@@ -112,8 +110,6 @@ grep -E '^  [a-zA-Z_]+ = ' "$SOURCE_FILE" | \
 
 TOTAL_KEYS=$(wc -l < "$TEMP_DIR/all_lines.txt")
 CURRENT_KEY=0
-
-echo "Найдено ключей для перевода: $TOTAL_KEYS"
 
 # Массив для сбора переведенных строк
 TRANSLATED_LINES=()
@@ -156,30 +152,26 @@ while IFS= read -r line; do
 done < "$TEMP_DIR/all_lines.txt"
 
 echo ""
-echo "✅ Перевод завершен!"
 
-# Создаем финальный файл
+# Создаем финальный файл с признаком завершения
 {
     echo "-- $TARGET_NAME localization"
     echo "return {"
     echo "  locale = \"$TARGET_LOCALE\","
     echo "  name = \"$TARGET_NAME\","
+    echo "  translation_completed = true,"
     echo ""
     printf '%s\n' "${TRANSLATED_LINES[@]}"
     echo "}"
 } > "$NEW_FILE"
 
-echo "📄 Создан файл: $NEW_FILE"
-
 # Проверка синтаксиса
 if command -v luac >/dev/null 2>&1; then
     if luac -p "$NEW_FILE" 2>/dev/null; then
-        echo "✅ Синтаксис корректен"
+        echo "✅ $TARGET_NAME локализация создана успешно"
     else
-        echo "❌ Ошибка синтаксиса"
+        echo "❌ Ошибка синтаксиса - локаль недоступна"
+        # Удаляем признак завершения из файла при ошибке
+        cross_platform_sed '/translation_completed = true,/d' "$NEW_FILE"
     fi
 fi
-
-# Статистика
-SUCCESS_COUNT=$(grep -c '= ".*",' "$NEW_FILE" 2>/dev/null || echo "0")
-echo "📊 Статистика: обработано $TOTAL_KEYS ключей, успешно переведено $SUCCESS_COUNT"
