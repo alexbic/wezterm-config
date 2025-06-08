@@ -75,7 +75,7 @@ return {
   locale_current_language = "Текущий язык",
   locale_regenerate_cache = "Перегенерировать кэш текущего языка",
   locale_show_stats = "Показать статистику локализации",
-  locale_create_new = "Создать новую локаль",
+  locale_create_new = "Создать/обновить локаль",
   error = "Ошибка",
   loading = "Загрузка...",
   success = "Успешно",

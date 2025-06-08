@@ -139,22 +139,45 @@ M.show_locale_manager = function(window, pane)
         end
         
       elseif id:match("^create_") then
-        -- Создание нового языка  
+        -- Создание нового языка с прогресс-баром
         local lang_code = id:match("^create_(.+)$")
-        local script_path = wezterm.config_dir .. "/scripts/create-locale.sh"
+        local script_path = wezterm.config_dir .. "/scripts/create-locale-final.sh"
         local ru_path = wezterm.config_dir .. "/config/locales/ru.lua"
         local cmd = script_path .. " " .. ru_path .. " " .. lang_code
-        local handle = io.popen(cmd .. " 2>&1")
-        if handle then
-          local result = handle:read("*a")
-          local success = handle:close()
-          if success then
-            inner_window:toast_notification("Успех", "Локаль создана", nil, 3000)
-            env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
-            wezterm.reload_configuration()
-          end
-        end
         
+        -- Показываем начальное уведомление
+        inner_window:toast_notification("🌐 Локализация", "Обновляем " .. lang_code .. " локаль из ru.lua...", nil, 2000)
+        
+        -- Запускаем процесс в фоне
+        wezterm.time.call_after(0.1, function()
+          local handle = io.popen(cmd .. " 2>&1")
+          if handle then
+            -- Читаем вывод построчно для прогресса
+            local progress_shown = false
+            for line in handle:lines() do
+              if line:match("Найдено ключей: (%d+)") then
+                local total = line:match("Найдено ключей: (%d+)")
+                inner_window:toast_notification("📊 Анализ", "Найдено " .. total .. " ключей для перевода", nil, 2000)
+              elseif line:match("Пакетный перевод") then
+                inner_window:toast_notification("🔄 Перевод", "Отправляем запрос на перевод...", nil, 3000)
+              elseif line:match("Перевод выполнен") then
+                inner_window:toast_notification("✅ Готово", "Перевод выполнен успешно!", nil, 2000)
+              end
+            end
+            
+            local success = handle:close()
+            if success then
+              inner_window:toast_notification("✅ Успех", lang_code:upper() .. " локаль создана!", nil, 3000)
+              -- Переключаемся на новый язык
+              wezterm.time.call_after(0.5, function()
+                env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
+                wezterm.reload_configuration()
+              end)
+            else
+              inner_window:toast_notification("❌ Ошибка", "Не удалось создать локаль", nil, 3000)
+            end
+          end
+        end)        
       elseif id == "regenerate" then
         -- Перегенерация кэша
         local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, current_language)
