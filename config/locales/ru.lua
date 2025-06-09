@@ -224,7 +224,7 @@ return {
   states_manager_title = "Управление состояниями",
   states_manager_description = "Сохранение/загрузка/удаление workspace/window/tab",
   save_workspace_action = "Сохранить текущую сессию",
-  load_state_action = "Загрузить состояние", 
+  load_state_action = "Загрузить состояние",
   delete_state_action = "Удалить состояние",  ai_settings_description = "Интеграция с Claude API",
   
   -- === ДОПОЛНИТЕЛЬНЫЕ КЛЮЧИ ===
