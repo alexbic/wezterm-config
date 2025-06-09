@@ -4,7 +4,6 @@ M.create_selector_dialog = function(wezterm, config)
   return {
 title = config.title,
 description = config.description,
-fuzzy_description = config.fuzzy_description,
 fuzzy = config.fuzzy or true,
 choices = config.choices or {},
 action = config.action
@@ -49,7 +48,7 @@ M.show_debug_panel = function(wezterm, window, pane)
   local env_utils = require('utils.environment')
   
   local tab = window:active_tab()
-  tab:set_title(wezterm.format({{ Foreground = { Color = env_utils.get_color(colors, "debug_control") }}, { Text = "⊠ Панель управления отладкой" }}))
+  local tab_color = env_utils.get_color(colors, "debug_control"); window:set_config_overrides({ colors = { tab_bar = { active_tab = { bg_color = tab_color, fg_color = "#FFFFFF" } } } }); tab:set_title("Панель управления отладкой")
   
   local modules = {}
   for module_name, _ in pairs(debug.DEBUG_CONFIG) do 
@@ -69,7 +68,7 @@ global = "Общесистемная отладка WezTerm"
   local choices = {}
   table.insert(choices, { id = "separator_top", label = "─────────────────────────────────────────────────────────" })  for i, module_name in ipairs(modules) do
 local enabled = debug.DEBUG_CONFIG[module_name] or false
-local status_icon = enabled and environment.icons.t.system or environment.icons.t.error
+local status_icon = enabled and (environment.icons and environment.icons.t and environment.icons.t.system) or "✅" or (environment.icons and environment.icons.t and environment.icons.t.error) or "❌"
 local description = descriptions[module_name] or "Модуль отладки"
 
 if enabled then
@@ -77,20 +76,20 @@ if enabled then
     id = module_name,
     label = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, "debug_control") } },
-      { Text = string.format("    %s  %-15s - %s", status_icon, module_name, description) }
+      { Text = string.format("%s %s - %s", status_icon, module_name, description) }
     })
   })
 else
   table.insert(choices, {
     id = module_name,
-    label = string.format("    %s  %-15s - %s", status_icon, module_name, description)
+    label = string.format("%s %s - %s", status_icon, module_name, description)
   })
 end
   end
   
   table.insert(choices, { id = "separator", label = "─────────────────────────────────────────────────────────" })
-  table.insert(choices, { id = "enable_all", label = "  " .. environment.icons.t.system .. "  Включить все модули" })
-  table.insert(choices, { id = "disable_all", label = "  " .. environment.icons.t.error .. "  Выключить все модули" })
+  table.insert(choices, { id = "enable_all", label = "  " .. (environment.icons and environment.icons.t and environment.icons.t.system) or "✅" .. "  Включить все модули" })
+  table.insert(choices, { id = "disable_all", label = "  " .. (environment.icons and environment.icons.t and environment.icons.t.error) or "❌" .. "  Выключить все модули" })
   table.insert(choices, { id = "exit", label = "  " .. environment.icons.t.exit .. "  Выход" })
   
   local enabled_count = 0
@@ -99,10 +98,10 @@ if enabled then enabled_count = enabled_count + 1 end
   end
   
   window:perform_action(wezterm.action.InputSelector({
-title = environment.icons.t.debug .. " Панель управления отладкой",
+title = "Панель управления отладкой",
 description = string.format("Активно: %d/%d модулей | ESC: F10 меню", enabled_count, #modules),
 
-fuzzy = true,
+fuzzy = false,
 choices = choices,
 action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
   if id == "exit" then
