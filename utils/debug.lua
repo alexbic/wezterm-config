@@ -15,7 +15,7 @@ M.DEBUG_CONFIG = {
   resurrect = false,         -- отладка сохранения/восстановления
   workspace = false,         -- отладка workspace
   bindings = false,          -- отладка горячих клавиш
-  global = false,            -- общая отладка
+  global = true,            -- общая отладка
 }
 
 -- Простое логирование с поддержкой таблицы локализации

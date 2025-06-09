@@ -36,6 +36,7 @@ return {
   main_font = "Основной шрифт",
   save_tab_default = "По умолчанию",
   config_loaded_info = "Конфигурация загружена",
+  debug_message = "%s",
   copy_mode = "Режим копирования",
   config_loaded = "Конфигурация загружена",
   division_by_zero = "Деление на ноль",
