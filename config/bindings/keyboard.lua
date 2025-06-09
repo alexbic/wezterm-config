@@ -46,7 +46,16 @@ local base_keys = {
    { key = 'F11',    mods = 'NONE',        action = act.ToggleFullScreen },
    { key = 'F12',    mods = 'NONE',        action = act.ShowDebugOverlay },
    { key = "F12", mods = "SHIFT", action = bindings_utils.activate_debug_mode_with_panel(wezterm) },
-   { key = "F10", mods = "NONE", action = bindings_utils.activate_state_manager(wezterm) },
+   { key = "F10", mods = "NONE", action = wezterm.action_callback(function(window, pane)
+    local dialogs = require("utils.dialogs")
+    local settings_data = require("config.dialogs.settings-manager")
+    local existing_managers = {
+      locale_manager = require("config.dialogs.locale-manager"),
+      debug_manager = require("config.dialogs.debug-manager"),
+      state_manager = require("config.dialogs.state-manager")
+    }
+    dialogs.show_f10_main_settings(wezterm, window, pane, settings_data, existing_managers)
+  end) },
    { key = "F9", mods = "NONE", action = wezterm.action_callback(function(window, pane)
      local locale_manager = require("config.dialogs.locale-manager")
      locale_manager.show_locale_manager(window, pane)

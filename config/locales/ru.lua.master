@@ -202,4 +202,27 @@ return {
   error_platform_initialization = "Не удалось инициализировать platform",
   error_workspace_switch_failed = "Ошибка при переключении workspace",
   error_load_state_failed = "Не удалось загрузить состояние для workspace",
+  
+  -- === F10 ЦЕНТР УПРАВЛЕНИЯ ===
+  settings_manager_title = "Центр управления",
+  settings_manager_description = "Единый интерфейс всех настроек конфигурации",
+  
+  -- === МОДУЛИ В РАЗРАБОТКЕ ===
+  keybind_settings_title = "Горячие клавиши",
+  keybind_settings_description = "Настройка биндингов и сочетаний",
+  appearance_settings_title = "Темы и оформление", 
+  appearance_settings_description = "Цвета, фоны, прозрачность",
+  global_settings_title = "Глобальные настройки",
+  global_settings_description = "Переменные окружения и пути",
+  export_import_title = "Экспорт/Импорт",
+  export_import_description = "Резервное копирование конфигурации",
+  help_f1_f12_title = "Справка F1-F12",
+  help_f1_f12_description = "Документация горячих клавиш",
+  
+  -- === МОДУЛИ V2.0 ===
+  ai_settings_title = "AI Ассистент",
+  ai_settings_description = "Интеграция с Claude API",
+  
+  -- === ДОПОЛНИТЕЛЬНЫЕ КЛЮЧИ ===
+  debug_panel_description = "Включение/выключение debug логирования",
 }

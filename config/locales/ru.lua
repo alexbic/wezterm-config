@@ -142,10 +142,30 @@ return {
   save_tab_instructions = "Enter = использовать по умолчанию | Esc = отмена",
 
   -- === ПОДСКАЗКИ И РЕЖИМЫ ===
+  -- ДУБЛИКАТ УДАЛЕН:   tip_split_pane = "Используйте Ctrl+Shift+O для разделения панели",
+  -- ДУБЛИКАТ УДАЛЕН:   copy_mode = "Режим копирования",
+  -- ДУБЛИКАТ УДАЛЕН:   search_mode = "Режим поиска",
+  -- ДУБЛИКАТ УДАЛЕН:   time_label = "Время",
+  -- ДУБЛИКАТ УДАЛЕН:   battery_label = "Заряд",
   
   -- === ВНЕШНИЙ ВИД ===
+  -- ДУБЛИКАТ УДАЛЕН:   background_changed = "Смена фонового изображения",
+  -- ДУБЛИКАТ УДАЛЕН:   theme_changed = "Тема изменена на",
+  -- ДУБЛИКАТ УДАЛЕН:   background_load_error = "Ошибка загрузки изображения",
   
   -- === СЕССИИ И СОХРАНЕНИЯ ===
+  -- ДУБЛИКАТ УДАЛЕН:   session_restored = "Сессия восстановлена",
+  -- ДУБЛИКАТ УДАЛЕН:   session_restore_error = "Ошибка восстановления сессии", 
+  -- ДУБЛИКАТ УДАЛЕН:   session_saved = "Сессия сохранена",
+  -- ДУБЛИКАТ УДАЛЕН:   enter_save_session_name = "Введите имя для сохранения сессии",
+  -- ДУБЛИКАТ УДАЛЕН:   current_workspace = "Текущая workspace",
+  -- ДУБЛИКАТ УДАЛЕН:   enter_save_default = "Enter = сохранить как текущую | Esc = отмена | или введите новое имя",
+  -- ДУБЛИКАТ УДАЛЕН:   save_window_as = "Сохранить window как:",
+  -- ДУБЛИКАТ УДАЛЕН:   save_window_default = "По умолчанию",
+  -- ДУБЛИКАТ УДАЛЕН:   save_window_instructions = "Enter = использовать по умолчанию | Esc = отмена",
+  -- ДУБЛИКАТ УДАЛЕН:   save_tab_as = "Сохранить tab как:",
+  -- ДУБЛИКАТ УДАЛЕН:   save_tab_default = "По умолчанию",
+  -- ДУБЛИКАТ УДАЛЕН:   save_tab_instructions = "Enter = использовать по умолчанию | Esc = отмена",
 
   -- === СОХРАНЕНИЕ СЕССИЙ ===
   session_window_saved_as = "Window сохранено как",
@@ -182,4 +202,27 @@ return {
   error_platform_initialization = "Не удалось инициализировать platform",
   error_workspace_switch_failed = "Ошибка при переключении workspace",
   error_load_state_failed = "Не удалось загрузить состояние для workspace",
+  
+  -- === F10 ЦЕНТР УПРАВЛЕНИЯ ===
+  settings_manager_title = "Центр управления",
+  settings_manager_description = "Единый интерфейс всех настроек конфигурации",
+  
+  -- === МОДУЛИ В РАЗРАБОТКЕ ===
+  keybind_settings_title = "Горячие клавиши",
+  keybind_settings_description = "Настройка биндингов и сочетаний",
+  appearance_settings_title = "Темы и оформление", 
+  appearance_settings_description = "Цвета, фоны, прозрачность",
+  global_settings_title = "Глобальные настройки",
+  global_settings_description = "Переменные окружения и пути",
+  export_import_title = "Экспорт/Импорт",
+  export_import_description = "Резервное копирование конфигурации",
+  help_f1_f12_title = "Справка F1-F12",
+  help_f1_f12_description = "Документация горячих клавиш",
+  
+  -- === МОДУЛИ V2.0 ===
+  ai_settings_title = "AI Ассистент",
+  ai_settings_description = "Интеграция с Claude API",
+  
+  -- === ДОПОЛНИТЕЛЬНЫЕ КЛЮЧИ ===
+  debug_panel_description = "Включение/выключение debug логирования",
 }

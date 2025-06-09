@@ -376,3 +376,4 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_m
 end
 
 return M
+
