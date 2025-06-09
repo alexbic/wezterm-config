@@ -241,7 +241,7 @@ local function show_states_of_type(window, pane, state_type, files)
     end)
   }
   
-  window:perform_action(wezterm.action.InputSelector(selector_config), pane)
+  if window and pane then window:perform_action(wezterm.action.InputSelector(selector_config), pane) end
 end
 
 -- Главное меню менеджера состояний
@@ -273,7 +273,7 @@ M.show_main_menu = function(window, pane)
     end)
   }
   
-  window:perform_action(wezterm.action.InputSelector(selector_config), pane)
+  if window and pane then window:perform_action(wezterm.action.InputSelector(selector_config), pane) end
 end
 
 return M
