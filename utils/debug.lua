@@ -28,8 +28,7 @@ M.log = function(wezterm, t_table, module, message_key, ...)
     local formatted_msg = string.format(localized_msg, ...)
     local icon = icons.t[module] or "🔧"
     local color_code = env_utils.get_ansi_color(colors, module)
-    local colored_prefix = "\033[38;5;" .. color_code .. "m" .. icon .. " [" .. module .. "]\033[0m"
-    wezterm.log_info(colored_prefix .. " " .. formatted_msg)
+    local colored_prefix = "27[38;5;" .. color_code .. "m" .. icon .. " [" .. module .. "]27[0m"    wezterm.log_info(colored_prefix .. " " .. formatted_msg)
   end
 end
 -- Выключить отладку для модуля  
