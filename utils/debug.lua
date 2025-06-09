@@ -31,15 +31,7 @@ M.log = function(wezterm, t_table, module, message_key, ...)
     local colored_prefix = "\033[38;5;" .. color_code .. "m" .. icon .. " [" .. module .. "]\033[0m"
     wezterm.log_info(colored_prefix .. " " .. formatted_msg)
   end
-endend
-
--- Включить отладку для модуля
-M.enable_debug = function(wezterm, t_table, module)
-  M.DEBUG_CONFIG[module] = true
-  local msg = (t_table and t_table["debug_enabled_for_module"]) or "Debug enabled for module: %s"
-  wezterm.log_info("⚙ " .. string.format(msg, module))
 end
-
 -- Выключить отладку для модуля  
 M.disable_debug = function(wezterm, t_table, module)
   M.DEBUG_CONFIG[module] = false
