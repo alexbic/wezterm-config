@@ -38,7 +38,7 @@ M.menu_items = {
     description_key = "state_manager_description",
     status = "ready",
     module_type = "existing",
-    target = "state_manager"
+    target = "states_manager"
   },
   
   -- МОДУЛИ В РАЗРАБОТКЕ
