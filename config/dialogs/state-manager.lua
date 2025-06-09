@@ -143,7 +143,6 @@ local function create_main_menu_choices(stats)
       id = "view_workspace",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "workspace") } },
-        { Text = environment.icons.t.workspace .. " " .. environment.locale.t.view_workspace_states }
       })
     })
   end
@@ -153,7 +152,6 @@ local function create_main_menu_choices(stats)
       id = "view_window",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "window") } },
-        { Text = environment.icons.t.window .. " " .. environment.locale.t.view_window_states }
       })
     })
   end
@@ -163,7 +161,6 @@ local function create_main_menu_choices(stats)
       id = "view_tab",
       label = wezterm.format({
         { Foreground = { Color = env_utils.get_color(colors, "tab") } },
-        { Text = environment.icons.t.tab .. " " .. environment.locale.t.view_tab_states }
       })
     })
   end
@@ -189,7 +186,7 @@ local function create_main_menu_choices(stats)
 end
 
 -- Показ состояний конкретного типа
-local function show_states_of_type(window, pane, state_type, files)
+local function local dialogs = require("utils.dialogs"); dialogs.show_states_list(wezterm, inner_window, inner_pane, id)
   local choices = {}
   
   if #files == 0 then
@@ -241,14 +238,13 @@ local function show_states_of_type(window, pane, state_type, files)
     end)
   }
   
-  if window and pane then window:perform_action(wezterm.action.InputSelector(selector_config), pane) end
+  if window and pane then window:perform_action(wezterm.action.InputSelector(selector_config), pane and window:perform_action(wezterm.action.InputSelector(selector_config), pane and window:perform_action(wezterm.action.InputSelector(selector_config), pane) or nil) or nil) end
 end
 
 -- Главное меню менеджера состояний
 M.show_main_menu = function(window, pane)
-  -- Устанавливаем название вкладки
+  if not window or not pane then return end  if not window or not pane then return end  -- Устанавливаем название вкладки
   local tab = window:active_tab()
-  tab:set_title("Менеджер состояний")  local stats = get_states_statistics()
   local choices = create_main_menu_choices(stats)
   
   local selector_config = {
@@ -263,9 +259,9 @@ M.show_main_menu = function(window, pane)
     action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
       if id == "exit" or not id then
         return
-      elseif id:match("^view_") then
+      elseif id == "workspace" or id == "window" or id == "tab" then
         local state_type = id:match("^view_(.+)$")
-        show_states_of_type(inner_window, inner_pane, state_type, stats[state_type].files)
+        local dialogs = require("utils.dialogs"); dialogs.show_states_list(wezterm, inner_window, inner_pane, id)
       elseif id:match("^stats_") or id:match("^separator") or id == "header" then
         -- Игнорируем клики по статистике и разделителям
         M.show_main_menu(inner_window, inner_pane)
@@ -273,7 +269,7 @@ M.show_main_menu = function(window, pane)
     end)
   }
   
-  if window and pane then window:perform_action(wezterm.action.InputSelector(selector_config), pane) end
+  if window and pane then window:perform_action(wezterm.action.InputSelector(selector_config), pane and window:perform_action(wezterm.action.InputSelector(selector_config), pane and window:perform_action(wezterm.action.InputSelector(selector_config), pane) or nil) or nil) end
 end
 
 return M
