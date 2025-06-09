@@ -391,20 +391,29 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_m
 end
 
 
-return M
 
+-- ========================================
 
-M.show_states_list = function(wezterm, window, pane, state_type)
-  if not window or not pane then return end
-  local tab = window:active_tab()
-  tab:set_title("Список " .. state_type .. " состояний")
-  local choices = { {id = "back", label = "Назад к главному меню"} }
-  window:perform_action(wezterm.action.InputSelector({
-    description = "Управление " .. state_type .. " состояниями",
-    choices = choices,
-    action = wezterm.action_callback(function(w, p, id)
-      local state_manager = require("config.dialogs.state-manager")
-      state_manager.show_main_menu(w, p)
-    end)
-  }), pane)
+-- ========================================
+-- УНИВЕРСАЛЬНЫЕ ДИАЛОГИ (ФУНКЦИИ)
+-- ========================================
+
+M.create_standard_list_dialog = function(wezterm, config)
+  local tab = config.window:active_tab()
+  tab:set_title(config.title)
+  
+  local choices = {}
+  table.insert(choices, { id = "separator", label = "─────────────────────────────────────────" })
+  
+  for _, item in ipairs(config.items or {}) do
+    table.insert(choices, { id = item.id, label = item.icon .. " " .. item.text })
+  end
+  
+  return choices
 end
+
+M.create_detail_dialog = function(wezterm, config)
+  return M.create_standard_list_dialog(wezterm, config)
+end
+
+return M
