@@ -302,6 +302,7 @@ M.create_f10_menu_choice = function(wezterm, item, colors, env_utils)
     full_title = full_title .. " - " .. description
   end
   
+
   return M.create_choice({
     id = item.id,
     icon = item.icon,
@@ -321,6 +322,9 @@ M.handle_f10_menu_selection = function(wezterm, window, pane, id, existing_manag
   if id == "locale_settings" and existing_managers.locale_manager then
     existing_managers.locale_manager.show_locale_manager(window, pane)
     
+  elseif id == "state_settings" and existing_managers.state_manager then
+    existing_managers.state_manager.show_main_menu(window, pane)
+    existing_managers.state_manager.show_main_menu(window, pane)
   elseif id == "debug_settings" and existing_managers.debug_manager then  
     existing_managers.debug_manager.show_panel(window, pane)
     
@@ -385,6 +389,7 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_m
   
   window:perform_action(wezterm.action.InputSelector(selector_config), pane)
 end
+
 
 return M
 

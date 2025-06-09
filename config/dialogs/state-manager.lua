@@ -225,7 +225,7 @@ local function show_states_of_type(window, pane, state_type, files)
   local selector_config = {
     title = wezterm.format({
       { Foreground = { Color = env_utils.get_color(colors, state_type) } },
-      { Text = environment.icons.t.state_type .. " Состояния " .. state_type }
+      { Text = environment.icons.t[state_type] .. " Состояния " .. state_type }
     }),
     description = "Выберите действие с состояниями",
     fuzzy = true,

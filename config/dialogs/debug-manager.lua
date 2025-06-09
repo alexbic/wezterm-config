@@ -110,6 +110,7 @@ M.show_panel = function(window, pane)
       enabled_count = enabled_count + 1
     end
   end
+  if not window or not pane or not window:active_tab() then return end
   
   window:perform_action(
     wezterm.action.InputSelector({
