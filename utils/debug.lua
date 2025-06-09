@@ -28,8 +28,9 @@ M.log = function(wezterm, t_table, module, message_key, ...)
     local formatted_msg = string.format(localized_msg, ...)
     local icon = icons.t[module] or "🔧"
     local color_code = env_utils.get_ansi_color(colors, module)
-    local colored_prefix = "27[38;5;" .. color_code .. "m" .. icon .. " [" .. module .. "]27[0m"    wezterm.log_info(colored_prefix .. " " .. formatted_msg)
-  end
+    local var_icon = icons.t.set_env_var or "⚡"
+    local var_color = env_utils.get_ansi_color(colors, "set_env_var")
+    local colored_prefix = "27[38;5;" .. var_color .. "m[" .. module .. "] " .. var_icon .. "27[0m"  end
 end
 -- Выключить отладку для модуля  
 M.disable_debug = function(wezterm, t_table, module)
