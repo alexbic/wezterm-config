@@ -50,14 +50,14 @@ local function create_choices()
         id = module_name,
         label = wezterm.format({
           { Foreground = { Color = env_utils.get_color(colors, "debug_control") } },
-          { Text = string.format(" %d    %s  %-15s - %s", i, status_icon, module_name, description) }
+          { Text = string.format("    %s  %-15s - %s", i, status_icon, module_name, description) }
         })
       })
     else
       -- Выключенный модуль - обычный
       table.insert(choices, {
         id = module_name,
-        label = string.format(" %d    %s  %-15s - %s", i, status_icon, module_name, description)
+        label = string.format("    %s  %-15s - %s", i, status_icon, module_name, description)
       })
     end
   end
@@ -94,7 +94,9 @@ end
 
 -- Показ панели отладки
 M.show_panel = function(window, pane)
-  local choices = create_choices()
+  -- Устанавливаем название вкладки
+  local tab = window:active_tab()
+  tab:set_title("Настройка отладки")  local choices = create_choices()
   local modules = {}
   for module_name, _ in pairs(debug.DEBUG_CONFIG) do 
     table.insert(modules, module_name) 
@@ -113,7 +115,19 @@ M.show_panel = function(window, pane)
     wezterm.action.InputSelector({
       action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
         if not id or id == "exit" then
+          -- Возвращаемся в F10 меню
+          local dialogs = require("utils.dialogs")
+          local settings_data = require("config.dialogs.settings-manager")
+          local existing_managers = {
+            locale_manager = require("config.dialogs.locale-manager"),
+            debug_manager = require("config.dialogs.debug-manager"),
+            state_manager = require("config.dialogs.state-manager")
+          }
+          dialogs.show_f10_main_settings(wezterm, inner_window, inner_pane, settings_data, existing_managers)
           return
+        end
+        
+        if not id then          return
         end
         
         if id == "separator" then
@@ -131,25 +145,25 @@ M.show_panel = function(window, pane)
           for module_name, _ in pairs(debug.DEBUG_CONFIG) do
             debug.DEBUG_CONFIG[module_name] = true
           end
-          debug.save_debug_settings()
+          debug.save_debug_settings(wezterm)
           M.show_panel(inner_window, inner_pane)
           
         elseif id == "disable_all" then
           for module_name, _ in pairs(debug.DEBUG_CONFIG) do
             debug.DEBUG_CONFIG[module_name] = false
           end
-          debug.save_debug_settings()
+          debug.save_debug_settings(wezterm)
           M.show_panel(inner_window, inner_pane)
           
         else
           -- Переключаем конкретный модуль
           debug.DEBUG_CONFIG[id] = not debug.DEBUG_CONFIG[id]
-          debug.save_debug_settings()
+          debug.save_debug_settings(wezterm)
           M.show_panel(inner_window, inner_pane)
         end
       end),
       title = environment.icons.t.debug .. " Панель управления отладкой",
-      description = string.format("Активно: %d/%d модулей", enabled_count, #modules),
+      description = string.format("Активно: %d/%d модулей | ESC: F10 меню", enabled_count, #modules),
       fuzzy_description = "Найти модуль:",
       fuzzy = true,
       choices = choices,

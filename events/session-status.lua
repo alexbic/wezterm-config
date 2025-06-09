@@ -61,9 +61,13 @@ end
 
 -- Получение данных режима из централизованной системы иконок
 local function get_mode_data(mode_name)
+  local env_utils = require('utils.environment')
+  local colors = require("config.environment.colors")
+  local icons = require("config.environment.icons")
+  
   if env_utils.is_valid_category(icons, colors, mode_name) then
     return {
-      icon = environment.icons.t.mode_name,
+      icon = icons.t[mode_name] or "?",
       name = "",
       color = env_utils.get_color(colors, mode_name)
     }
@@ -76,7 +80,6 @@ local function get_mode_data(mode_name)
     color = "#FFFFFF"
   }
 end
-
 -- Функция для получения красивого имени режима с локализацией
 local function get_mode_display_name(mode_name)
   local mode_names = {

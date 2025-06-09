@@ -1,0 +1,22 @@
+        elseif id == "disable_all" then
+          for module_name, _ in pairs(debug.DEBUG_CONFIG) do
+            debug.DEBUG_CONFIG[module_name] = false
+          end
+          debug.save_debug_settings(wezterm)
+          M.show_panel(inner_window, inner_pane)
+          
+        else
+          -- Переключаем конкретный модуль
+          debug.DEBUG_CONFIG[id] = not debug.DEBUG_CONFIG[id]
+          debug.save_debug_settings(wezterm)
+          M.show_panel(inner_window, inner_pane)
+        end
+      end),
+      title = icons.t.debug .. " Панель управления отладкой",
+      description = string.format("Активно: %d/%d модулей | ESC: F10 меню", enabled_count, #modules),
+      fuzzy_description = "Найти модуль:",
+      fuzzy = true,
+      choices = choices,
+    }),
+    pane
+  )

@@ -1,0 +1,11 @@
+-- Добавляем в начало show_f10_main_settings
+M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_managers)
+  -- Устанавливаем название вкладки
+  local tab = window:active_tab()
+  local environment = require('config.environment')
+  local title = environment.locale.t[menu_data.title_key] or "Настройка WezTerm"
+  tab:set_title(title)
+  
+  local colors = require("config.environment.colors")
+  local env_utils = require("utils.environment")
+  local choices = {}

@@ -33,7 +33,9 @@ end
 
 -- Главная функция показа менеджера локализации
 M.show_locale_manager = function(window, pane)
-  local create_platform_info = require('utils.platform')
+  -- Устанавливаем название вкладки
+  local tab = window:active_tab()
+  tab:set_title("Управление локализацией")  local create_platform_info = require('utils.platform')
   local platform = create_platform_info(wezterm.target_triple)
   
   -- Получаем данные о языках
@@ -107,7 +109,18 @@ M.show_locale_manager = function(window, pane)
     description = safe_get_text("locale_manager_description"),
     choices = choices,
     action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
-      if not id or id == "exit" or id == "header" or id == "current" then
+      if not id or id == "exit" then
+        -- Возвращаемся в F10 меню
+        local dialogs = require("utils.dialogs")
+        local settings_data = require("config.dialogs.settings-manager")
+        local existing_managers = {
+          locale_manager = require("config.dialogs.locale-manager"),
+          debug_manager = require("config.dialogs.debug-manager"),
+          state_manager = require("config.dialogs.state-manager")
+        }
+        dialogs.show_f10_main_settings(wezterm, inner_window, inner_pane, settings_data, existing_managers)
+        return
+      end      if not id or id == "exit" or id == "header" or id == "current" then
         return
       end
       

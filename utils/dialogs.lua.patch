@@ -1,0 +1,25 @@
+--- utils/dialogs.lua.original
++++ utils/dialogs.lua.fixed
+@@ -291,12 +291,18 @@
+ M.create_f10_menu_choice = function(wezterm, item, colors, env_utils)
++  local environment = require('config.environment')
++  
+   local status_icons = {
+     ready = "✅",
+     planned = "🔧", 
+     ["v2.0"] = "🚀"
+   }
+   
++  -- Получаем title и description через ключи локализации
++  local title = environment.locale.t[item.title_key] or item.title_key
++  local description = item.description_key and environment.locale.t[item.description_key] or nil
++  
+   local status_icon = status_icons[item.status] or "❓"
+-  local full_title = status_icon .. " " .. item.title
++  local full_title = status_icon .. " " .. title
+   
+-  if item.description then
+-    full_title = full_title .. " - " .. item.description
++  if description then
++    full_title = full_title .. " - " .. description
+   end

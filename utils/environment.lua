@@ -273,7 +273,13 @@ end
 
 -- Получить ANSI код цвета для категории из отдельного модуля colors
 M.get_ansi_color = function(colors_data, category)
-  return colors_data.ANSI_COLORS[category] or "15"
+
+-- Проверка валидности категории в иконках и цветах
+M.is_valid_category = function(icons_data, colors_data, category)
+  local has_icon = icons_data and icons_data.t and icons_data.t[category]
+  local has_color = colors_data and colors_data.COLORS and colors_data.COLORS[category]
+  return has_icon or has_color
+end  return colors_data.ANSI_COLORS[category] or "15"
 end
 
 -- Создать простое сообщение с иконкой (только иконки)
@@ -454,4 +460,11 @@ M.init_wezterm_environment = function(wezterm, platform, environment_data)
   return result
 end
 
+
+-- Проверка валидности категории в иконках и цветах
+M.is_valid_category = function(icons_data, colors_data, category)
+  local has_icon = icons_data and icons_data.t and icons_data.t[category]
+  local has_color = colors_data and colors_data.COLORS and colors_data.COLORS[category]
+  return has_icon or has_color
+end
 return M

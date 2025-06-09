@@ -246,7 +246,9 @@ end
 
 -- Главное меню менеджера состояний
 M.show_main_menu = function(window, pane)
-  local stats = get_states_statistics()
+  -- Устанавливаем название вкладки
+  local tab = window:active_tab()
+  tab:set_title("Менеджер состояний")  local stats = get_states_statistics()
   local choices = create_main_menu_choices(stats)
   
   local selector_config = {

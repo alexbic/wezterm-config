@@ -1,0 +1,13 @@
+      action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
+        if not id or id == "exit" then
+          -- Возвращаемся в F10 меню
+          local dialogs = require("utils.dialogs")
+          local settings_data = require("config.dialogs.settings-manager")
+          local existing_managers = {
+            locale_manager = require("config.dialogs.locale-manager"),
+            debug_manager = require("config.dialogs.debug-manager"),
+            state_manager = require("config.dialogs.state-manager")
+          }
+          dialogs.show_f10_main_settings(wezterm, inner_window, inner_pane, settings_data, existing_managers)
+          return
+        end

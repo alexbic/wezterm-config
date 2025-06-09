@@ -1,0 +1,31 @@
+-- Функция сохранения настроек отладки в Lua файл
+M.save_debug_settings = function(wezterm)
+  if not wezterm then
+    wezterm = require('wezterm')
+  end
+  local settings_file = wezterm.config_dir .. "/session-state/debug-settings.lua"
+  local lua_content = string.format([[{
+  debug_modules = {
+    appearance = %s,
+    global = %s,
+    session_status = %s,
+    workspace = %s,
+    bindings = %s,
+    resurrect = %s
+  },
+  last_updated = "%s"
+}]], 
+    M.DEBUG_CONFIG.appearance and "true" or "false",
+    M.DEBUG_CONFIG.global and "true" or "false",
+    M.DEBUG_CONFIG.session_status and "true" or "false",
+    M.DEBUG_CONFIG.workspace and "true" or "false",
+    M.DEBUG_CONFIG.bindings and "true" or "false",
+    M.DEBUG_CONFIG.resurrect and "true" or "false",
+    os.date("%Y-%m-%d %H:%M:%S"))
+  
+  local file = io.open(settings_file, "w")
+  if file then
+    file:write(lua_content)
+    file:close()
+  end
+end

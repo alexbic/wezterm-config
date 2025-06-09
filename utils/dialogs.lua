@@ -284,6 +284,7 @@ end
 
 -- Создание элемента меню F10 (самодостаточная функция)
 M.create_f10_menu_choice = function(wezterm, item, colors, env_utils)
+  local environment = require('config.environment')
   local status_icons = {
     ready = "✅",
     planned = "🔧", 
@@ -291,10 +292,14 @@ M.create_f10_menu_choice = function(wezterm, item, colors, env_utils)
   }
   
   local status_icon = status_icons[item.status] or "❓"
-  local full_title = status_icon .. " " .. item.title
+  -- Получаем title и description через ключи локализации
+  local title = environment.locale.t[item.title_key] or item.title_key
+  local description = item.description_key and environment.locale.t[item.description_key] or nil
   
-  if item.description then
-    full_title = full_title .. " - " .. item.description
+  local full_title = status_icon .. " " .. title
+  
+  if description then
+    full_title = full_title .. " - " .. description
   end
   
   return M.create_choice({
@@ -337,6 +342,12 @@ end
 
 -- Главная функция показа меню F10 (самодостаточная)
 M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_managers)
+  -- Устанавливаем название вкладки
+  local tab = window:active_tab()
+  local environment = require('config.environment')
+  local title = environment.locale.t[menu_data.title_key] or "Настройка WezTerm"
+  tab:set_title(title)
+  
   local colors = require("config.environment.colors")
   local env_utils = require("utils.environment")
   local choices = {}

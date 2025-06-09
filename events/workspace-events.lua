@@ -71,8 +71,7 @@ M.setup = function()
               id = "saved|" .. state_type .. "|" .. name,
               label = wezterm.format({
                 { Foreground = { Color = env_utils.get_color(colors, state_type) } },
-                { Text = environment.icons.t.state_type .. " : " .. name .. " (" .. type_label .. ")" }
-              })
+                { Text = (environment.icons.t[state_type] or "📄") .. " : " .. name .. " (" .. type_label .. ")" }              })
             })
           end
         end

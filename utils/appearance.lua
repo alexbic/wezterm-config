@@ -126,23 +126,24 @@ M.create_delete_state_handler = function(wezterm, session_status, environment, i
     }
 
     for _, state_info in ipairs(state_types) do
-      local state_dir = paths.resurrect_state_dir .. state_info.type
+            local state_dir = paths.resurrect_state_dir .. state_info.type
       local cmd = "ls " .. state_dir .. "/*.json 2>/dev/null || true"
       local handle = io.popen(cmd)
       if handle then
         for line in handle:lines() do
           local name = line:match("([^/]+)%.json$")
+        if not state_info then goto continue end
           if name then
-            local type_label = environment.locale.t[state_info.type .. "_type"]
-            
+            local type_label = (state_info and state_info.type) and environment.locale.t[state_info.type .. "_type"] or "unknown"            
             table.insert(choices, {
               id = state_info.type .. "/" .. name .. ".json",
               label = wezterm.format({
                 { Foreground = { Color = env_utils.get_color(colors, state_info.color) } },
-                { Text = (state_info.icon or environment.icons.t.state_info.type) .. " : " .. name .. " (" .. type_label .. ")" }
+                { Text = (state_info.icon or environment.icons.t[state_info.type]) .. " : " .. name .. " (" .. type_label .. ")" }
               })
             })
           end
+        ::continue::
         end
         handle:close()
       end

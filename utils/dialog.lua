@@ -65,8 +65,8 @@ M.create_dialog_box = function(config)
     -- Новый единообразный шаблон
     local icons = require("config.environment.icons")
     local env_utils = require("utils.environment")
-    local icon = environment.icons.t.icon_key
-    
+      local environment = require("config.environment")
+      local icon = environment.icons.t[icon_key] or "🔧"    
     -- Определяем правильное название по типу
     local type_names = {
       workspace = "Текущая сессия",
@@ -90,10 +90,12 @@ M.create_dialog_box = function(config)
   for _, line in ipairs(lines) do
     -- Для placeholder используем примерную длину цветной строки
     if line == "PLACEHOLDER_FOR_COLORED_FIRST_LINE" then
-      local icons = require("config.environment.icons")
+      local environment = require("config.environment")
+      local icons = environment.icons
+      local icon = icons.t[icon_key] or "🔧"
       local env_utils = require("utils.environment")
-      local icon = environment.icons.t.icon_key
-      local type_names = {
+      local environment = require("config.environment")
+      local icon = environment.icons.t[icon_key] or "🔧"      local type_names = {
         workspace = "Текущая сессия",
         window = "Текущее окно",
         tab = "Текущая вкладка"
@@ -135,10 +137,12 @@ M.create_dialog_box = function(config)
 
     -- Специальная обработка для placeholder цветной первой строки
     if line == "PLACEHOLDER_FOR_COLORED_FIRST_LINE" then
-      local icons = require("config.environment.icons")
+      local environment = require("config.environment")
+      local icons = environment.icons
+      local icon = icons.t[icon_key] or "🔧"
       local env_utils = require("utils.environment")
-      local icon = environment.icons.t.icon_key
-      
+      local environment = require("config.environment")
+      local icon = environment.icons.t[icon_key] or "🔧"      
       local type_names = {
         workspace = "Текущая сессия",
         window = "Текущее окно",

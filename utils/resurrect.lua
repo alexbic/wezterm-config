@@ -1,4 +1,4 @@
--- cat > ~/.config/wezterm/utils/resurrect.lua << 'EOF'
+local environment = require("config.environment")-- cat > ~/.config/wezterm/utils/resurrect.lua << 'EOF'
 --
 -- ОПИСАНИЕ: Утилиты для работы с плагином resurrect.wezterm
 -- Централизованные функции для сохранения и восстановления сессий.
