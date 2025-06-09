@@ -26,7 +26,7 @@ table.insert(choices, {
 })
   end
   
-  table.insert(choices, { id = "exit", label = "🚪 Выход" })
+  table.insert(choices, { id = "exit", label = "  🚪  Выход" })
   
   window:perform_action(wezterm.action.InputSelector({
 title = title,
@@ -48,87 +48,126 @@ M.show_debug_panel = function(wezterm, window, pane)
   local env_utils = require('utils.environment')
   
   local tab = window:active_tab()
-  local tab_color = env_utils.get_color(colors, "debug_control"); window:set_config_overrides({ colors = { tab_bar = { active_tab = { bg_color = tab_color, fg_color = "#FFFFFF" } } } }); tab:set_title("Панель управления отладкой")
+  tab:set_title("Панель управления отладкой")
   
   local modules = {}
   for module_name, _ in pairs(debug.DEBUG_CONFIG) do 
-table.insert(modules, module_name) 
+    table.insert(modules, module_name) 
   end
   table.sort(modules)
   
   local descriptions = {
-session_status = "Статус сессий и режимов терминала",
-appearance = "Внешний вид, фоны и прозрачность",
-resurrect = "Сохранение и восстановление сессий", 
-workspace = "Управление рабочими пространствами",
-bindings = "Горячие клавиши и биндинги",
-global = "Общесистемная отладка WezTerm"
+    session_status = "Статус сессий и режимов терминала",
+    appearance = "Внешний вид, фоны и прозрачность",
+    resurrect = "Сохранение и восстановление сессий", 
+    workspace = "Управление рабочими пространствами",
+    bindings = "Горячие клавиши и биндинги",
+    global = "Общесистемная отладка WezTerm"
   }
   
   local choices = {}
-  table.insert(choices, { id = "separator_top", label = "─────────────────────────────────────────────────────────" })  for i, module_name in ipairs(modules) do
-local enabled = debug.DEBUG_CONFIG[module_name] or false
-local status_icon = enabled and (environment.icons and environment.icons.t and environment.icons.t.system) or "✅" or (environment.icons and environment.icons.t and environment.icons.t.error) or "❌"
-local description = descriptions[module_name] or "Модуль отладки"
-
-if enabled then
+  
+  -- Верхняя разделительная строка (БЕЗ нумерации)
   table.insert(choices, {
-    id = module_name,
+    id = "header_separator",
     label = wezterm.format({
-      { Foreground = { Color = env_utils.get_color(colors, "debug_control") } },
-      { Text = string.format("%s %s - %s", status_icon, module_name, description) }
+      { Foreground = { Color = "#FFFFFF" } },
+      { Text = "─────────────────────────────────────────────────────────" }
     })
   })
-else
-  table.insert(choices, {
-    id = module_name,
-    label = string.format("%s %s - %s", status_icon, module_name, description)
+  
+  for _, module_name in ipairs(modules) do
+    local enabled = debug.DEBUG_CONFIG[module_name] or false
+    local status_icon = enabled and environment.icons.t.dialog_module_enabled or environment.icons.t.dialog_module_disabled
+    local description = descriptions[module_name] or "Модуль отладки"
+    
+    -- Выравнивание: модуль слева, описание справа
+    local module_text = string.format("%-15s", module_name)
+    local padding_needed = 50 - string.len(module_text) - string.len(description)
+    local padding = string.rep(" ", math.max(1, padding_needed))
+    
+    if enabled then
+      table.insert(choices, {
+        id = module_name,
+        label = wezterm.format({
+          { Foreground = { Color = env_utils.get_color(colors, "debug_control") } },
+          { Text = status_icon .. " " .. module_text .. padding .. description }
+        })
+      })
+    else
+      table.insert(choices, {
+        id = module_name,
+        label = status_icon .. " " .. module_text .. padding .. description
+      })
+    end
+  end
+  
+  -- Нижняя разделительная строка
+  table.insert(choices, { 
+    id = "footer_separator", 
+    label = wezterm.format({
+      { Foreground = { Color = "#FFFFFF" } },
+      { Text = "─────────────────────────────────────────────────────────" }
+    })
   })
-end
-  end
   
-  table.insert(choices, { id = "separator", label = "─────────────────────────────────────────────────────────" })
-  table.insert(choices, { id = "enable_all", label = "  " .. (environment.icons and environment.icons.t and environment.icons.t.system) or "✅" .. "  Включить все модули" })
-  table.insert(choices, { id = "disable_all", label = "  " .. (environment.icons and environment.icons.t and environment.icons.t.error) or "❌" .. "  Выключить все модули" })
-  table.insert(choices, { id = "exit", label = "  " .. environment.icons.t.exit .. "  Выход" })
+  table.insert(choices, { 
+    id = "enable_all", 
+    label = environment.icons.t.dialog_enable_all .. " Включить все модули"
+  })
   
-  local enabled_count = 0
-  for _, enabled in pairs(debug.DEBUG_CONFIG) do
-if enabled then enabled_count = enabled_count + 1 end
-  end
+  table.insert(choices, { 
+    id = "disable_all", 
+    label = environment.icons.t.dialog_disable_all .. " Выключить все модули"
+  })
+  
+  table.insert(choices, { 
+    id = "exit", 
+    label = environment.icons.t.dialog_exit .. " Выход"
+  })
   
   window:perform_action(wezterm.action.InputSelector({
-title = "Панель управления отладкой",
-description = string.format("Активно: %d/%d модулей | ESC: F10 меню", enabled_count, #modules),
-
-fuzzy = false,
-choices = choices,
-action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
-  if id == "exit" then
-    M.show_f10_main_settings(wezterm, inner_window, inner_pane, 
-      require("config.dialogs.settings-manager"), {
-        locale_manager = require("config.dialogs.locale-manager"),
-        debug_manager = { show_panel = function(w,p) M.show_debug_panel(wezterm,w,p) end }
-      })
-  elseif id == "enable_all" then
-    for module_name, _ in pairs(debug.DEBUG_CONFIG) do
-      debug.DEBUG_CONFIG[module_name] = true
-    end
-    debug.save_debug_settings(wezterm)
-    M.show_debug_panel(wezterm, inner_window, inner_pane)
-  elseif id == "disable_all" then
-    for module_name, _ in pairs(debug.DEBUG_CONFIG) do
-      debug.DEBUG_CONFIG[module_name] = false
-    end
-    debug.save_debug_settings(wezterm)
-    M.show_debug_panel(wezterm, inner_window, inner_pane)
-  elseif id ~= "separator" then
-    debug.DEBUG_CONFIG[id] = not debug.DEBUG_CONFIG[id]
-    debug.save_debug_settings(wezterm)
-    M.show_debug_panel(wezterm, inner_window, inner_pane)
-  end
-end)
+    title = wezterm.format({
+      { Foreground = { Color = "#FFFFFF" } },
+      { Text = environment.icons.t.debug .. " Панель управления отладкой" }
+    }),
+    description = "",
+    fuzzy = false,
+    choices = choices,
+    action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
+      if id == "exit" or id == "header_separator" or id == "footer_separator" then
+        if id == "exit" then
+          M.show_f10_main_settings(wezterm, inner_window, inner_pane, 
+            require("config.dialogs.settings-manager"), {
+              locale_manager = require("config.dialogs.locale-manager"),
+              debug_manager = { show_panel = function(w,p) M.show_debug_panel(wezterm,w,p) end },
+              state_manager = require("config.dialogs.states-manager-new")
+            })
+        end
+      elseif id == "enable_all" then
+        for module_name, _ in pairs(debug.DEBUG_CONFIG) do
+          debug.DEBUG_CONFIG[module_name] = true
+        end
+        debug.save_debug_settings(wezterm)
+        M.show_debug_panel(wezterm, inner_window, inner_pane)
+      elseif id == "disable_all" then
+        for module_name, _ in pairs(debug.DEBUG_CONFIG) do
+          debug.DEBUG_CONFIG[module_name] = false
+        end
+        debug.save_debug_settings(wezterm)
+        M.show_debug_panel(wezterm, inner_window, inner_pane)
+      else
+        debug.DEBUG_CONFIG[id] = not debug.DEBUG_CONFIG[id]
+        debug.save_debug_settings(wezterm)
+        M.show_debug_panel(wezterm, inner_window, inner_pane)
+      end
+    end)
   }), pane)
 end
+
+
+
+
+
 
 return M
