@@ -21,11 +21,17 @@ M.DEBUG_CONFIG = {
 -- Простое логирование с поддержкой таблицы локализации
 M.log = function(wezterm, t_table, module, message_key, ...)
   if M.DEBUG_CONFIG[module] then
+    local colors = require("config.environment.colors")
+    local icons = require("config.environment.icons")
+    local env_utils = require("utils.environment")
     local localized_msg = (t_table and t_table[message_key]) or message_key
     local formatted_msg = string.format(localized_msg, ...)
-    wezterm.log_info("[" .. module .. "] " .. formatted_msg)
+    local icon = icons.t[module] or "🔧"
+    local color_code = env_utils.get_ansi_color(colors, module)
+    local colored_prefix = "\033[38;5;" .. color_code .. "m" .. icon .. " [" .. module .. "]\033[0m"
+    wezterm.log_info(colored_prefix .. " " .. formatted_msg)
   end
-end
+endend
 
 -- Включить отладку для модуля
 M.enable_debug = function(wezterm, t_table, module)
