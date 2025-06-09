@@ -113,7 +113,7 @@ M.show_panel = function(window, pane)
   if not window or not pane or not window:active_tab() then return end
   
   window:perform_action(
-    wezterm.action.InputSelector({
+    require("utils.dialogs").create_selector_dialog(wezterm, {
       action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
         if not id or id == "exit" then
           -- Возвращаемся в F10 меню

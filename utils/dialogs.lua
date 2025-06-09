@@ -323,8 +323,8 @@ M.handle_f10_menu_selection = function(wezterm, window, pane, id, existing_manag
     existing_managers.locale_manager.show_locale_manager(window, pane)
     
   elseif id == "state_settings" and existing_managers.state_manager then
-    existing_managers.state_manager.show_main_menu(window, pane)
-    existing_managers.state_manager.show_main_menu(window, pane)
+    require("config.dialogs.states-manager-new").show_main_menu(window, pane)
+    require("config.dialogs.states-manager-new").show_main_menu(window, pane)
   elseif id == "debug_settings" and existing_managers.debug_manager then  
     existing_managers.debug_manager.show_panel(window, pane)
     
@@ -417,3 +417,146 @@ M.create_detail_dialog = function(wezterm, config)
 end
 
 return M
+-- ========================================
+-- УНИВЕРСАЛЬНЫЕ ФУНКЦИИ PromptInputLine
+-- ========================================
+
+-- Создание стандартного PromptInputLine диалога
+M.create_prompt_dialog = function(wezterm, config)
+  local environment = require('config.environment')
+  
+  return wezterm.action.PromptInputLine({
+    description = M.create_dialog_box({
+      action_type = config.action_type or "save",
+      icon_key = config.icon_key or "workspace", 
+      current_value = config.current_value or "default",
+      hint_text = config.hint_text or environment.locale.t.dialog_hint_save,
+      border_color = config.border_color or "dialog_border",
+      content_color = "dialog_content",
+      hint_color = "dialog_hint",
+      min_width = config.min_width or 50,
+      max_width = config.max_width or 80
+    }),
+    action = config.action
+  })
+end
+
+-- Стандартная обработка ввода с локализацией
+M.handle_prompt_input = function(window, pane, line, config)
+  local tab = window:active_tab()
+  tab:set_title("")
+  
+  if line == nil then
+    if config.on_cancel then config.on_cancel(window, pane) end
+    return
+  end
+  
+  local final_value = (line == "" and config.default_value) and config.default_value or line
+  if config.on_confirm then config.on_confirm(window, pane, final_value) end
+end
+
+-- ========================================
+-- УНИВЕРСАЛЬНЫЕ ФУНКЦИИ InputSelector
+-- ========================================
+
+-- Создание стандартного InputSelector с разделителями
+M.create_selector_dialog = function(wezterm, config)
+  local environment = require('config.environment')
+  local choices = {}
+  
+  -- Заголовок (если нужен)
+  if config.show_header then
+    table.insert(choices, M.create_choice({
+      id = "header",
+      icon = config.header_icon or environment.icons.t.system,
+      text = config.header_text or "Заголовок",
+      colored = true,
+      color = config.header_color or "#BD93F9"
+    }))
+    
+    table.insert(choices, {
+      id = "separator_header", 
+      label = "─────────────────────────────────────────"
+    })
+  end
+  
+  -- Основные элементы
+  for _, item in ipairs(config.items or {}) do
+    table.insert(choices, M.create_choice({
+      id = item.id,
+      icon = item.icon,
+      text = item.text,
+      colored = item.colored or false,
+      color = item.color
+    }))
+  end
+  
+  -- Разделитель перед командами
+  if config.show_commands then
+    table.insert(choices, {
+      id = "separator_commands",
+      label = "─────────────────────────────────────────"
+    })
+    
+    for _, cmd in ipairs(config.commands or {}) do
+      table.insert(choices, M.create_choice({
+        id = cmd.id,
+        icon = cmd.icon,
+        text = cmd.text
+      }))
+    end
+  end
+  
+  return M.create_input_selector({
+    title = config.title,
+    description = config.description,
+    fuzzy_description = config.fuzzy_description,
+    fuzzy = config.fuzzy or true,
+    choices = choices,
+    action = config.action
+  })
+end
+
+-- ========================================
+-- МНОГОУРОВНЕВЫЕ ДИАЛОГИ
+-- ========================================
+
+-- Создание многоуровневого диалога состояний
+M.create_states_dialog = function(wezterm, config)
+  local environment = require('config.environment')
+  local colors = require('config.environment.colors')
+  local env_utils = require('utils.environment')
+  
+  -- Уровень 1: главный список типов
+  if config.level == 1 then
+    return M.create_selector_dialog(wezterm, {
+      title = environment.icons.t.session .. " " .. environment.locale.t.state_manager_title,
+      description = environment.locale.t.state_manager_description,
+      show_header = false,
+      items = config.items,
+      show_commands = true,
+      commands = {
+        { id = "exit", icon = environment.icons.t.exit, text = environment.locale.t.exit }
+      },
+      action = config.action
+    })
+  end
+  
+  -- Уровень 2: детали конкретного типа
+  if config.level == 2 then
+    return M.create_selector_dialog(wezterm, {
+      title = config.type_icon .. " " .. config.type_title,
+      description = config.description,
+      show_header = true,
+      header_text = config.header_text,
+      items = config.items,
+      show_commands = true,
+      commands = {
+        { id = "back", icon = environment.icons.t.exit, text = environment.locale.t.back_to_main_menu },
+        { id = "delete_all", icon = environment.icons.t.error, text = "Удалить все" }
+      },
+      action = config.action
+    })
+  end
+end
+

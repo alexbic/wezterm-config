@@ -105,7 +105,7 @@ M.setup = function()
     tab:set_title(environment.locale.t.load_session_tab_title)
         -- InputSelector с цветным форматированием
     window:perform_action(
-      wezterm.action.InputSelector({
+      require("utils.dialogs").create_selector_dialog(wezterm, {
         action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
           wezterm.emit('clear-saved-mode', inner_window, inner_pane)
           -- Возвращаем обычное название вкладки
