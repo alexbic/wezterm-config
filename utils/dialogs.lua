@@ -154,7 +154,7 @@ end
 
 
 -- Универсальная функция построения InputSelector диалогов
-M.build_inputselector = function(wezterm, dialog_config, action_callback)
+M.build_inputselector = function(wezterm, dialog_config, existing_managers)
   local environment = require("config.environment")
   local choices = {}
   
