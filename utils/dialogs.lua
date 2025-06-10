@@ -1,10 +1,8 @@
 local M = {}
 
 M.show_debug_panel = function(wezterm, window, pane)
-  local debug = require("utils.debug")
-  local environment = require("config.environment")
-  local colors = require("config.environment.colors")
-  local env_utils = require("utils.environment")
+  local debug = require('utils.debug')
+  local environment = require('config.environment')
   
   local tab = window:active_tab()
   tab:set_title("Панель управления отладкой")
@@ -22,55 +20,45 @@ M.show_debug_panel = function(wezterm, window, pane)
   
   local choices = {}
   
-  -- Верхний разделитель БЕЗ отступа
+  -- Верхний разделитель
   table.insert(choices, {
     id = "header_separator",
     label = wezterm.format({
       { Foreground = { Color = "#FFFFFF" } },
-      { Text = "───────────────────────────────────────────────────────" }
+      { Text = " ───────────────────────────────────────────────────────" }
     })
   })
   
-  -- Модули с нумерацией БЕЗ отступа
+  -- Модули с нумерацией 1-6
   for i, module_name in ipairs(modules) do
     local enabled = debug.DEBUG_CONFIG[module_name] or false
     local status_icon = enabled and "⚙" or "✗"
     local description = descriptions[module_name] or "Модуль отладки"
     
-    if enabled then
-      table.insert(choices, {
-        id = module_name,
-        label = wezterm.format({
-          { Foreground = { Color = "#FFFFFF" } },
-          { Text = string.format("%d.  %s  %-15s  -  %s", i, status_icon, module_name, description) }
-        })
+    table.insert(choices, {
+      id = module_name,
+      label = wezterm.format({
+        { Foreground = { Color = "#FFFFFF" } },
+        { Text = string.format(" %d.  %s  %-15s  -  %s", i, status_icon, module_name, description) }
       })
-    else
-      table.insert(choices, {
-        id = module_name,
-        label = wezterm.format({
-          { Foreground = { Color = "#FFFFFF" } },
-          { Text = string.format("%d.  %s  %-15s  -  %s", i, status_icon, module_name, description) }
-        })
-      })
-    end
+    })
   end
   
-  -- Нижний разделитель БЕЗ отступа
+  -- Нижний разделитель
   table.insert(choices, {
     id = "footer_separator",
     label = wezterm.format({
       { Foreground = { Color = "#FFFFFF" } },
-      { Text = "───────────────────────────────────────────────────────" }
+      { Text = " ───────────────────────────────────────────────────────" }
     })
   })
   
-  -- Команды БЕЗ отступа
+  -- Служебные команды
   table.insert(choices, {
     id = "enable_all",
     label = wezterm.format({
       { Foreground = { Color = "#FFFFFF" } },
-      { Text = "⚙  Включить все модули" }
+      { Text = "      ⚙  Включить все модули" }
     })
   })
   
@@ -78,7 +66,7 @@ M.show_debug_panel = function(wezterm, window, pane)
     id = "disable_all",
     label = wezterm.format({
       { Foreground = { Color = "#FFFFFF" } },
-      { Text = "✗  Выключить все модули" }
+      { Text = "      ✗  Выключить все модули" }
     })
   })
   
@@ -86,14 +74,14 @@ M.show_debug_panel = function(wezterm, window, pane)
     id = "exit",
     label = wezterm.format({
       { Foreground = { Color = "#FFFFFF" } },
-      { Text = "⏏  Выход" }
+      { Text = "      ⏏  Выход" }
     })
   })
   
   window:perform_action(wezterm.action.InputSelector({
     title = wezterm.format({
       { Foreground = { Color = "#FF6B6B" } },
-      { Text = "🪲 Панель управления отладкой" }
+      { Text = "Панель управления отладкой" }
     }),
     description = "",
     fuzzy_description = "Выбери модуль:",
@@ -105,6 +93,7 @@ M.show_debug_panel = function(wezterm, window, pane)
           M.show_f10_main_settings(wezterm, inner_window, inner_pane,
             require("config.dialogs.settings-manager"), {
               locale_manager = require("config.dialogs.locale-manager"),
+              debug_manager = { show_panel = function(w,p) M.show_debug_panel(wezterm,w,p) end },
               state_manager = require("config.dialogs.state-manager")
             })
         end
@@ -137,6 +126,7 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_m
   tab:set_title(title)
   
   local choices = {}
+  table.insert(choices, { id = "separator_top", label = "─────────────────────────────────────────────────────────" })
   
   for _, item in ipairs(menu_data.menu_items) do
     local status_icon = (item.status == "ready") and "✅" or "🔧"
@@ -147,7 +137,7 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_m
     })
   end
   
-  table.insert(choices, { id = "exit", label = "🚪 Выход" })
+  table.insert(choices, { id = "exit", label = "  🚪  Выход" })
   
   window:perform_action(wezterm.action.InputSelector({
     title = title,
@@ -162,4 +152,64 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_m
   }), pane)
 end
 
+
+-- Универсальная функция построения InputSelector диалогов
+M.build_inputselector = function(wezterm, dialog_config, action_callback)
+  local environment = require("config.environment")
+  local choices = {}
+  
+  -- Верхний разделитель
+  table.insert(choices, {
+    id = "header_separator",
+    label = wezterm.format({
+      { Foreground = { Color = "#FFFFFF" } },
+      { Text = " ───────────────────────────────────────────────────────" }
+    })
+  })
+  
+  -- Основные пункты с нумерацией
+  for i, item in ipairs(dialog_config.main_items or {}) do
+    local icon = environment.icons.t[item.icon_key] or "⚙"
+    local text = environment.locale.t[item.text_key] or item.text_key
+    
+    table.insert(choices, {
+      id = item.id,
+      label = wezterm.format({
+        { Foreground = { Color = "#FFFFFF" } },
+        { Text = string.format(" %d.  %s  %-15s  -  %s", i, icon, item.id, text) }
+      })
+    })
+  end
+  
+  -- Нижний разделитель + служебные команды
+  table.insert(choices, {
+    id = "footer_separator",
+    label = wezterm.format({
+      { Foreground = { Color = "#FFFFFF" } },
+      { Text = " ───────────────────────────────────────────────────────" }
+    })
+  })
+  
+  -- Служебные команды
+  for _, item in ipairs(dialog_config.service_items or {}) do
+    local icon = environment.icons.t[item.icon_key] or "⚙"
+    local text = environment.locale.t[item.text_key] or item.text_key
+    
+    table.insert(choices, {
+      id = item.id,
+      label = wezterm.format({
+        { Foreground = { Color = "#FFFFFF" } },
+        { Text = string.format("      %s  %s", icon, text) }
+      })
+    })
+  end
+  
+  return wezterm.action.InputSelector({
+    title = environment.locale.t[dialog_config.meta.title_key] or dialog_config.meta.title_key,
+    description = dialog_config.meta.description or "",
+    fuzzy = dialog_config.meta.fuzzy or true,
+    choices = choices,
+    action = action_callback
+  })
+end
 return M
