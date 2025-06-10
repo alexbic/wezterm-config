@@ -87,7 +87,10 @@ local colorscheme = {
    },
    scrollbar_thumb = mocha.surface2,
    split = mocha.overlay0,
-   compose_cursor = mocha.flamingo,
+  
+  -- === ОФИЦИАЛЬНЫЕ ЦВЕТА INPUTSELECTOR ===
+  quick_select_label_bg = { Color = mocha.surface0 },
+  quick_select_label_fg = { Color = mocha.text },   compose_cursor = mocha.flamingo,
 }
 
 -- === ЦВЕТА ПО КАТЕГОРИЯМ (HEX) ===
@@ -143,8 +146,9 @@ local COLORS = {
   tab_hover_bg = "#79c92e",            -- фон при наведении
   tab_admin_bg = "#FF6B6B",            -- фон вкладки администратора
   tab_unseen_output = "#FFA066",       -- цвет индикатора непрочитанного вывода (оранжевый)
-  
-  -- Цвета текста для заголовков вкладок
+  -- === ОФИЦИАЛЬНЫЕ ЦВЕТА INPUTSELECTOR ===  
+  quick_select_label_bg = "#313244",    -- фон элементов InputSelector
+  quick_select_label_fg = "#F8F8F2",    -- текст элементов InputSelector  -- Цвета текста для заголовков вкладок
   tab_default_fg = "#1c1b19",          -- текст обычной вкладки (темный)
   tab_active_fg = "#11111b",           -- текст активной вкладки (черный)
   tab_hover_fg = "#1c1b19",            -- текст при наведении

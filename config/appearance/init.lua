@@ -12,5 +12,4 @@ return {
   window_background_image = backgrounds.random_background,
   -- Применяем цветовую схему напрямую
   colors = colors.colorscheme,
-  -- никаких других параметров, только валидные поля WezTerm!
 }

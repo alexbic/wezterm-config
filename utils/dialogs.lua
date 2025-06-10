@@ -22,16 +22,16 @@ M.show_debug_panel = function(wezterm, window, pane)
   
   local choices = {}
   
-  -- Верхний разделитель (сдвинут влево)
+  -- Верхний разделитель БЕЗ отступа
   table.insert(choices, {
     id = "header_separator",
     label = wezterm.format({
       { Foreground = { Color = "#FFFFFF" } },
-      { Text = " ───────────────────────────────────────────────────────" }
+      { Text = "───────────────────────────────────────────────────────" }
     })
   })
   
-  -- Модули с нумерацией, сдвинутые влево, белым цветом при выделении
+  -- Модули с нумерацией БЕЗ отступа
   for i, module_name in ipairs(modules) do
     local enabled = debug.DEBUG_CONFIG[module_name] or false
     local status_icon = enabled and "⚙" or "✗"
@@ -42,7 +42,7 @@ M.show_debug_panel = function(wezterm, window, pane)
         id = module_name,
         label = wezterm.format({
           { Foreground = { Color = "#FFFFFF" } },
-          { Text = string.format(" %d.  %s  %-15s  -  %s", i, status_icon, module_name, description) }
+          { Text = string.format("%d.  %s  %-15s  -  %s", i, status_icon, module_name, description) }
         })
       })
     else
@@ -50,27 +50,27 @@ M.show_debug_panel = function(wezterm, window, pane)
         id = module_name,
         label = wezterm.format({
           { Foreground = { Color = "#FFFFFF" } },
-          { Text = string.format(" %d.  %s  %-15s  -  %s", i, status_icon, module_name, description) }
+          { Text = string.format("%d.  %s  %-15s  -  %s", i, status_icon, module_name, description) }
         })
       })
     end
   end
   
-  -- Нижний разделитель (сдвинут влево)
+  -- Нижний разделитель БЕЗ отступа
   table.insert(choices, {
     id = "footer_separator",
     label = wezterm.format({
       { Foreground = { Color = "#FFFFFF" } },
-      { Text = " ───────────────────────────────────────────────────────" }
+      { Text = "───────────────────────────────────────────────────────" }
     })
   })
   
-  -- Команды БЕЗ нумерации (сдвинуты влево, белым цветом)
+  -- Команды БЕЗ отступа
   table.insert(choices, {
     id = "enable_all",
     label = wezterm.format({
       { Foreground = { Color = "#FFFFFF" } },
-      { Text = "      ⚙  Включить все модули" }
+      { Text = "⚙  Включить все модули" }
     })
   })
   
@@ -78,7 +78,7 @@ M.show_debug_panel = function(wezterm, window, pane)
     id = "disable_all",
     label = wezterm.format({
       { Foreground = { Color = "#FFFFFF" } },
-      { Text = "      ✗  Выключить все модули" }
+      { Text = "✗  Выключить все модули" }
     })
   })
   
@@ -86,14 +86,14 @@ M.show_debug_panel = function(wezterm, window, pane)
     id = "exit",
     label = wezterm.format({
       { Foreground = { Color = "#FFFFFF" } },
-      { Text = "      ⏏  Выход" }
+      { Text = "⏏  Выход" }
     })
   })
   
   window:perform_action(wezterm.action.InputSelector({
     title = wezterm.format({
       { Foreground = { Color = "#FF6B6B" } },
-      { Text = "Панель управления отладкой" }
+      { Text = "🪲 Панель управления отладкой" }
     }),
     description = "",
     fuzzy_description = "Выбери модуль:",
@@ -105,7 +105,6 @@ M.show_debug_panel = function(wezterm, window, pane)
           M.show_f10_main_settings(wezterm, inner_window, inner_pane,
             require("config.dialogs.settings-manager"), {
               locale_manager = require("config.dialogs.locale-manager"),
-              debug_manager = { show_panel = function(w,p) M.show_debug_panel(wezterm,w,p) end },
               state_manager = require("config.dialogs.state-manager")
             })
         end
@@ -130,6 +129,7 @@ M.show_debug_panel = function(wezterm, window, pane)
     end)
   }), pane)
 end
+
 M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_managers)
   local tab = window:active_tab()
   local environment = require('config.environment')
@@ -137,7 +137,6 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_m
   tab:set_title(title)
   
   local choices = {}
-  table.insert(choices, { id = "separator_top", label = "─────────────────────────────────────────────────────────" })
   
   for _, item in ipairs(menu_data.menu_items) do
     local status_icon = (item.status == "ready") and "✅" or "🔧"
@@ -148,7 +147,7 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data, existing_m
     })
   end
   
-  table.insert(choices, { id = "exit", label = "  🚪  Выход" })
+  table.insert(choices, { id = "exit", label = "🚪 Выход" })
   
   window:perform_action(wezterm.action.InputSelector({
     title = title,
