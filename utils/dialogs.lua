@@ -212,4 +212,39 @@ M.build_inputselector = function(wezterm, dialog_config, existing_managers)
     action = action_callback
   })
 end
+
+M.build_inputselector = function(wezterm, dialog_config, existing_managers)
+  local environment = require("config.environment")
+  local choices = {}
+  table.insert(choices, {id = "header_separator", label = wezterm.format({{ Foreground = { Color = "#FFFFFF" } }, { Text = " ───────────────────────────────────────────────────────" }})})
+  for i, item in ipairs(dialog_config.main_items or {}) do
+    local icon = environment.icons.t[item.icon_key] or "⚙"
+    local text = environment.locale.t[item.text_key] or item.text_key
+    table.insert(choices, {id = item.id, label = wezterm.format({{ Foreground = { Color = "#FFFFFF" } }, { Text = string.format(" %d.  %s  %-15s  -  %s", i, icon, item.id, text) }})})
+  end
+  table.insert(choices, {id = "footer_separator", label = wezterm.format({{ Foreground = { Color = "#FFFFFF" } }, { Text = " ───────────────────────────────────────────────────────" }})})
+  for _, item in ipairs(dialog_config.service_items or {}) do
+    local icon = environment.icons.t[item.icon_key] or "⚙"
+    local text = environment.locale.t[item.text_key] or item.text_key
+    table.insert(choices, {id = item.id, label = wezterm.format({{ Foreground = { Color = "#FFFFFF" } }, { Text = string.format("      %s  %s", icon, text) }})})
+  end
+  table.insert(choices, {id = "exit", label = wezterm.format({{ Foreground = { Color = "#FFFFFF" } }, { Text = "      ⏏  Выход" }})})
+  return wezterm.action.InputSelector({
+    title = environment.locale.t[dialog_config.meta.title_key] or dialog_config.meta.title_key,
+    description = dialog_config.meta.description or "", fuzzy = dialog_config.meta.fuzzy or true, choices = choices,
+    action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
+      inner_window:active_tab():set_title(environment.locale.t[dialog_config.meta.tab_title_key] or "Диалог")
+      if id == "exit" or id == "header_separator" or id == "footer_separator" then
+        if id == "exit" then M.show_f10_main_settings(wezterm, inner_window, inner_pane, require("config.dialogs.settings-manager"), existing_managers) end
+        return
+      end
+      local target_item = nil
+      for _, item in ipairs(dialog_config.main_items or {}) do if item.id == id then target_item = item break end end
+      if not target_item then for _, item in ipairs(dialog_config.service_items or {}) do if item.id == id then target_item = item break end end end
+      if target_item and target_item.target and existing_managers[target_item.target] then
+        existing_managers[target_item.target].show_panel(inner_window, inner_pane)
+      end
+    end)
+  })
+end
 return M

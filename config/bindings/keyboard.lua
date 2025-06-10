@@ -59,6 +59,16 @@ local base_keys = {
     }
     dialogs.show_f10_main_settings(wezterm, window, pane, settings_data, existing_managers)
   end) },
+   { key = "F8", mods = "NONE", action = wezterm.action_callback(function(window, pane)
+    local dialogs = require("utils.dialogs")
+    local debug_config = require("config.dialogs.debug-config")
+    local existing_managers = {
+      locale_manager = require("config.dialogs.locale-manager"),
+      debug_manager = { show_panel = function(w,p) dialogs.show_debug_panel(wezterm,w,p) end },
+      state_manager = require("config.dialogs.state-manager")
+    }
+    window:perform_action(dialogs.build_inputselector(wezterm, debug_config, existing_managers), pane)
+  end) },
    { key = "F9", mods = "NONE", action = wezterm.action_callback(function(window, pane)
      local locale_manager = require("config.dialogs.locale-manager")
      locale_manager.show_locale_manager(window, pane)
