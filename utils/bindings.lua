@@ -194,3 +194,69 @@ M.close_debug_panel = function(wezterm)
 end
 
 return M
+
+-- Функция для F8 отладочного диалога
+M.create_debug_panel_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local dialogs = require("utils.dialogs")
+    local debug_config = require("config.dialogs.debug-config")
+    local debug = require("utils.debug")
+    local debug_state_provider = {
+      get_state = function(module_name) return debug.DEBUG_CONFIG[module_name] end,
+      handle_action = function(id, inner_window, inner_pane)
+        if id == "enable_all" then
+          for module_name, _ in pairs(debug.DEBUG_CONFIG) do debug.DEBUG_CONFIG[module_name] = true end
+          debug.save_debug_settings(wezterm)
+          wezterm.time.call_after(0.1, function() inner_window:perform_action(dialogs.build_inputselector(wezterm, debug_config, debug_state_provider), inner_pane) end)
+          return true
+        elseif id == "disable_all" then
+          for module_name, _ in pairs(debug.DEBUG_CONFIG) do debug.DEBUG_CONFIG[module_name] = false end
+          debug.save_debug_settings(wezterm)
+          wezterm.time.call_after(0.1, function() inner_window:perform_action(dialogs.build_inputselector(wezterm, debug_config, debug_state_provider), inner_pane) end)
+          return true
+        elseif debug.DEBUG_CONFIG[id] ~= nil then
+          debug.DEBUG_CONFIG[id] = not debug.DEBUG_CONFIG[id]
+          debug.save_debug_settings(wezterm)
+          wezterm.time.call_after(0.1, function() inner_window:perform_action(dialogs.build_inputselector(wezterm, debug_config, debug_state_provider), inner_pane) end)
+          return true
+        end
+        return false
+      end
+    }
+    debug.load_debug_settings(wezterm)
+    window:perform_action(dialogs.build_inputselector(wezterm, debug_config, debug_state_provider), pane)
+  end)
+end
+
+-- Функция для F9 локализации
+M.create_locale_manager_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local locale_manager = require("config.dialogs.locale-manager")
+    locale_manager.show_locale_manager(window, pane)
+  end)
+end
+
+-- Функция для F10 центра управления
+M.create_f10_settings_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local dialogs = require("utils.dialogs")
+    local settings_data = require("config.dialogs.settings-manager")
+    dialogs.show_f10_main_settings(wezterm, window, pane, settings_data)
+  end)
+end
+
+-- Функция для Shift+F12 отладки
+M.create_shift_f12_debug_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local dialogs = require("utils.dialogs")
+    dialogs.show_debug_panel(wezterm, window, pane)
+  end)
+end
+
+-- Функция для принудительной перезагрузки
+M.create_force_reload_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local env_utils = require("utils.environment")
+    env_utils.force_config_reload(wezterm)
+  end)
+end

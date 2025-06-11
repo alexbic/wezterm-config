@@ -9,20 +9,7 @@ M.DEBUG_CONFIG = {
   global = true,
 }
 
-M.log = function(wezterm, t_table, module, message_key, ...)
-  if M.DEBUG_CONFIG[module] then
-    local colors = require("config.environment.colors")
-    local icons = require("config.environment.icons")
-    local env_utils = require("utils.environment")
-    local localized_msg = (t_table and t_table[message_key]) or message_key
-    local formatted_msg = string.format(localized_msg, ...)
-    local var_icon = icons.t.set_env_var or "⚡"
-    local var_color = env_utils.get_ansi_color(colors, "set_env_var")
-    local colored_prefix = "\27[38;5;" .. var_color .. "m[" .. module .. "] " .. var_icon .. "\27[0m"
-    wezterm.log_info(colored_prefix .. " " .. formatted_msg)
-  end
-end
-
+-- ЕДИНСТВЕННАЯ ФУНКЦИЯ загрузки (с возвратом успеха)
 M.load_debug_settings = function(wezterm)
   local settings_file = wezterm.config_dir .. "/session-state/debug-settings.lua"
   local file = io.open(settings_file, "r")
@@ -38,8 +25,24 @@ M.load_debug_settings = function(wezterm)
             M.DEBUG_CONFIG[module] = value
           end
         end
+        return true
       end
     end
+  end
+  return false
+end
+
+M.log = function(wezterm, t_table, module, message_key, ...)
+  if M.DEBUG_CONFIG[module] then
+    local colors = require("config.environment.colors")
+    local icons = require("config.environment.icons")
+    local env_utils = require("utils.environment")
+    local localized_msg = (t_table and t_table[message_key]) or message_key
+    local formatted_msg = string.format(localized_msg, ...)
+    local var_icon = icons.t.set_env_var or "⚡"
+    local var_color = env_utils.get_ansi_color(colors, "set_env_var")
+    local colored_prefix = "\27[38;5;" .. var_color .. "m[" .. module .. "] " .. var_icon .. "\27[0m"
+    wezterm.log_info(colored_prefix .. " " .. formatted_msg)
   end
 end
 

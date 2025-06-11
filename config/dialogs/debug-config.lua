@@ -8,12 +8,12 @@ M.meta = {
 }
 
 M.main_items = {
-  { id = "appearance", text_key = "appearance_settings_description", icon_key = "system", target = "debug_manager" },
-  { id = "bindings", text_key = "keybind_settings_description", icon_key = "system", target = "debug_manager" },
+  { id = "appearance", text_key = "appearance_settings_description", icon_key = "appearance", target = "debug_manager" },
+  { id = "bindings", text_key = "keybind_settings_description", icon_key = "pane_control", target = "debug_manager" },
   { id = "global", text_key = "global_settings_description", icon_key = "system", target = "debug_manager" },
-  { id = "resurrect", text_key = "debug_panel_description", icon_key = "system", target = "debug_manager" },
-  { id = "session_status", text_key = "debug_panel_description", icon_key = "system", target = "debug_manager" },
-  { id = "workspace", text_key = "settings_manager_description", icon_key = "system", target = "debug_manager" }
+  { id = "resurrect", text_key = "states_manager_description", icon_key = "session", target = "debug_manager" },
+  { id = "session_status", text_key = "debug_panel_description", icon_key = "mode", target = "debug_manager" },
+  { id = "workspace", text_key = "workspace_switch_description", icon_key = "workspace", target = "debug_manager" }
 }
 
 M.service_items = {
