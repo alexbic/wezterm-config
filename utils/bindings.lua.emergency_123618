@@ -1,0 +1,254 @@
+-- cat > ~/.config/wezterm/utils/bindings.lua << 'EOF'
+--
+-- ОПИСАНИЕ: Утилиты для работы с биндингами клавиш и мыши WezTerm
+-- Централизованные функции для создания привязок клавиш, управления модификаторами.
+-- ПОЛНОСТЬЮ САМОДОСТАТОЧНЫЙ МОДУЛЬ - все зависимости передаются как параметры.
+--
+-- ЗАВИСИМОСТИ: НЕТ
+
+local M = {}
+
+-- Функция для переключения видимости панели вкладок
+M.toggle_tab_bar = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local overrides = window:get_config_overrides() or {}
+    local current_tab_bar_state = overrides.enable_tab_bar
+    if current_tab_bar_state == nil then
+      current_tab_bar_state = true
+    end
+    overrides.enable_tab_bar = not current_tab_bar_state
+    window:set_config_overrides(overrides)
+    wezterm.log_info("Tab bar toggled to: " .. tostring(overrides.enable_tab_bar))
+  end)
+end
+
+-- Функция для циклического изменения прозрачности (вперед)
+M.cycle_opacity_forward = function(wezterm)
+  return wezterm.action.EmitEvent('cycle-opacity-forward')
+end
+
+-- Функция для циклического изменения прозрачности (назад)
+M.cycle_opacity_backward = function(wezterm)
+  return wezterm.action.EmitEvent('cycle-opacity-backward')
+end
+
+-- Функция для смены фонового изображения
+M.change_background = function(wezterm)
+  return wezterm.action.EmitEvent('change-background')
+end
+
+-- Функция для создания key table биндинга
+M.create_key_table_binding = function(wezterm, key_table_name, timeout_ms)
+  timeout_ms = timeout_ms or 10000
+  return wezterm.action.Multiple({
+    wezterm.action.ActivateKeyTable({
+      name = key_table_name,
+      one_shot = false,
+      timeout_milliseconds = timeout_ms,
+    }),
+    wezterm.action.EmitEvent('force-update-status')
+  })
+end
+
+-- Функция для отправки специальных символов (для macOS Alt/Option)
+M.send_special_char = function(wezterm, char)
+  return wezterm.action.SendString(char)
+end
+
+-- Функция для создания workspace (принимает готовый текст)
+M.create_workspace = function(wezterm, description_text)
+  description_text = description_text or "Enter workspace name:"
+  return wezterm.action.PromptInputLine {
+    description = wezterm.format {
+      { Attribute = { Intensity = "Bold" } },
+      { Foreground = { AnsiColor = "Fuchsia" } },
+      { Text = description_text },
+    },
+    action = wezterm.action_callback(function(window, pane, line)
+      if line then
+        window:perform_action(
+          wezterm.action.SwitchToWorkspace {
+            name = line,
+          },
+          pane
+        )
+      end
+    end),
+  }
+end
+
+-- Функция для создания workspace в новом окне
+M.create_workspace_new_window = function(wezterm, description_text)
+  description_text = description_text or "Enter workspace name for new window:"
+  return wezterm.action.PromptInputLine {
+    description = wezterm.format {
+      { Attribute = { Intensity = "Bold" } },
+      { Foreground = { AnsiColor = "Fuchsia" } },
+      { Text = description_text },
+    },
+    action = wezterm.action_callback(function(window, pane, line)
+      if line then
+        window:perform_action(
+          wezterm.action.SpawnWindow {
+            workspace = line,
+          },
+          pane
+        )
+      end
+    end),
+  }
+end
+
+-- Функция для переименования вкладки
+M.rename_tab = function(wezterm, description_text)
+  description_text = description_text or "Enter new tab name:"
+  return wezterm.action.PromptInputLine({
+    description = description_text,
+    action = wezterm.action_callback(function(window, pane, line)
+      if line then
+        window:active_tab():set_title(line)
+      end
+    end),
+  })
+end
+
+-- Функция для генерации биндингов внешнего вида
+M.generate_appearance_bindings = function(wezterm, mod)
+  return {
+    { key = '0', mods = 'CTRL', action = M.cycle_opacity_forward(wezterm) },
+    { key = '9', mods = 'CTRL', action = M.cycle_opacity_backward(wezterm) },
+    { key = 'h', mods = mod.SUPER_REV, action = M.toggle_tab_bar(wezterm) },
+    { key = 'b', mods = 'SHIFT|' .. mod.SUPER, action = M.change_background(wezterm) },
+  }
+end
+
+-- Функция для генерации биндингов key tables
+M.generate_key_table_bindings = function(wezterm, mod)
+  return {
+    { key = 'p', mods = 'LEADER', action = M.create_key_table_binding(wezterm, 'pane_control') },
+    { key = 'f', mods = 'LEADER', action = M.create_key_table_binding(wezterm, 'font_control') },
+    { key = 's', mods = 'LEADER', action = M.create_key_table_binding(wezterm, 'session_control') },
+  }
+end
+
+-- Функция для генерации биндингов специальных символов (macOS)
+M.generate_special_char_bindings = function(wezterm)
+  return {
+    { key = "'", mods = 'ALT', action = M.send_special_char(wezterm, "\\") },
+    { key = 'ñ', mods = 'ALT', action = M.send_special_char(wezterm, "~") },
+    { key = '1', mods = 'ALT', action = M.send_special_char(wezterm, "|") },
+    { key = 'º', mods = 'ALT', action = M.send_special_char(wezterm, "\\") },
+    { key = '+', mods = 'ALT', action = M.send_special_char(wezterm, "]") },
+    { key = '`', mods = 'ALT', action = M.send_special_char(wezterm, "[") },
+    { key = 'ç', mods = 'ALT', action = M.send_special_char(wezterm, "}") },
+    { key = '*', mods = 'ALT', action = M.send_special_char(wezterm, "{") },
+    { key = '3', mods = 'ALT', action = M.send_special_char(wezterm, "#") },
+  }
+end
+
+-- Функция для генерации биндингов workspace (принимает готовые тексты)
+M.generate_workspace_bindings = function(wezterm, mod, workspace_text, workspace_new_window_text)
+  workspace_text = workspace_text or "Enter workspace name:"
+  workspace_new_window_text = workspace_new_window_text or "Enter workspace name for new window:"
+  
+  return {
+    { key = "w", mods = "CTRL|SHIFT", action = M.create_workspace(wezterm, workspace_text) },
+    { key = "w", mods = "CTRL|SHIFT|ALT", action = M.create_workspace_new_window(wezterm, workspace_new_window_text) },
+    { key = "w", mods = "LEADER", action = wezterm.action.EmitEvent("workspace.switch") },
+    { key = "W", mods = "LEADER", action = wezterm.action.EmitEvent("workspace.restore") },
+  }
+end
+
+-- Функция для F8 отладочного диалога
+M.create_debug_panel_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local dialogs = require("utils.dialogs")
+    local debug_config = require("config.dialogs.debug-config")
+    local debug = require("utils.debug")
+    local debug_state_provider = {
+      get_state = function(module_name) 
+        return debug.DEBUG_CONFIG[module_name] 
+      end,
+      handle_action = function(id, inner_window, inner_pane)
+        if id == "enable_all" then
+          for module_name, _ in pairs(debug.DEBUG_CONFIG) do
+            debug.DEBUG_CONFIG[module_name] = true
+          end
+          debug.save_debug_settings(wezterm)
+          return { action = "refresh" }
+        elseif id == "disable_all" then
+          for module_name, _ in pairs(debug.DEBUG_CONFIG) do
+            debug.DEBUG_CONFIG[module_name] = false
+          end
+          debug.save_debug_settings(wezterm)
+          return { action = "refresh" }
+        elseif debug.DEBUG_CONFIG[id] ~= nil then
+          debug.DEBUG_CONFIG[id] = not debug.DEBUG_CONFIG[id]
+          debug.save_debug_settings(wezterm)
+          return { action = "refresh" }
+        end
+        return { action = "none" }
+      end
+    }
+    debug.load_debug_settings(wezterm)
+    window:perform_action(dialogs.build_inputselector(wezterm, debug_config, debug_state_provider), pane)
+  end)
+end
+
+-- Функция для F9 локализации
+M.create_locale_manager_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local locale_manager = require("config.dialogs.locale-manager")
+    locale_manager.show_locale_manager(window, pane)
+  end)
+end
+
+-- Функция для F10 центра управления
+M.create_f10_settings_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local dialogs = require("utils.dialogs")
+    local settings_data = require("config.dialogs.settings-manager")
+    dialogs.show_f10_main_settings(wezterm, window, pane, settings_data)
+  end)
+end
+
+-- Функция для Shift+F12 отладки
+M.create_shift_f12_debug_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local dialogs = require("utils.dialogs")
+    dialogs.show_debug_panel(wezterm, window, pane)
+  end)
+end
+
+-- Функция для принудительной перезагрузки
+M.create_force_reload_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local env_utils = require("utils.environment")
+    env_utils.force_config_reload(wezterm)
+  end)
+end
+
+-- Функция сборки всех биндингов (перенесена из keyboard.lua)
+M.build_keys = function(wezterm, base_keys, mod, platform, locale_t)
+  local keys = {}
+  for _, key in ipairs(base_keys) do 
+    table.insert(keys, key) 
+  end
+  for _, key in ipairs(M.generate_appearance_bindings(wezterm, mod)) do 
+    table.insert(keys, key) 
+  end
+  for _, key in ipairs(M.generate_key_table_bindings(wezterm, mod)) do 
+    table.insert(keys, key) 
+  end
+  if platform.is_mac then
+    for _, key in ipairs(M.generate_special_char_bindings(wezterm)) do 
+      table.insert(keys, key) 
+    end
+  end
+  for _, key in ipairs(M.generate_workspace_bindings(wezterm, mod, locale_t.enter_workspace_name or "Введите имя workspace:", locale_t.enter_workspace_name_new_window or "Введите имя workspace для нового окна:")) do 
+    table.insert(keys, key) 
+  end
+  return keys
+end
+
+return M

@@ -19,19 +19,19 @@ M.show_debug_panel = function(wezterm, window, pane)
   }
   
   local choices = {}
-  table.insert(choices, {id = "header_separator", label = " ───────────────────────────────────────────────────────"})
+  table.insert(choices, {id = "header_separator", label = "───────────────────────────────────────────────────────"})
   
   for i, module_name in ipairs(modules) do
     local enabled = debug.DEBUG_CONFIG[module_name] or false
     local status_icon = enabled and "⚙" or "✗"
     local description = descriptions[module_name] or "Модуль отладки"
-    table.insert(choices, {id = module_name, label = string.format(" %d.  %s  %-15s  -  %s", i, status_icon, module_name, description)})
+    table.insert(choices, {id = module_name, label = string.format("%d.  %s  %-15s  -  %s", i, status_icon, module_name, description)})
   end
   
-  table.insert(choices, {id = "footer_separator", label = " ───────────────────────────────────────────────────────"})
-  table.insert(choices, {id = "enable_all", label = "      ⚙  Включить все модули"})
-  table.insert(choices, {id = "disable_all", label = "      ✗  Выключить все модули"})
-  table.insert(choices, {id = "exit", label = "      ⏏  Выход"})
+  table.insert(choices, {id = "footer_separator", label = "───────────────────────────────────────────────────────"})
+  table.insert(choices, {id = "enable_all", label = "     ⚙  Включить все модули"})
+  table.insert(choices, {id = "disable_all", label = "     ✗  Выключить все модули"})
+  table.insert(choices, {id = "exit", label = "     ⏏  Выход"})
   
   window:perform_action(wezterm.action.InputSelector({
     title = "🪲 Панель управления отладкой",
@@ -40,19 +40,27 @@ M.show_debug_panel = function(wezterm, window, pane)
     fuzzy = true,
     choices = choices,
     action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
-      if id == "exit" or id == "header_separator" or id == "footer_separator" then
-        if id == "exit" then
-          M.show_f10_main_settings(wezterm, inner_window, inner_pane, require("config.dialogs.settings-manager"))
-        end
+      wezterm.log_info("DEBUG: Clicked id=[" .. tostring(id) .. "] label=[" .. tostring(label) .. "]")
+      -- ✅ РАЗДЕЛИТЕЛИ ИГНОРИРУЮТСЯ
+      if id == "header_separator" or id == "footer_separator" then
+        return  -- НЕ ДЕЛАЕМ НИЧЕГО
+      end
+      
+      if id == "exit" then
+        M.show_f10_main_settings(wezterm, inner_window, inner_pane, require("config.dialogs.settings-manager"))
         return
       elseif id == "enable_all" then
-        for module_name, _ in pairs(debug.DEBUG_CONFIG) do debug.DEBUG_CONFIG[module_name] = true end
+        for module_name, _ in pairs(debug.DEBUG_CONFIG) do 
+          debug.DEBUG_CONFIG[module_name] = true 
+        end
         debug.save_debug_settings(wezterm)
         M.show_debug_panel(wezterm, inner_window, inner_pane)
       elseif id == "disable_all" then
-        for module_name, _ in pairs(debug.DEBUG_CONFIG) do debug.DEBUG_CONFIG[module_name] = false end
+        for module_name, _ in pairs(debug.DEBUG_CONFIG) do 
+          debug.DEBUG_CONFIG[module_name] = false 
+        end
         debug.save_debug_settings(wezterm)
-        M.show_debug_panel(wezterm, inner_pane)
+        M.show_debug_panel(wezterm, inner_window, inner_pane)
       else
         debug.DEBUG_CONFIG[id] = not debug.DEBUG_CONFIG[id]
         debug.save_debug_settings(wezterm)
@@ -62,9 +70,8 @@ M.show_debug_panel = function(wezterm, window, pane)
   }), pane)
 end
 
--- ИСПРАВЛЕННАЯ функция F10 с проверкой menu_data
+-- Функция F10 главного меню
 M.show_f10_main_settings = function(wezterm, window, pane, menu_data)
-  -- ЗАЩИТА: проверяем menu_data
   if not menu_data then
     menu_data = require("config.dialogs.settings-manager")
   end
@@ -89,20 +96,27 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data)
     title = title,
     choices = choices,
     action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
+      wezterm.log_info("DEBUG: Clicked id=[" .. tostring(id) .. "] label=[" .. tostring(label) .. "]")
+      -- ✅ РАЗДЕЛИТЕЛИ F10 ИГНОРИРУЮТСЯ
+      if id == "separator_top" then
+        return  -- НЕ ДЕЛАЕМ НИЧЕГО
+      end
+      
       if id == "locale_settings" then
         require("config.dialogs.locale-manager").show_locale_manager(inner_window, inner_pane)
       elseif id == "debug_settings" then
         M.show_debug_panel(wezterm, inner_window, inner_pane)
       elseif id == "state_settings" then
         local state_manager = require("config.dialogs.state-manager")
-        if state_manager.show_main_menu then state_manager.show_main_menu(inner_window, inner_pane) end
+        if state_manager.show_main_menu then 
+          state_manager.show_main_menu(inner_window, inner_pane) 
+        end
       end
     end)
   }), pane)
 end
 
--- ИСПРАВЛЕННАЯ универсальная функция с ДИНАМИЧЕСКИМИ иконками
--- ПРАВИЛЬНАЯ универсальная функция - использует ТОЛЬКО dialog_config данные
+-- Универсальная функция построения InputSelector диалогов
 M.build_inputselector = function(wezterm, dialog_config, state_provider)
   local environment = require("config.environment")
   local colors = require("config.environment.colors")
@@ -112,9 +126,7 @@ M.build_inputselector = function(wezterm, dialog_config, state_provider)
   table.insert(choices, {id = "header_separator", label = "───────────────────────────────────────────────────────"})
   
   for i, item in ipairs(dialog_config.main_items or {}) do
-    local icon_key = item.icon_key or "system"
     local text = environment.locale.t[item.text_key] or item.text_key
-    
     local icon = "✗"
     local label_format = string.format("%d.  %s  %-15s  -  %s", i, icon, item.id, text)
     
@@ -159,16 +171,18 @@ M.build_inputselector = function(wezterm, dialog_config, state_provider)
     fuzzy = dialog_config.meta.fuzzy or true,
     choices = choices,
     action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
+      wezterm.log_info("DEBUG: Clicked id=[" .. tostring(id) .. "] label=[" .. tostring(label) .. "]")
+      -- ✅ РАЗДЕЛИТЕЛИ ИГНОРИРУЮТСЯ
+      if id == "header_separator" or id == "footer_separator" then
+        return  -- НЕ ДЕЛАЕМ НИЧЕГО
+      end
+      
       local tab_title = environment.locale.t[dialog_config.meta.tab_title_key] or "Диалог"
       inner_window:active_tab():set_title(tab_title)
       
       if id == "exit" then
         inner_window:active_tab():set_title("")
         M.show_f10_main_settings(wezterm, inner_window, inner_pane, require("config.dialogs.settings-manager"))
-        return
-      end
-      
-      if id == "header_separator" or id == "footer_separator" then
         return
       end
       
@@ -184,8 +198,15 @@ M.build_inputselector = function(wezterm, dialog_config, state_provider)
   })
 end
 
+-- Универсальная функция создания селектора
 M.create_selector_dialog = function(wezterm, config)
-  return {title = config.title, description = config.description, fuzzy = config.fuzzy or true, choices = config.choices or {}, action = config.action}
+  return {
+    title = config.title, 
+    description = config.description, 
+    fuzzy = config.fuzzy or true, 
+    choices = config.choices or {}, 
+    action = config.action
+  }
 end
 
 return M

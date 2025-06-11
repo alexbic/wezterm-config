@@ -1,11 +1,11 @@
 {
   debug_modules = {
-    appearance = true,
+    appearance = false,
     global = true,
     session_status = false,
     workspace = false,
-    bindings = true,
+    bindings = false,
     resurrect = true
   },
-  last_updated = "2025-06-11 11:45:06"
+  last_updated = "2025-06-11 14:12:54"
 }
