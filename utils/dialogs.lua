@@ -40,15 +40,12 @@ M.show_debug_panel = function(wezterm, window, pane)
     fuzzy = true,
     choices = choices,
     action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
-      if id == "exit" then
-        inner_window:active_tab():set_title("")
-        M.show_f10_main_settings(wezterm, inner_window, inner_pane, require("config.dialogs.settings-manager"))
+      if id == "exit" or id == "header_separator" or id == "footer_separator" then
+        if id == "exit" then
+          M.show_f10_main_settings(wezterm, inner_window, inner_pane, require("config.dialogs.settings-manager"))
+        end
         return
-      end
-      
-      if id == "header_separator" or id == "footer_separator" then
-        return
-      end      elseif id == "enable_all" then
+      elseif id == "enable_all" then
         for module_name, _ in pairs(debug.DEBUG_CONFIG) do debug.DEBUG_CONFIG[module_name] = true end
         debug.save_debug_settings(wezterm)
         M.show_debug_panel(wezterm, inner_window, inner_pane)
@@ -173,11 +170,10 @@ M.build_inputselector = function(wezterm, dialog_config, state_provider)
       
       if id == "header_separator" or id == "footer_separator" then
         return
-      end      end
+      end
       
       if state_provider and state_provider.handle_action then
         local result = state_provider.handle_action(id, inner_window, inner_pane)
-        
         if result and type(result) == "table" and result.action == "refresh" then
           wezterm.time.call_after(0.1, function()
             inner_window:perform_action(M.build_inputselector(wezterm, dialog_config, state_provider), inner_pane)
@@ -185,7 +181,8 @@ M.build_inputselector = function(wezterm, dialog_config, state_provider)
         end
       end
     end)
-  })end
+  })
+end
 
 M.create_selector_dialog = function(wezterm, config)
   return {title = config.title, description = config.description, fuzzy = config.fuzzy or true, choices = config.choices or {}, action = config.action}
