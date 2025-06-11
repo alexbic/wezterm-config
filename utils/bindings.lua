@@ -195,11 +195,132 @@ M.create_debug_panel_action = function(wezterm)
   end)
 end
 
--- Функция для F9 локализации
+-- Функция для F9 локализации через универсальную систему
 M.create_locale_manager_action = function(wezterm)
   return wezterm.action_callback(function(window, pane)
-    local locale_manager = require("config.dialogs.locale-manager")
-    locale_manager.show_locale_manager(window, pane)
+    local dialogs = require("utils.dialogs")
+    local environment = require("config.environment")
+    local env_utils = require("utils.environment")
+    local create_platform_info = require("utils.platform")
+    local platform = create_platform_info(wezterm.target_triple)
+    
+    -- Устанавливаем название вкладки
+    local tab = window:active_tab()
+    tab:set_title("Управление локализацией")
+    
+    -- Сканируем доступные языки динамически
+    local available_languages = env_utils.scan_locale_files(wezterm.config_dir, platform)
+    local current_language = (environment.locale and environment.locale.current_language) or "ru"
+    
+    -- Создаём динамическую конфигурацию
+    local dynamic_locale_config = {
+      meta = {
+        title_key = "locale_manager_wezterm_title",
+        icon_key = "locale_manager", 
+        tab_title_key = "locale_manager_title",
+        fuzzy = true
+      },
+      main_items = {},
+      service_items = {}
+    }
+    
+    -- Добавляем заголовок
+    table.insert(dynamic_locale_config.main_items, {
+      id = "header",
+      text_key = "locale_manager_title",
+      icon_key = "system",
+      action = "header"
+    })
+    
+    -- Текущий язык
+    table.insert(dynamic_locale_config.main_items, {
+      id = "current",
+      text_key = "locale_current_language",
+      icon_key = "locale_current", 
+      action = "show_current",
+      extra_text = current_language
+    })
+    
+    -- Доступные языки с иконками состояния
+    for lang_code, lang_data in pairs(available_languages) do
+      local status_icon = (lang_code == current_language) and "🟢" or "⚪"
+      table.insert(dynamic_locale_config.main_items, {
+        id = "switch_" .. lang_code,
+        text_key = lang_data.name .. " (" .. lang_code .. ")",
+        icon_key = status_icon,
+        action = "switch_lang",
+        lang = lang_code
+      })
+    end
+    
+    -- Служебные команды
+    table.insert(dynamic_locale_config.service_items, {
+      id = "regenerate",
+      text_key = "locale_regenerate_cache",
+      icon_key = "locale_refresh",
+      action = "regenerate"
+    })
+    
+    table.insert(dynamic_locale_config.service_items, {
+      id = "emergency_fix",
+      text_key = "Экстренное восстановление ru.lua",
+      icon_key = "locale_emergency",
+      action = "emergency"
+    })
+    
+    local locale_state_provider = {
+      handle_action = function(id, inner_window, inner_pane)
+        if id == "header" or id == "current" then
+          return { action = "none" }
+        elseif id:match("^switch_") then
+          local lang_code = id:match("^switch_(.+)$")
+          if lang_code and lang_code ~= current_language then
+            local success = env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
+            if success then
+              inner_window:toast_notification("Локализация", "Язык переключен на: " .. lang_code, nil, 3000)
+              wezterm.reload_configuration()
+            end
+          end
+          return { action = "exit" }
+        elseif id == "regenerate" then
+          local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, current_language)
+          if success then
+            inner_window:toast_notification("Локализация", "Кэш перегенерирован", nil, 3000)
+            wezterm.reload_configuration()
+          end
+          return { action = "exit" }
+        elseif id == "emergency_fix" then
+          local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, "ru")
+          if success then
+            inner_window:toast_notification("Восстановление", "Восстановлено на русский язык", nil, 3000)
+            wezterm.reload_configuration()
+          end
+          return { action = "exit" }
+        end
+        return { action = "none" }
+      end
+    }
+    
+    window:perform_action(dialogs.build_inputselector(wezterm, dynamic_locale_config, locale_state_provider), pane)
+  end)
+end
+          return { action = "exit" }
+        elseif id == "emergency_fix" then
+          local env_utils = require("utils.environment")
+          local create_platform_info = require("utils.platform")
+          local platform = create_platform_info(wezterm.target_triple)
+          local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, "ru")
+          if success then
+            inner_window:toast_notification("Восстановление", "Восстановлено на русский язык", nil, 3000)
+            wezterm.reload_configuration()
+          end
+          return { action = "exit" }
+        end
+        return { action = "none" }
+      end
+    }
+    
+    window:perform_action(dialogs.build_inputselector(wezterm, locale_config, locale_state_provider), pane)
   end)
 end
 
