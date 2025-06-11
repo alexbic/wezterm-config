@@ -11,8 +11,7 @@ local environment_data = require("config.environment")
 local env_utils = require("utils.environment")
 local create_platform_info = require("utils.platform")
 local platform = create_platform_info(wezterm.target_triple)
-local environment = env_utils.init_wezterm_environment(wezterm, platform, environment_data)local create_platform_info = require('utils.platform')
-local platform = create_platform_info(wezterm.target_triple)
+local environment = env_utils.init_wezterm_environment(wezterm, platform, environment_data)
 
 -- Защита от повторного логирования через файл состояния
 local env_utils = require("utils.environment")
@@ -26,7 +25,6 @@ if not env_utils.config_env_loaded(wezterm) then
   else
     debug.log(wezterm, environment.locale.t, "global", "platform_info", "Unknown")
   end
-
 
   -- Собираем все переменные окружения из подмодулей
   local set_env = {}
@@ -47,11 +45,10 @@ if not env_utils.config_env_loaded(wezterm) then
     end
   end
 
-  
-  -- Выводим собранные переменные окружения с детализацией
+  -- Выводим переменные окружения напрямую: KEY=VALUE
   for key, value in pairs(set_env) do
     if key ~= "PATH" then
-      debug.log(wezterm, environment.locale.t, "global", "debug_message", key .. " = " .. tostring(value))
+      wezterm.log_info("[global] ⚡ " .. key .. "=" .. tostring(value))
     end
   end
   debug.log(wezterm, environment.locale.t, "global", "config_loaded_info", "")

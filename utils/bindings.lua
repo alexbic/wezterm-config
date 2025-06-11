@@ -55,7 +55,7 @@ M.send_special_char = function(wezterm, char)
   return wezterm.action.SendString(char)
 end
 
--- ИСПРАВЛЕНО: Функция для создания workspace (принимает готовый текст)
+-- Функция для создания workspace (принимает готовый текст)
 M.create_workspace = function(wezterm, description_text)
   description_text = description_text or "Enter workspace name:"
   return wezterm.action.PromptInputLine {
@@ -77,7 +77,7 @@ M.create_workspace = function(wezterm, description_text)
   }
 end
 
--- ИСПРАВЛЕНО: Функция для создания workspace в новом окне
+-- Функция для создания workspace в новом окне
 M.create_workspace_new_window = function(wezterm, description_text)
   description_text = description_text or "Enter workspace name for new window:"
   return wezterm.action.PromptInputLine {
@@ -99,7 +99,7 @@ M.create_workspace_new_window = function(wezterm, description_text)
   }
 end
 
--- ИСПРАВЛЕНО: Функция для переименования вкладки
+-- Функция для переименования вкладки
 M.rename_tab = function(wezterm, description_text)
   description_text = description_text or "Enter new tab name:"
   return wezterm.action.PromptInputLine({
@@ -146,7 +146,7 @@ M.generate_special_char_bindings = function(wezterm)
   }
 end
 
--- ИСПРАВЛЕНО: Функция для генерации биндингов workspace (принимает готовые тексты)
+-- Функция для генерации биндингов workspace (принимает готовые тексты)
 M.generate_workspace_bindings = function(wezterm, mod, workspace_text, workspace_new_window_text)
   workspace_text = workspace_text or "Enter workspace name:"
   workspace_new_window_text = workspace_new_window_text or "Enter workspace name for new window:"
@@ -158,42 +158,6 @@ M.generate_workspace_bindings = function(wezterm, mod, workspace_text, workspace
     { key = "W", mods = "LEADER", action = wezterm.action.EmitEvent("workspace.restore") },
   }
 end
-
--- Функция для активации режима отладки с разделением панели
-M.activate_debug_mode_with_panel = function(wezterm)
-  return wezterm.action_callback(function(window, pane)
-    local debug_panel = require("config.dialogs.debug-manager")
-    debug_panel.create_panel(window, pane)
-  end)
-end
-
--- Функция для активации менеджера состояний
-M.activate_state_manager = function(wezterm)
-  return wezterm.action_callback(function(window, pane)
-    local state_manager = require("config.dialogs.state-manager")
-    state_manager.show_main_menu(window, pane)
-  end)
-end
-
--- Функция для закрытия отладочной панели
-M.close_debug_panel = function(wezterm)
-  return wezterm.action_callback(function(window, pane)
-    local current_tab = window:active_tab()
-    local panes = current_tab:panes()
-    
-    -- Ищем панель с названием DEBUG_PANEL
-    for _, p in ipairs(panes) do
-      if p:get_title() == "DEBUG_PANEL" then
-        -- Активируем отладочную панель и закрываем её
-        p:activate()
-        window:perform_action(wezterm.action.CloseCurrentPane({ confirm = false }), p)
-        break
-      end
-    end
-  end)
-end
-
-return M
 
 -- Функция для F8 отладочного диалога
 M.create_debug_panel_action = function(wezterm)
@@ -260,3 +224,28 @@ M.create_force_reload_action = function(wezterm)
     env_utils.force_config_reload(wezterm)
   end)
 end
+
+-- Функция сборки всех биндингов (перенесена из keyboard.lua)
+M.build_keys = function(wezterm, base_keys, mod, platform, locale_t)
+  local keys = {}
+  for _, key in ipairs(base_keys) do 
+    table.insert(keys, key) 
+  end
+  for _, key in ipairs(M.generate_appearance_bindings(wezterm, mod)) do 
+    table.insert(keys, key) 
+  end
+  for _, key in ipairs(M.generate_key_table_bindings(wezterm, mod)) do 
+    table.insert(keys, key) 
+  end
+  if platform.is_mac then
+    for _, key in ipairs(M.generate_special_char_bindings(wezterm)) do 
+      table.insert(keys, key) 
+    end
+  end
+  for _, key in ipairs(M.generate_workspace_bindings(wezterm, mod, locale_t.enter_workspace_name or "Введите имя workspace:", locale_t.enter_workspace_name_new_window or "Введите имя workspace для нового окна:")) do 
+    table.insert(keys, key) 
+  end
+  return keys
+end
+
+return M

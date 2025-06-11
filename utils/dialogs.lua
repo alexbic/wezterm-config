@@ -102,60 +102,66 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data)
 end
 
 -- ИСПРАВЛЕННАЯ универсальная функция с ДИНАМИЧЕСКИМИ иконками
+-- ПРАВИЛЬНАЯ универсальная функция - использует ТОЛЬКО dialog_config данные
 M.build_inputselector = function(wezterm, dialog_config, state_provider)
   local environment = require("config.environment")
   local choices = {}
-  
-  table.insert(choices, {id = "header_separator", label = " ───────────────────────────────────────────────────────"})
-  
+
+  table.insert(choices, {id = "header_separator", label = "───────────────────────────────────────────────────────"})
+
   for i, item in ipairs(dialog_config.main_items or {}) do
-    local icon = "⚙"  -- УБИРАЕМ статические иконки из config
+    -- Читаем ВСЁ из dialog_config, а не напрямую из environment
+    local icon_key = item.icon_key or "system"
+    local icon = environment.icons.t[icon_key] or "⚙"
     local text = environment.locale.t[item.text_key] or item.text_key
-    
-    -- ПРИНУДИТЕЛЬНО используем state_provider для иконок
+
+    -- Состояние получаем от state_provider
     if state_provider and state_provider.get_state then
       local state = state_provider.get_state(item.id)
-      if state ~= nil then 
-        icon = state and "⚙" or "✗" 
+      if state ~= nil then
+        icon = state and "⚙" or "✗"
       else
-        icon = "✗"  -- По умолчанию выключено если нет состояния
+        icon = "✗"
       end
     end
-    
-    table.insert(choices, {id = item.id, label = string.format(" %d.  %s  %-15s  -  %s", i, icon, item.id, text)})
+
+    table.insert(choices, {id = item.id, label = string.format("%d.  %s  %-15s  -  %s", i, icon, item.id, text)})
   end
-  
-  table.insert(choices, {id = "footer_separator", label = " ───────────────────────────────────────────────────────"})
-  
+
+  table.insert(choices, {id = "footer_separator", label = "───────────────────────────────────────────────────────"})
+
   for _, item in ipairs(dialog_config.service_items or {}) do
     local icon = environment.icons.t[item.icon_key] or "⚙"
     local text = environment.locale.t[item.text_key] or item.text_key
-    table.insert(choices, {id = item.id, label = string.format("      %s  %s", icon, text)})
+    table.insert(choices, {id = item.id, label = string.format("     %s  %s", icon, text)})
   end
-  
-  table.insert(choices, {id = "exit", label = "      ⏏  Выход"})
-  
+
+  table.insert(choices, {id = "exit", label = "     ⏏  Выход"})
+
+  -- Заголовок БЕЗ добавления иконки (только из meta.title_key)
+  local title = environment.locale.t[dialog_config.meta.title_key] or dialog_config.meta.title_key
+
   return wezterm.action.InputSelector({
-    title = environment.locale.t[dialog_config.meta.title_key] or dialog_config.meta.title_key,
+    title = title,
     description = dialog_config.meta.description or "",
     fuzzy_description = "Выбери пункт:",
     fuzzy = dialog_config.meta.fuzzy or true,
     choices = choices,
     action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
-      inner_window:active_tab():set_title(environment.locale.t[dialog_config.meta.tab_title_key] or "Диалог")
-      
+      local tab_title = environment.locale.t[dialog_config.meta.tab_title_key] or "Диалог"
+      inner_window:active_tab():set_title(tab_title)
+
       if id == "exit" or id == "header_separator" or id == "footer_separator" then
         if id == "exit" then
-          -- ИСПРАВЛЕНИЕ: всегда передаем menu_data
           M.show_f10_main_settings(wezterm, inner_window, inner_pane, require("config.dialogs.settings-manager"))
         end
         return
       end
-      
+
       if state_provider and state_provider.handle_action then
         if state_provider.handle_action(id, inner_window, inner_pane) then return end
       end
-      
+
       local target_item = nil
       for _, item in ipairs(dialog_config.main_items or {}) do
         if item.id == id then target_item = item break end
@@ -165,7 +171,7 @@ M.build_inputselector = function(wezterm, dialog_config, state_provider)
           if item.id == id then target_item = item break end
         end
       end
-      
+
       if target_item and target_item.target then
         if target_item.target == "debug_manager" then
           M.show_debug_panel(wezterm, inner_window, inner_pane)

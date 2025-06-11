@@ -62,3 +62,10 @@ desktop.ini
 .*.swp
 .*.swo
 backup/
+# Исключаем мусорные файлы
+*.emergency_backup*
+*.backup_*
+*test*.md
+*_FIXED.md
+file.lua
+complex_test.md
