@@ -2,6 +2,7 @@ local M = {}
 
 M.meta = {
   title_key = "debug_panel_title",
+  icon_key = "debug",
   description = "",
   tab_title_key = "debug_panel_short", 
   fuzzy = true

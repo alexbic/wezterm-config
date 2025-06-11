@@ -166,25 +166,28 @@ M.create_debug_panel_action = function(wezterm)
     local debug_config = require("config.dialogs.debug-config")
     local debug = require("utils.debug")
     local debug_state_provider = {
-      get_state = function(module_name) return debug.DEBUG_CONFIG[module_name] end,
+      get_state = function(module_name) 
+        return debug.DEBUG_CONFIG[module_name] 
+      end,
       handle_action = function(id, inner_window, inner_pane)
         if id == "enable_all" then
-          for module_name, _ in pairs(debug.DEBUG_CONFIG) do debug.DEBUG_CONFIG[module_name] = true end
+          for module_name, _ in pairs(debug.DEBUG_CONFIG) do
+            debug.DEBUG_CONFIG[module_name] = true
+          end
           debug.save_debug_settings(wezterm)
-          wezterm.time.call_after(0.1, function() inner_window:perform_action(dialogs.build_inputselector(wezterm, debug_config, debug_state_provider), inner_pane) end)
-          return true
+          return { action = "refresh" }
         elseif id == "disable_all" then
-          for module_name, _ in pairs(debug.DEBUG_CONFIG) do debug.DEBUG_CONFIG[module_name] = false end
+          for module_name, _ in pairs(debug.DEBUG_CONFIG) do
+            debug.DEBUG_CONFIG[module_name] = false
+          end
           debug.save_debug_settings(wezterm)
-          wezterm.time.call_after(0.1, function() inner_window:perform_action(dialogs.build_inputselector(wezterm, debug_config, debug_state_provider), inner_pane) end)
-          return true
+          return { action = "refresh" }
         elseif debug.DEBUG_CONFIG[id] ~= nil then
           debug.DEBUG_CONFIG[id] = not debug.DEBUG_CONFIG[id]
           debug.save_debug_settings(wezterm)
-          wezterm.time.call_after(0.1, function() inner_window:perform_action(dialogs.build_inputselector(wezterm, debug_config, debug_state_provider), inner_pane) end)
-          return true
+          return { action = "refresh" }
         end
-        return false
+        return { action = "none" }
       end
     }
     debug.load_debug_settings(wezterm)
