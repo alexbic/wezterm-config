@@ -159,156 +159,12 @@ M.generate_workspace_bindings = function(wezterm, mod, workspace_text, workspace
   }
 end
 
--- F8 освобожден для будущего использования
+-- Функция для F8 отладочного диалога
 M.create_debug_panel_action = function(wezterm)
   return wezterm.action_callback(function(window, pane)
-    window:toast_notification("F8", "Клавиша F8 освобождена для нового функционала", nil, 2000)
-  end)
-end
-
--- Функция для F9 локализации через универсальную систему
-M.create_locale_manager_action = function(wezterm)
-  return wezterm.action_callback(function(window, pane)
     local dialogs = require("utils.dialogs")
-    local environment = require("config.environment")
-    local env_utils = require("utils.environment")
-    local create_platform_info = require("utils.platform")
-    local platform = create_platform_info(wezterm.target_triple)
-    
-    -- Устанавливаем название вкладки
-    local tab = window:active_tab()
-    tab:set_title("Управление локализацией")
-    
-    -- Сканируем доступные языки динамически
-    local available_languages = env_utils.scan_locale_files(wezterm.config_dir, platform)
-    local current_language = (environment.locale and environment.locale.current_language) or "ru"
-    
-    -- Создаём динамическую конфигурацию
-    local dynamic_locale_config = {
-      meta = {
-        title_key = "locale_manager_wezterm_title",
-        icon_key = "locale_manager", 
-        tab_title_key = "locale_manager_title",
-        fuzzy = true
-      },
-      main_items = {},
-      service_items = {}
-    }
-    
-    -- Добавляем заголовок
-    table.insert(dynamic_locale_config.main_items, {
-      id = "header",
-      text_key = "locale_manager_title",
-      icon_key = "system",
-      action = "header"
-    })
-    
-    -- Текущий язык
-    table.insert(dynamic_locale_config.main_items, {
-      id = "current",
-      text_key = "locale_current_language",
-      icon_key = "locale_current", 
-      action = "show_current",
-      extra_text = current_language
-    })
-    
-    -- Доступные языки с иконками состояния
-    for lang_code, lang_data in pairs(available_languages) do
-      local status_icon = (lang_code == current_language) and "🟢" or "⚪"
-      table.insert(dynamic_locale_config.main_items, {
-        id = "switch_" .. lang_code,
-        text_key = lang_data.name .. " (" .. lang_code .. ")",
-        icon_key = status_icon,
-        action = "switch_lang",
-        lang = lang_code
-      })
-    end
-    
-    -- Служебные команды
-    table.insert(dynamic_locale_config.service_items, {
-      id = "regenerate",
-      text_key = "locale_regenerate_cache",
-      icon_key = "locale_refresh",
-      action = "regenerate"
-    })
-    
-    table.insert(dynamic_locale_config.service_items, {
-      id = "emergency_fix",
-      text_key = "Экстренное восстановление ru.lua",
-      icon_key = "locale_emergency",
-      action = "emergency"
-    })
-    
-    local locale_state_provider = {
-      handle_action = function(id, inner_window, inner_pane)
-        if id == "header" or id == "current" then
-          return { action = "none" }
-        elseif id:match("^switch_") then
-          local lang_code = id:match("^switch_(.+)$")
-          if lang_code and lang_code ~= current_language then
-            local success = env_utils.switch_language_and_rebuild(wezterm.config_dir, platform, lang_code)
-            if success then
-              inner_window:toast_notification("Локализация", "Язык переключен на: " .. lang_code, nil, 3000)
-              wezterm.reload_configuration()
-            end
-          end
-          return { action = "exit" }
-        elseif id == "regenerate" then
-          local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, current_language)
-          if success then
-            inner_window:toast_notification("Локализация", "Кэш перегенерирован", nil, 3000)
-            wezterm.reload_configuration()
-          end
-          return { action = "exit" }
-        elseif id == "emergency_fix" then
-          local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, "ru")
-          if success then
-            inner_window:toast_notification("Восстановление", "Восстановлено на русский язык", nil, 3000)
-            wezterm.reload_configuration()
-          end
-          return { action = "exit" }
-        end
-        return { action = "none" }
-      end
-    }
-    
-    window:perform_action(dialogs.build_inputselector(wezterm, dynamic_locale_config, locale_state_provider), pane)
-  end)
-end
-
--- Функция для F10 центра управления через универсальную систему
-M.create_f10_settings_action = function(wezterm)
-  return wezterm.action_callback(function(window, pane)
-    local dialogs = require("utils.dialogs")
-    local settings_config = require("config.dialogs.settings-manager")
-    
-    local settings_state_provider = {
-      handle_action = function(id, inner_window, inner_pane)
-        if id == "locale_settings" then
-          M.create_locale_manager_action(wezterm)()(inner_window, inner_pane)
-          return { action = "exit" }
-        elseif id == "debug_settings" then
-          M.create_shift_f12_debug_action(wezterm)()(inner_window, inner_pane)
-          return { action = "exit" }
-        elseif id == "state_settings" then
-          inner_window:toast_notification("Состояния", "Менеджер состояний в разработке", nil, 2000)
-          return { action = "none" }
-        end
-        return { action = "none" }
-      end
-    }
-    
-    window:perform_action(dialogs.build_inputselector(wezterm, settings_config, settings_state_provider), pane)
-  end)
-end
-
--- Функция для Shift+F12 отладки через универсальную систему
-M.create_shift_f12_debug_action = function(wezterm)
-  return wezterm.action_callback(function(window, pane)
-    local dialogs = require("utils.dialogs")
-    local debug_config = require("config.dialogs.debug-manager")
+    local debug_config = require("config.dialogs.debug-config")
     local debug = require("utils.debug")
-    
     local debug_state_provider = {
       get_state = function(module_name) 
         return debug.DEBUG_CONFIG[module_name] 
@@ -334,9 +190,53 @@ M.create_shift_f12_debug_action = function(wezterm)
         return { action = "none" }
       end
     }
-    
     debug.load_debug_settings(wezterm)
     window:perform_action(dialogs.build_inputselector(wezterm, debug_config, debug_state_provider), pane)
+  end)
+end
+
+end
+-- Функция для F9 локализации
+M.create_locale_manager_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local locale_manager = require("config.dialogs.locale-manager")
+    locale_manager.show_locale_manager(window, pane)
+  end)
+end
+          return { action = "exit" }
+        elseif id == "emergency_fix" then
+          local env_utils = require("utils.environment")
+          local create_platform_info = require("utils.platform")
+          local platform = create_platform_info(wezterm.target_triple)
+          local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, "ru")
+          if success then
+            inner_window:toast_notification("Восстановление", "Восстановлено на русский язык", nil, 3000)
+            wezterm.reload_configuration()
+          end
+          return { action = "exit" }
+        end
+        return { action = "none" }
+      end
+    }
+    
+    window:perform_action(dialogs.build_inputselector(wezterm, locale_config, locale_state_provider), pane)
+  end)
+end
+
+-- Функция для F10 центра управления
+M.create_f10_settings_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local dialogs = require("utils.dialogs")
+    local settings_data = require("config.dialogs.settings-manager")
+    dialogs.show_f10_main_settings(wezterm, window, pane, settings_data)
+  end)
+end
+
+-- Функция для Shift+F12 отладки
+M.create_shift_f12_debug_action = function(wezterm)
+  return wezterm.action_callback(function(window, pane)
+    local dialogs = require("utils.dialogs")
+    dialogs.show_debug_panel(wezterm, window, pane)
   end)
 end
 
