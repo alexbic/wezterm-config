@@ -241,10 +241,6 @@ M.create_locale_manager_action = function(wezterm)
     
     local locale_state_provider = {
       handle_action = function(id, inner_window, inner_pane)
-        -- ИСПРАВЛЕНИЕ: проверка на nil id (ESC нажатие)
-        if not id then
-          return { action = "close" }
-        end
         if id == "header" or id == "current" then
           return { action = "none" }
         elseif id:match("^switch_") then
@@ -256,21 +252,21 @@ M.create_locale_manager_action = function(wezterm)
               wezterm.reload_configuration()
             end
           end
-          return { action = "close" }
+          return { action = "exit" }
         elseif id == "regenerate" then
           local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, current_language)
           if success then
             inner_window:toast_notification("Локализация", "Кэш перегенерирован", nil, 3000)
             wezterm.reload_configuration()
           end
-          return { action = "close" }
+          return { action = "exit" }
         elseif id == "emergency_fix" then
           local success = env_utils.rebuild_locale_cache_file(wezterm.config_dir, platform, "ru")
           if success then
             inner_window:toast_notification("Восстановление", "Восстановлено на русский язык", nil, 3000)
             wezterm.reload_configuration()
           end
-          return { action = "close" }
+          return { action = "exit" }
         end
         return { action = "none" }
       end
@@ -288,16 +284,12 @@ M.create_f10_settings_action = function(wezterm)
     
     local settings_state_provider = {
       handle_action = function(id, inner_window, inner_pane)
-        -- ИСПРАВЛЕНИЕ: проверка на nil id (ESC нажатие)
-        if not id then
-          return { action = "close" }
-        end
         if id == "locale_settings" then
           M.create_locale_manager_action(wezterm)()(inner_window, inner_pane)
-          return { action = "close" }
+          return { action = "exit" }
         elseif id == "debug_settings" then
           M.create_shift_f12_debug_action(wezterm)()(inner_window, inner_pane)
-          return { action = "close" }
+          return { action = "exit" }
         elseif id == "state_settings" then
           inner_window:toast_notification("Состояния", "Менеджер состояний в разработке", nil, 2000)
           return { action = "none" }
@@ -322,10 +314,6 @@ M.create_shift_f12_debug_action = function(wezterm)
         return debug.DEBUG_CONFIG[module_name] 
       end,
       handle_action = function(id, inner_window, inner_pane)
-        -- ИСПРАВЛЕНИЕ: проверка на nil id (ESC нажатие)
-        if not id then
-          return { action = "close" }
-        end
         if id == "enable_all" then
           for module_name, _ in pairs(debug.DEBUG_CONFIG) do
             debug.DEBUG_CONFIG[module_name] = true
