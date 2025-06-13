@@ -162,11 +162,8 @@ end
 -- F8 освобожден для будущего использования
 M.create_debug_panel_action = function(wezterm)
   return wezterm.action_callback(function(window, pane)
-    local debug = require("utils.debug")
-    local environment = require("config.environment")
-    local locale_t = environment.locale and environment.locale.t or {}
-    local message = locale_t.unused_key_not_used or "не используется, доступна для новых функций"
-    debug.log(wezterm, locale_t, "bindings", "F8", "F8 → " .. message)  end)
+    window:toast_notification("F8", "Клавиша F8 освобождена для нового функционала", nil, 2000)
+  end)
 end
 
 -- Функция для F9 локализации через универсальную систему

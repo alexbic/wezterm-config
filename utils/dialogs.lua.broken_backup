@@ -47,7 +47,7 @@ M.show_debug_panel = function(wezterm, window, pane)
       end
       
       if id == "exit" then
-        -- УБРАН ХАРДКОД: exit обрабатывается в state_provider
+        M.show_f10_main_settings(wezterm, inner_window, inner_pane, require("config.dialogs.settings-manager"))
         return
       elseif id == "enable_all" then
         for module_name, _ in pairs(debug.DEBUG_CONFIG) do 
@@ -117,10 +117,10 @@ M.show_f10_main_settings = function(wezterm, window, pane, menu_data)
 end
 
 -- Универсальная функция построения InputSelector диалогов
+-- Универсальная функция построения InputSelector диалогов
 M.build_inputselector = function(wezterm, dialog_config, state_provider)
   local environment = require("config.environment")
   local colors = require("config.environment.colors")
-  local env_utils = require("utils.environment")
   local choices = {}
   
   table.insert(choices, {id = "header_separator", label = "───────────────────────────────────────────────────────"})
@@ -128,18 +128,45 @@ M.build_inputselector = function(wezterm, dialog_config, state_provider)
   for i, item in ipairs(dialog_config.main_items or {}) do
     local text = environment.locale.t[item.text_key] or item.text_key
     local icon = "✗"
-    local label_format = string.format("%d.  %s  %-15s  -  %s", i, icon, item.id, text)
-    
-    if state_provider and state_provider.get_state then
-      local state = state_provider.get_state(item.id)
-      if state == true then
-        icon = "⚙"
-        label_format = string.format("%d.  %s  %-15s  -  %s", i, icon, item.id, text)
-        table.insert(choices, {
-          id = item.id,
-          label = wezterm.format({
-            { Foreground = { Color = env_utils.get_color(colors, "debug_control") } },
-            { Text = label_format }
+    local label_format = string.format("%d. %s %s", i, icon, text)
+    table.insert(choices, {id = item.id, label = label_format})
+  end
+  
+  table.insert(choices, {id = "footer_separator", label = "───────────────────────────────────────────────────────"})
+  
+  for _, item in ipairs(dialog_config.service_items or {}) do
+    local text = environment.locale.t[item.text_key] or item.text_key
+    local icon = environment.icons and environment.icons.t and environment.icons.t[item.icon_key] or "⚙"
+    table.insert(choices, {id = item.id, label = "  " .. icon .. "  " .. text})
+  end
+  
+  local meta = dialog_config.meta or {}
+  local title = environment.locale.t[meta.title_key] or meta.title_key or "Диалог"
+  
+  return wezterm.action.InputSelector({
+    title = title,
+    description = meta.description or "",
+    fuzzy_description = environment.locale.t.find_item or "Найти:",
+    fuzzy = meta.fuzzy or false,
+    choices = choices,
+    action = wezterm.action_callback(function(window, pane, id, label)
+      if id == "header_separator" or id == "footer_separator" then
+        return
+      end
+      
+      if state_provider and state_provider.handle_action then
+        local result = state_provider.handle_action(wezterm, window, pane, id, label)
+        if result and result.action == "refresh" then
+          wezterm.time.call_after(0.1, function()
+            window:perform_action(M.build_inputselector(wezterm, dialog_config, state_provider), pane)
+          end)
+        elseif result and result.action == "exit" then
+          -- УБИРАЕМ ХАРДКОД: Пусть state_provider сам решает что делать при exit
+          return
+        end
+      end
+    end)
+  })
           })
         })
       else
@@ -182,7 +209,7 @@ M.build_inputselector = function(wezterm, dialog_config, state_provider)
       
       if id == "exit" then
         inner_window:active_tab():set_title("")
-          -- УБРАН ХАРДКОД: exit обрабатывается в state_provider
+        M.show_f10_main_settings(wezterm, inner_window, inner_pane, require("config.dialogs.settings-manager"))
         return
       end
       
