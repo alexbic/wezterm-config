@@ -166,7 +166,8 @@ M.create_debug_panel_action = function(wezterm)
     local environment = require("config.environment")
     local locale_t = environment.locale and environment.locale.t or {}
     local message = locale_t.unused_key_not_used or "не используется, доступна для новых функций"
-    debug.log(wezterm, locale_t, "bindings", "F8", "F8 → " .. message)  end)
+    debug.log(wezterm, locale_t, "bindings", "F8", "F8 → " .. message)
+  end)
 end
 
 -- Функция для F9 локализации через универсальную систему
